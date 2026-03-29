@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PrintIcon } from '../components/Icons';
+import { getImageUrl } from '../utils/imageUrl';
 
 function clamp(val, min, max) {
   const n = Number(val);
@@ -94,8 +96,9 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const getScoreColor = (score) =>
     score >= 90 ? '#059669' : score >= 75 ? '#3b82f6' : '#d97706';
 
-  const initials = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const grades = editing ? editGrades : student.grades;
+  const initials  = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const grades    = editing ? editGrades : student.grades;
+  const photoSrc  = getImageUrl(student.photo);
 
   // Totals for summary cards
   const totals = student.grades.length > 0 ? {
@@ -110,10 +113,19 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       {/* Hero */}
       <div className="detail-hero">
         <div className="hero-left">
-          <div className="hero-avatar">{initials}</div>
+          {photoSrc ? (
+            <img src={photoSrc} alt={student.name} className="hero-avatar-img" />
+          ) : (
+            <div className="hero-avatar">{initials}</div>
+          )}
           <div>
             <h1 className="hero-name">{student.name}</h1>
             <span className="hero-class">Анги: {student.className}</span>
+            {student.academicYear && (
+              <span className="hero-class" style={{ marginLeft: 8 }}>
+                {student.academicYear} · {student.semester}-р улирал
+              </span>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -238,7 +250,54 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
 
       <div className="detail-actions">
         <button onClick={() => navigate('/')} className="btn btn-secondary">← Буцах</button>
+        <button onClick={() => window.print()} className="btn btn-secondary">
+          <PrintIcon size={15} color="currentColor" />Хэвлэх
+        </button>
         <button onClick={handleDelete} className="btn btn-danger">Устгах</button>
+      </div>
+
+      {/* ── Print-only report card ── */}
+      <div className="print-report">
+        <div className="print-school">ЕБС ДҮН БҮРТГЭЛИЙН СИСТЕМ</div>
+        <div className="print-title">ДҮНГИЙН ТАЙЛАН</div>
+        <div className="print-meta">
+          <div><strong>Нэр:</strong> {student.name}</div>
+          <div><strong>Анги:</strong> {student.className}</div>
+          {student.academicYear && <div><strong>Хичээлийн жил:</strong> {student.academicYear} · {student.semester}-р улирал</div>}
+          <div><strong>Дундаж дүн:</strong> {student.average} / 100</div>
+        </div>
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Хичээл</th>
+              <th>Шалгалт 1 (/30)</th><th>Шалгалт 2 (/30)</th>
+              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {student.grades.map((g, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>{g.subject}</td>
+                <td>{g.exam1 ?? 0}</td>
+                <td>{g.exam2 ?? 0}</td>
+                <td>{g.attendance ?? 0}</td>
+                <td>{g.independent ?? 0}</td>
+                <td><strong>{g.score}</strong></td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'right' }}><strong>Дундаж нийт оноо:</strong></td>
+              <td><strong>{student.average}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+        <div className="print-footer">
+          <div className="print-sign"><span>Багшийн гарын үсэг: ___________</span></div>
+          <div className="print-sign"><span>Огноо: {new Date().toLocaleDateString('mn-MN')}</span></div>
+        </div>
       </div>
     </div>
   );

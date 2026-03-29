@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'Хэрэглэгч амжилттай бүртгэгдлээ',
       token,
-      user: { id: user._id, username: user.username, email: user.email, role: user.role },
+      user: { id: user._id, username: user.username, email: user.email, role: user.role, profileImage: user.profileImage },
     });
   } catch (err) {
     console.error('REGISTER АЛДАА:', err);
@@ -71,7 +71,7 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Амжилттай нэвтэрлээ',
       token,
-      user: { id: user._id, username: user.username, email: user.email, role: user.role },
+      user: { id: user._id, username: user.username, email: user.email, role: user.role, profileImage: user.profileImage },
     });
   } catch (err) {
     res.status(500).json({ message: 'Нэвтрэхэд алдаа гарлаа', error: err.message });
@@ -107,6 +107,25 @@ router.post('/change-password', async (req, res) => {
     res.json({ message: 'Нууц үг амжилттай солигдлоо' });
   } catch (err) {
     res.status(500).json({ message: 'Нууц үг солиход алдаа гарлаа', error: err.message });
+  }
+});
+
+// PATCH /api/auth/profile — Профайл зураг шинэчлэх (хамгаалалттай)
+router.patch('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { profileImage } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ message: 'Хэрэглэгч олдсонгүй' });
+    res.json({
+      message: 'Профайл амжилттай шинэчлэгдлээ',
+      user: { id: user._id, username: user.username, email: user.email, role: user.role, profileImage: user.profileImage },
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Профайл шинэчлэхэд алдаа гарлаа', error: err.message });
   }
 });
 

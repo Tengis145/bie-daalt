@@ -1,5 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { CameraIcon } from '../components/Icons';
+import { getImageUrl } from '../utils/imageUrl';
+
+const CY = new Date().getFullYear();
+const YEARS = [`${CY - 1}-${CY}`, `${CY}-${CY + 1}`];
 
 const DEFAULT_SUBJECTS = [
   'Математик', 'Монгол хэл', 'Физик', 'Хими', 'Түүх',
@@ -9,30 +15,25 @@ const DEFAULT_SUBJECTS = [
 function emptyGrade(subject = '') {
   return { subject, exam1: 0, exam2: 0, attendance: 0, independent: 0, score: 0 };
 }
-
-function clamp(val, min, max) {
-  const n = Number(val);
-  return isNaN(n) ? min : Math.min(max, Math.max(min, n));
-}
-
-function calcScore(g) {
-  return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
-}
+function clamp(val, min, max) { const n = Number(val); return isNaN(n) ? min : Math.min(max, Math.max(min, n)); }
+function calcScore(g) { return clamp(Number(g.exam1)+Number(g.exam2)+Number(g.attendance)+Number(g.independent), 0, 100); }
 
 export default function AddStudent({ onAdd, classes, showToast }) {
   const navigate = useNavigate();
+  const fileRef  = useRef();
   const [formData, setFormData] = useState({
-    lastName:  '',
-    firstName: '',
-    className: '',
+    lastName: '', firstName: '', className: '',
+    academicYear: YEARS[0],
+    semester: 1,
     grades: DEFAULT_SUBJECTS.map(emptyGrade),
   });
-  const [newSubject, setNewSubject] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [newSubject,  setNewSubject]  = useState('');
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoUrl,     setPhotoUrl]     = useState('');
+  const [uploading,    setUploading]    = useState(false);
+  const [loading,      setLoading]      = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleFieldChange = (idx, field, value) => {
     const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
@@ -46,44 +47,54 @@ export default function AddStudent({ onAdd, classes, showToast }) {
     const name = newSubject.trim();
     if (!name) return;
     if (formData.grades.some(g => g.subject.toLowerCase() === name.toLowerCase())) {
-      showToast('Энэ хичээл аль хэдийн нэмэгдсэн байна', 'error');
-      return;
+      showToast('Энэ хичээл аль хэдийн нэмэгдсэн байна', 'error'); return;
     }
     setFormData({ ...formData, grades: [...formData.grades, emptyGrade(name)] });
     setNewSubject('');
   };
 
   const removeSubject = (idx) => {
-    const updated = formData.grades.filter((_, i) => i !== idx);
-    setFormData({ ...formData, grades: updated });
+    setFormData({ ...formData, grades: formData.grades.filter((_, i) => i !== idx) });
+  };
+
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('Файл 5MB-аас хэтэрч байна', 'error'); return; }
+    setPhotoPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await axios.post('/api/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setPhotoUrl(res.data.url);
+      showToast('Зураг бэлэн боллоо');
+    } catch { showToast('Зураг оруулахад алдаа гарлаа', 'error'); setPhotoPreview(null); }
+    finally { setUploading(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.lastName || !formData.firstName || !formData.className) {
-      showToast('Овог, нэр болон ангийг оруулна уу!', 'error');
-      return;
+      showToast('Овог, нэр болон ангийг оруулна уу!', 'error'); return;
     }
-    if (formData.grades.length === 0) {
-      showToast('Дор хаяж нэг хичээл нэмэх хэрэгтэй', 'error');
-      return;
-    }
+    if (formData.grades.length === 0) { showToast('Дор хаяж нэг хичээл нэмэх хэрэгтэй', 'error'); return; }
     setLoading(true);
     try {
       const fullName = `${formData.lastName} ${formData.firstName}`;
-      await onAdd({ name: fullName, className: formData.className, grades: formData.grades });
+      await onAdd({
+        name: fullName, className: formData.className,
+        academicYear: formData.academicYear, semester: Number(formData.semester),
+        photo: photoUrl, grades: formData.grades,
+      });
       showToast(`${fullName} амжилттай бүртгэгдлээ`);
       navigate('/');
-    } catch {
-      showToast('Бүртгэхэд алдаа гарлаа', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch { showToast('Бүртгэхэд алдаа гарлаа', 'error'); }
+    finally { setLoading(false); }
   };
 
   const avg = formData.grades.length
-    ? (formData.grades.reduce((s, g) => s + g.score, 0) / formData.grades.length).toFixed(1)
-    : '0.0';
+    ? (formData.grades.reduce((s, g) => s + g.score, 0) / formData.grades.length).toFixed(1) : '0.0';
 
   return (
     <div className="form-container" style={{ maxWidth: 980 }}>
@@ -93,44 +104,81 @@ export default function AddStudent({ onAdd, classes, showToast }) {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Овог / Нэр / Анги */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Овог</label>
-            <input required name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Жишээ: Батын" />
+        {/* Photo + basic info */}
+        <div style={{ display: 'flex', gap: 24, marginBottom: 20, alignItems: 'flex-start' }}>
+          {/* Photo upload */}
+          <div style={{ flexShrink: 0 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, fontSize: '0.875rem' }}>Зураг</label>
+            <div className="student-photo-upload" onClick={() => fileRef.current?.click()}>
+              {photoPreview ? (
+                <img src={photoPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: '#94a3b8' }}>
+                  <CameraIcon size={24} color="#94a3b8" />
+                  <span style={{ fontSize: '0.72rem' }}>Зураг нэмэх</span>
+                </div>
+              )}
+              {uploading && <div className="student-photo-overlay">Оруулж байна...</div>}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoSelect} />
           </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Нэр</label>
-            <input required name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Жишээ: Болд" />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Анги</label>
-            <input required name="className" value={formData.className} onChange={handleChange} placeholder="Жишээ: 11А" list="class-options" />
-            <datalist id="class-options">{classes.map(c => <option key={c} value={c} />)}</datalist>
+
+          {/* Name + class + year */}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Овог</label>
+                <input required name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Батын" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Нэр</label>
+                <input required name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Болд" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Анги</label>
+                <input required name="className" value={formData.className} onChange={handleChange} placeholder="11А" list="class-options" />
+                <datalist id="class-options">{classes.map(c => <option key={c} value={c} />)}</datalist>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Хичээлийн жил</label>
+                <select name="academicYear" value={formData.academicYear} onChange={handleChange} className="form-group select">
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Улирал</label>
+                <select name="semester" value={formData.semester} onChange={handleChange}>
+                  <option value={1}>1-р улирал</option>
+                  <option value={2}>2-р улирал</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
         {(formData.lastName || formData.firstName) && (
-          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: '0.875rem', color: '#3730a3', fontWeight: 500 }}>
+          <div style={{ background:'#eef2ff', border:'1px solid #c7d2fe', borderRadius:8, padding:'10px 16px', marginBottom:20, fontSize:'0.875rem', color:'#3730a3', fontWeight:500 }}>
             Бүтэн нэр: <strong>{formData.lastName} {formData.firstName}</strong>
+            &nbsp;·&nbsp; {formData.academicYear} {formData.semester}-р улирал
           </div>
         )}
 
-        {/* Хичээлийн дүнгүүд */}
+        {/* Grades table */}
         <div className="form-group">
           <div className="section-label">
             Хичээлийн дүнгүүд &nbsp;·&nbsp; Дундаж нийт оноо: <strong>{avg}</strong> &nbsp;·&nbsp; {formData.grades.length} хичээл
           </div>
-
           <div style={{ overflowX: 'auto' }}>
             <table className="exam-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }}>Хичээл</th>
-                  <th>Ш1 <span className="th-max">/30</span></th>
-                  <th>Ш2 <span className="th-max">/30</span></th>
-                  <th>Ирц <span className="th-max">/20</span></th>
-                  <th>БД <span className="th-max">/20</span></th>
+                  <th style={{ textAlign:'left' }}>Хичээл</th>
+                  <th>Ш1<span className="th-max">/30</span></th>
+                  <th>Ш2<span className="th-max">/30</span></th>
+                  <th>Ирц<span className="th-max">/20</span></th>
+                  <th>БД<span className="th-max">/20</span></th>
                   <th>Нийт</th>
                   <th></th>
                 </tr>
@@ -141,51 +189,35 @@ export default function AddStudent({ onAdd, classes, showToast }) {
                     <td className="subject-name">{g.subject}</td>
                     {['exam1','exam2','attendance','independent'].map(field => (
                       <td key={field}>
-                        <input
-                          className="exam-input"
-                          type="number"
-                          min="0"
-                          max={field === 'attendance' || field === 'independent' ? 20 : 30}
-                          value={g[field]}
-                          onChange={e => handleFieldChange(idx, field, e.target.value)}
-                        />
+                        <input className="exam-input" type="number" min="0"
+                          max={field==='attendance'||field==='independent'?20:30}
+                          value={g[field]} onChange={e=>handleFieldChange(idx,field,e.target.value)} />
                       </td>
                     ))}
                     <td>
-                      <span className="score-pill" style={{
-                        float: 'none', display: 'inline-block',
-                        color: g.score >= 90 ? '#065f46' : g.score >= 75 ? '#1e40af' : '#92400e',
-                        backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
-                      }}>{g.score}</span>
+                      <span className="score-pill" style={{ float:'none', display:'inline-block',
+                        color:g.score>=90?'#065f46':g.score>=75?'#1e40af':'#92400e',
+                        backgroundColor:g.score>=90?'#d1fae5':g.score>=75?'#dbeafe':'#fef3c7' }}>
+                        {g.score}
+                      </span>
                     </td>
-                    <td>
-                      <button type="button" className="btn-remove-subject" onClick={() => removeSubject(idx)} title="Хасах">✕</button>
-                    </td>
+                    <td><button type="button" className="btn-remove-subject" onClick={()=>removeSubject(idx)}>✕</button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          {/* Хичээл нэмэх */}
           <div className="add-subject-row">
-            <input
-              className="add-subject-input"
-              type="text"
-              placeholder="Шинэ хичээлийн нэр..."
-              value={newSubject}
-              onChange={e => setNewSubject(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSubject())}
-            />
-            <button type="button" className="btn btn-secondary" onClick={addSubject}>
-              + Хичээл нэмэх
-            </button>
+            <input className="add-subject-input" type="text" placeholder="Шинэ хичээлийн нэр..."
+              value={newSubject} onChange={e=>setNewSubject(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&(e.preventDefault(),addSubject())} />
+            <button type="button" className="btn btn-secondary" onClick={addSubject}>+ Хичээл нэмэх</button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/')}>← Буцах</button>
-          <button type="submit" className="btn btn-success btn-lg" style={{ flex: 1 }} disabled={loading}>
+        <div style={{ display:'flex', gap:12, marginTop:8 }}>
+          <button type="button" className="btn btn-secondary" onClick={()=>navigate('/')}>← Буцах</button>
+          <button type="submit" className="btn btn-success btn-lg" style={{ flex:1 }} disabled={loading||uploading}>
             {loading ? 'Хадгалж байна...' : 'Сурагч бүртгэх'}
           </button>
         </div>

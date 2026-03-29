@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } from './components/Icons';
+import { getImageUrl } from './utils/imageUrl';
 import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import StudentDetail from './pages/StudentDetail';
@@ -10,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
 import SubjectDashboard from './pages/SubjectDashboard';
+import Profile from './pages/Profile';
 
 const API = '/api/students';
 
@@ -79,6 +81,11 @@ export default function App() {
     localStorage.removeItem('ebs_token');
     localStorage.removeItem('ebs_user');
     setAuthHeader(null);
+  };
+
+  const onUpdateUser = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('ebs_user', JSON.stringify(updatedUser));
   };
 
   const fetchStudents = async (className = '') => {
@@ -173,10 +180,13 @@ export default function App() {
               </Link>
               <div className="nav-divider" />
               <div className="nav-user">
-                <div className="user-badge">
-                  <div className="user-avatar">{initials}</div>
+                <Link to="/profile" className="user-badge" style={{ textDecoration: 'none' }}>
+                  {getImageUrl(currentUser?.profileImage)
+                    ? <img src={getImageUrl(currentUser?.profileImage)} alt="" className="user-avatar-img" />
+                    : <div className="user-avatar">{initials}</div>
+                  }
                   <span className="user-name">{currentUser?.username}</span>
-                </div>
+                </Link>
                 <button onClick={handleLogout} className="btn-logout">
                   <LogoutIcon size={14} color="currentColor" />Гарах
                 </button>
@@ -213,10 +223,13 @@ export default function App() {
               </Link>
               <div className="mobile-menu-divider" />
               <div className="mobile-menu-user">
-                <div className="user-badge" style={{ background: 'rgba(255,255,255,.15)' }}>
-                  <div className="user-avatar">{initials}</div>
+                <Link to="/profile" className="user-badge" style={{ background: 'rgba(255,255,255,.15)', textDecoration: 'none' }}>
+                  {getImageUrl(currentUser?.profileImage)
+                    ? <img src={getImageUrl(currentUser?.profileImage)} alt="" className="user-avatar-img" />
+                    : <div className="user-avatar">{initials}</div>
+                  }
                   <span className="user-name">{currentUser?.username}</span>
-                </div>
+                </Link>
                 <button onClick={handleLogout} className="btn-logout">
                   <LogoutIcon size={14} color="currentColor" />Гарах
                 </button>
@@ -260,6 +273,11 @@ export default function App() {
           } />
           <Route path="/change-password" element={
             <ChangePassword token={token} currentUser={currentUser} showToast={showToast} />
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute token={token}>
+              <Profile currentUser={currentUser} onUpdateUser={onUpdateUser} showToast={showToast} />
+            </ProtectedRoute>
           } />
         </Routes>
       </main>

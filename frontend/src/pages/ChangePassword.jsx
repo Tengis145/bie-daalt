@@ -3,10 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldIcon } from '../components/Icons';
 
-export default function ChangePassword({ token }) {
+export default function ChangePassword({ token, currentUser, showToast }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
+    email: currentUser?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -36,7 +36,8 @@ export default function ChangePassword({ token }) {
         newPassword: formData.newPassword,
       });
       setSuccess('Нууц үг амжилттай солигдлоо!');
-      setFormData({ email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
+      showToast?.('Нууц үг амжилттай солигдлоо');
+      setFormData({ email: currentUser?.email || '', currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => navigate(token ? '/' : '/login'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Нууц үг солиход алдаа гарлаа');

@@ -3,11 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-function calcScore(exam1, exam2) {
-  return Math.round((Number(exam1) + Number(exam2)) / 2);
+function clamp(val, min, max) {
+  const n = Number(val);
+  return isNaN(n) ? min : Math.min(max, Math.max(min, n));
+}
+function calcScore(g) {
+  return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
 }
 
-export default function StudentDetail({ onUpdate, onDelete }) {
+export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
@@ -39,21 +43,21 @@ export default function StudentDetail({ onUpdate, onDelete }) {
 
   const handleEditStart = () => {
     setEditGrades(student.grades.map(g => ({
-      subject: g.subject,
-      exam1: g.exam1 ?? g.score,
-      exam2: g.exam2 ?? g.score,
-      score: g.score,
+      subject:     g.subject,
+      exam1:       g.exam1       ?? 0,
+      exam2:       g.exam2       ?? 0,
+      attendance:  g.attendance  ?? 0,
+      independent: g.independent ?? 0,
+      score:       g.score       ?? 0,
     })));
     setEditing(true);
   };
 
-  const handleExamChange = (idx, field, value) => {
+  const handleFieldChange = (idx, field, value) => {
+    const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
     const updated = [...editGrades];
-    let val = Number(value);
-    if (val > 100) val = 100;
-    if (val < 0) val = 0;
-    updated[idx] = { ...updated[idx], [field]: val };
-    updated[idx].score = calcScore(updated[idx].exam1, updated[idx].exam2);
+    updated[idx] = { ...updated[idx], [field]: clamp(value, 0, maxMap[field]) };
+    updated[idx].score = calcScore(updated[idx]);
     setEditGrades(updated);
   };
 
@@ -63,8 +67,9 @@ export default function StudentDetail({ onUpdate, onDelete }) {
       const updated = await onUpdate(id, { grades: editGrades });
       setStudent(updated);
       setEditing(false);
-    } catch (err) {
-      alert('Хадгалахад алдаа гарлаа');
+      showToast('Дүн амжилттай хадгалагдлаа');
+    } catch {
+      showToast('Хадгалахад алдаа гарлаа', 'error');
     } finally {
       setSaving(false);
     }
@@ -76,9 +81,17 @@ export default function StudentDetail({ onUpdate, onDelete }) {
   const initials = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const grades = editing ? editGrades : student.grades;
 
+  // Totals for summary cards
+  const totals = student.grades.length > 0 ? {
+    exam1:       (student.grades.reduce((s, g) => s + (g.exam1 ?? 0), 0) / student.grades.length).toFixed(1),
+    exam2:       (student.grades.reduce((s, g) => s + (g.exam2 ?? 0), 0) / student.grades.length).toFixed(1),
+    attendance:  (student.grades.reduce((s, g) => s + (g.attendance ?? 0), 0) / student.grades.length).toFixed(1),
+    independent: (student.grades.reduce((s, g) => s + (g.independent ?? 0), 0) / student.grades.length).toFixed(1),
+  } : null;
+
   return (
     <div className="detail-container">
-      {/* Hero card */}
+      {/* Hero */}
       <div className="detail-hero">
         <div className="hero-left">
           <div className="hero-avatar">{initials}</div>
@@ -87,35 +100,49 @@ export default function StudentDetail({ onUpdate, onDelete }) {
             <span className="hero-class">Анги: {student.className}</span>
           </div>
         </div>
-        <div className="hero-score">
-          <div className="hero-score-label">Дундаж дүн</div>
-          <div className="hero-score-value">{student.average}</div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div className="hero-score">
+            <div className="hero-score-label">Дундаж нийт</div>
+            <div className="hero-score-value">{student.average}</div>
+          </div>
+          {totals && (
+            <div className="hero-breakdown">
+              <div className="hero-breakdown-row">
+                <span>Шалгалт 1</span><strong>{totals.exam1}<em>/30</em></strong>
+              </div>
+              <div className="hero-breakdown-row">
+                <span>Шалгалт 2</span><strong>{totals.exam2}<em>/30</em></strong>
+              </div>
+              <div className="hero-breakdown-row">
+                <span>Ирц</span><strong>{totals.attendance}<em>/20</em></strong>
+              </div>
+              <div className="hero-breakdown-row">
+                <span>Бие даалт</span><strong>{totals.independent}<em>/20</em></strong>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div className="detail-content">
         <div className="chart-box">
-          <h3>Хичээл тус бүрийн дүн</h3>
+          <h3>Хичээл тус бүрийн нийт дүн</h3>
           <ResponsiveContainer width="100%" height="90%">
             <BarChart
               data={student.grades}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+              margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-              <YAxis
-                dataKey="subject"
-                type="category"
-                width={90}
-                tick={{ fontSize: 12, fill: '#374151' }}
-              />
+              <YAxis dataKey="subject" type="category" width={75} tick={{ fontSize: 11, fill: '#374151' }} />
               <Tooltip
                 contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }}
                 cursor={{ fill: 'transparent' }}
+                formatter={(val) => [val, 'Нийт дүн']}
               />
-              <Bar dataKey="score" name="Оноо" radius={[0, 5, 5, 0]}>
+              <Bar dataKey="score" name="Нийт дүн" radius={[0, 5, 5, 0]}>
                 {student.grades.map((entry, i) => (
                   <Cell key={i} fill={getScoreColor(entry.score)} />
                 ))}
@@ -125,8 +152,8 @@ export default function StudentDetail({ onUpdate, onDelete }) {
         </div>
 
         <div className="grades-list">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ margin: 0 }}>Хичээлүүд</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ margin: 0 }}>Дүнгийн дэлгэрэнгүй</h3>
             {!editing ? (
               <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem' }} onClick={handleEditStart}>
                 Засах
@@ -143,71 +170,59 @@ export default function StudentDetail({ onUpdate, onDelete }) {
             )}
           </div>
 
-          <table className="grades-table">
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', fontSize: '0.78rem', color: '#64748b', fontWeight: 600, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>Хичээл</th>
-                <th style={{ textAlign: 'center', fontSize: '0.78rem', color: '#64748b', fontWeight: 600, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>Ш1</th>
-                <th style={{ textAlign: 'center', fontSize: '0.78rem', color: '#64748b', fontWeight: 600, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>Ш2</th>
-                <th style={{ textAlign: 'center', fontSize: '0.78rem', color: '#64748b', fontWeight: 600, paddingBottom: 8, borderBottom: '1px solid #e2e8f0' }}>Дүн</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grades.map((g, i) => (
-                <tr key={i}>
-                  <td className="subject-name">{g.subject}</td>
-                  {editing ? (
-                    <>
-                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>
-                        <input
-                          className="exam-input"
-                          type="number" min="0" max="100"
-                          value={g.exam1}
-                          onChange={(e) => handleExamChange(i, 'exam1', e.target.value)}
-                        />
-                      </td>
-                      <td style={{ textAlign: 'center', padding: '6px 4px' }}>
-                        <input
-                          className="exam-input"
-                          type="number" min="0" max="100"
-                          value={g.exam2}
-                          onChange={(e) => handleExamChange(i, 'exam2', e.target.value)}
-                        />
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>{g.exam1 ?? '-'}</td>
-                      <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>{g.exam2 ?? '-'}</td>
-                    </>
-                  )}
-                  <td style={{ textAlign: 'center' }}>
-                    <span
-                      className="score-pill"
-                      style={{
-                        float: 'none',
-                        display: 'inline-block',
+          <div style={{ overflowX: 'auto' }}>
+            <table className="grades-table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Хичээл</th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ш1<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ш2<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ирц<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>БД<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Нийт</th>
+                </tr>
+              </thead>
+              <tbody>
+                {grades.map((g, i) => (
+                  <tr key={i}>
+                    <td className="subject-name" style={{ fontSize: '0.82rem' }}>{g.subject}</td>
+                    {editing ? (
+                      ['exam1','exam2','attendance','independent'].map(field => (
+                        <td key={field} style={{ padding: '5px 4px', textAlign: 'center' }}>
+                          <input
+                            className="exam-input"
+                            type="number" min="0"
+                            max={field === 'attendance' || field === 'independent' ? 20 : 30}
+                            value={g[field]}
+                            onChange={e => handleFieldChange(i, field, e.target.value)}
+                          />
+                        </td>
+                      ))
+                    ) : (
+                      ['exam1','exam2','attendance','independent'].map(field => (
+                        <td key={field} style={{ textAlign: 'center', fontSize: '0.82rem', color: '#64748b', padding: '8px 4px' }}>
+                          {(g[field] == null || g[field] === 0) ? <span style={{ color: '#cbd5e1' }}>—</span> : g[field]}
+                        </td>
+                      ))
+                    )}
+                    <td style={{ textAlign: 'center', padding: '8px 0' }}>
+                      <span className="score-pill" style={{
+                        float: 'none', display: 'inline-block',
                         color: g.score >= 90 ? '#065f46' : g.score >= 75 ? '#1e40af' : '#92400e',
                         backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
-                      }}
-                    >
-                      {g.score}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      }}>{g.score}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div className="detail-actions">
-        <button onClick={() => navigate('/')} className="btn btn-secondary">
-          ← Буцах
-        </button>
-        <button onClick={handleDelete} className="btn btn-danger">
-          Устгах
-        </button>
+        <button onClick={() => navigate('/')} className="btn btn-secondary">← Буцах</button>
+        <button onClick={handleDelete} className="btn btn-danger">Устгах</button>
       </div>
     </div>
   );

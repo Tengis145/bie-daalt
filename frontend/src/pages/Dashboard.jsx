@@ -1,8 +1,114 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { UsersIcon, ChartIcon, TrophyIcon, ClassIcon } from '../components/Icons';
 
-export default function Dashboard({ students, classes, loading, onFilter, onDelete }) {
+function clamp(val, min, max) {
+  const n = Number(val);
+  return isNaN(n) ? min : Math.min(max, Math.max(min, n));
+}
+function calcScore(g) {
+  return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
+}
+
+// ── Inline Edit Modal ────────────────────────────────────────
+function EditModal({ student, onSave, onClose }) {
+  const [grades, setGrades] = useState(
+    student.grades.map(g => ({
+      subject:     g.subject,
+      exam1:       g.exam1       ?? 0,
+      exam2:       g.exam2       ?? 0,
+      attendance:  g.attendance  ?? 0,
+      independent: g.independent ?? 0,
+      score:       g.score       ?? 0,
+    }))
+  );
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (idx, field, value) => {
+    const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
+    const updated = [...grades];
+    updated[idx] = { ...updated[idx], [field]: clamp(value, 0, maxMap[field]) };
+    updated[idx].score = calcScore(updated[idx]);
+    setGrades(updated);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(grades);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h2 className="modal-title">{student.name}</h2>
+            <span className="badge">{student.className}</span>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="modal-body">
+          <table className="exam-table">
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>Хичээл</th>
+                <th>Ш1 <span className="th-max">/30</span></th>
+                <th>Ш2 <span className="th-max">/30</span></th>
+                <th>Ирц <span className="th-max">/20</span></th>
+                <th>БД <span className="th-max">/20</span></th>
+                <th>Нийт</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grades.map((g, i) => (
+                <tr key={i}>
+                  <td className="subject-name">{g.subject}</td>
+                  {['exam1','exam2','attendance','independent'].map(field => (
+                    <td key={field}>
+                      <input
+                        className="exam-input"
+                        type="number"
+                        min="0"
+                        max={field === 'attendance' || field === 'independent' ? 20 : 30}
+                        value={g[field]}
+                        onChange={e => handleChange(i, field, e.target.value)}
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <span className="score-pill" style={{
+                      float: 'none', display: 'inline-block',
+                      color: g.score >= 90 ? '#065f46' : g.score >= 75 ? '#1e40af' : '#92400e',
+                      backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
+                    }}>{g.score}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onClose}>Болих</button>
+          <button className="btn btn-success" onClick={handleSave} disabled={saving}>
+            {saving ? 'Хадгалж байна...' : 'Хадгалах'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ────────────────────────────────────────────────
+export default function Dashboard({ students, classes, loading, onFilter, onDelete, onUpdate, showToast }) {
+  const [editingStudent, setEditingStudent] = useState(null);
+
   const totalStudents = students.length;
   const avgScore = totalStudents
     ? (students.reduce((sum, s) => sum + (parseFloat(s.average) || 0), 0) / totalStudents).toFixed(1)
@@ -13,12 +119,45 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
   const classCount = classes.length;
 
   const chartData = students
-    .map(s => ({ name: s.name, average: parseFloat(s.average) || 0 }))
+    .map(s => ({ name: s.name.split(' ')[0], average: parseFloat(s.average) || 0 }))
     .sort((a, b) => b.average - a.average)
     .slice(0, 15);
 
   const getGradeClass = (avg) =>
     avg >= 90 ? 'grade-excellent' : avg >= 75 ? 'grade-good' : 'grade-average';
+
+  const handleDelete = (student) => {
+    if (window.confirm(`"${student.name}"-г устгах уу?`)) {
+      onDelete(student._id);
+      showToast(`${student.name} устгагдлаа`, 'info');
+    }
+  };
+
+  const handleSaveEdit = async (grades) => {
+    try {
+      await onUpdate(editingStudent._id, { grades });
+      showToast('Дүн амжилттай хадгалагдлаа');
+      setEditingStudent(null);
+    } catch {
+      showToast('Хадгалахад алдаа гарлаа', 'error');
+    }
+  };
+
+  // Per-student averages for each component
+  const getComponentAvgs = (student) => {
+    const g = student.grades;
+    if (!g || g.length === 0) return null;
+    const avg = (key, max) => {
+      const a = (g.reduce((s, x) => s + (x[key] ?? 0), 0) / g.length).toFixed(1);
+      return { val: a, max };
+    };
+    return {
+      exam1:       avg('exam1', 30),
+      exam2:       avg('exam2', 30),
+      attendance:  avg('attendance', 20),
+      independent: avg('independent', 20),
+    };
+  };
 
   if (loading) {
     return (
@@ -74,11 +213,7 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
       <div className="controls">
         <div className="filter-group">
           <span className="filter-label">Анги сонгох:</span>
-          <select
-            className="filter-select"
-            onChange={(e) => onFilter(e.target.value)}
-            defaultValue=""
-          >
+          <select className="filter-select" onChange={(e) => onFilter(e.target.value)} defaultValue="">
             <option value="">Бүх анги</option>
             {classes.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -120,43 +255,72 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
         </div>
       ) : (
         <div className="student-grid">
-          {students.map(student => (
-            <div key={student._id} className="student-card">
-              <div className="card-top-bar" />
-              <div className="card-header">
-                <div>
-                  <h3 className="card-name">{student.name}</h3>
-                  <div className="card-class">{student.grades?.length || 0} хичээл</div>
+          {students.map(student => {
+            const avgs = getComponentAvgs(student);
+            return (
+              <div key={student._id} className="student-card">
+                <div className="card-top-bar" />
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-name">{student.name}</h3>
+                    <div className="card-class">{student.grades?.length || 0} хичээл</div>
+                  </div>
+                  <span className="badge">{student.className}</span>
                 </div>
-                <span className="badge">{student.className}</span>
-              </div>
-              <div className="card-body">
-                <div className="score-row">
-                  <span className="score-label">Дундаж дүн</span>
-                  <span className={`score-val ${getGradeClass(student.average)}`}>
-                    {student.average}
+                <div className="card-body">
+                  <div className="score-row">
+                    <span className="score-label">Дундаж дүн</span>
+                    <span className={`score-val ${getGradeClass(parseFloat(student.average))}`}>
+                      {student.average}
+                    </span>
+                  </div>
+                  {avgs && (
+                    <div className="score-breakdown">
+                      <span className="breakdown-item">
+                        <span className="breakdown-label">Ш1</span>
+                        <span className="breakdown-val">{avgs.exam1.val}<em>/{avgs.exam1.max}</em></span>
+                      </span>
+                      <span className="breakdown-item">
+                        <span className="breakdown-label">Ш2</span>
+                        <span className="breakdown-val">{avgs.exam2.val}<em>/{avgs.exam2.max}</em></span>
+                      </span>
+                      <span className="breakdown-item">
+                        <span className="breakdown-label">Ирц</span>
+                        <span className="breakdown-val">{avgs.attendance.val}<em>/{avgs.attendance.max}</em></span>
+                      </span>
+                      <span className="breakdown-item">
+                        <span className="breakdown-label">БД</span>
+                        <span className="breakdown-val">{avgs.independent.val}<em>/{avgs.independent.max}</em></span>
+                      </span>
+                    </div>
+                  )}
+                  <span className="subject-count">
+                    {parseFloat(student.average) >= 90 ? 'Тэрлэлт' : parseFloat(student.average) >= 75 ? 'Сайн' : 'Дунд'}
                   </span>
                 </div>
-                <span className="subject-count">
-                  {student.average >= 90 ? 'Тэрлэлт' : student.average >= 75 ? 'Сайн' : 'Дунд'}
-                </span>
+                <div className="card-actions" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                  <Link to={`/student/${student._id}`} className="btn btn-primary">
+                    Дэлгэрэнгүй
+                  </Link>
+                  <button className="btn btn-secondary" onClick={() => setEditingStudent(student)}>
+                    Засах
+                  </button>
+                  <button className="btn btn-danger" onClick={() => handleDelete(student)}>
+                    Устгах
+                  </button>
+                </div>
               </div>
-              <div className="card-actions">
-                <Link to={`/student/${student._id}`} className="btn btn-primary">
-                  Дэлгэрэнгүй
-                </Link>
-                <button
-                  onClick={() => {
-                    if (window.confirm(`"${student.name}"-г устгах уу?`)) onDelete(student._id);
-                  }}
-                  className="btn btn-danger"
-                >
-                  Устгах
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+      )}
+
+      {editingStudent && (
+        <EditModal
+          student={editingStudent}
+          onSave={handleSaveEdit}
+          onClose={() => setEditingStudent(null)}
+        />
       )}
     </div>
   );

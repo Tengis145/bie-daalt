@@ -166,25 +166,27 @@ function SubjectDetail({ stat }) {
         {/* Stacked bar chart */}
         <div className="subject-chart-box">
           <h3>Сурагч бүрийн оноо (бүрэлдэхүүнээр)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 30 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 11, fill: '#64748b' }}
-                angle={-35}
-                textAnchor="end"
-                interval={0}
-              />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-              <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" />
-              <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
-              <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />
-              <Bar dataKey="independent" name="Бие даалт"  stackId="a" fill="#10b981" radius={[4,4,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  angle={-35}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" />
+                <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
+                <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />
+                <Bar dataKey="independent" name="Бие даалт"  stackId="a" fill="#10b981" radius={[4,4,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Student ranking table */}

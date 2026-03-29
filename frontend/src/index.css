@@ -1176,11 +1176,13 @@ body {
 .subject-chart-box {
   padding: 22px 24px;
   border-right: 1px solid var(--border);
+  min-width: 0;
 }
 .subject-chart-box h3 { margin: 0 0 16px; font-size: 0.95rem; font-weight: 700; color: var(--text); }
 
 .subject-rank-box {
   padding: 22px 20px;
+  min-width: 0;
 }
 .subject-rank-box h3 { margin: 0 0 14px; font-size: 0.95rem; font-weight: 700; color: var(--text); }
 

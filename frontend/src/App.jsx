@@ -1,17 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } from './components/Icons';
 import { getImageUrl } from './utils/imageUrl';
 import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
-import StudentDetail from './pages/StudentDetail';
-import AddStudent from './pages/AddStudent';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
-import SubjectDashboard from './pages/SubjectDashboard';
-import Profile from './pages/Profile';
+
+const StudentDetail    = lazy(() => import('./pages/StudentDetail'));
+const AddStudent       = lazy(() => import('./pages/AddStudent'));
+const SubjectDashboard = lazy(() => import('./pages/SubjectDashboard'));
+const Profile          = lazy(() => import('./pages/Profile'));
 
 const API = '/api/students';
 
@@ -45,17 +46,36 @@ export default function App() {
   useEffect(() => { setAuthHeader(token); }, [token]);
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
-  // Global 401 interceptor — auto logout on expired token
+  // Global 401 interceptor — auto-refresh access token, logout if refresh fails
   useEffect(() => {
     const id = axios.interceptors.response.use(
       res => res,
-      err => {
-        if (err.response?.status === 401 && token) handleLogout();
+      async err => {
+        const original = err.config;
+        if (err.response?.status === 401 && !original._retry) {
+          original._retry = true;
+          const storedRefresh = localStorage.getItem('ebs_refresh');
+          if (storedRefresh) {
+            try {
+              const { data } = await axios.post('/api/auth/refresh', { refreshToken: storedRefresh });
+              setToken(data.token);
+              localStorage.setItem('ebs_token', data.token);
+              localStorage.setItem('ebs_refresh', data.refreshToken);
+              setAuthHeader(data.token);
+              original.headers['Authorization'] = `Bearer ${data.token}`;
+              return axios(original);
+            } catch {
+              handleLogout();
+            }
+          } else {
+            handleLogout();
+          }
+        }
         return Promise.reject(err);
       }
     );
     return () => axios.interceptors.response.eject(id);
-  }, [token]);
+  }, [handleLogout]);
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now();
@@ -66,23 +86,26 @@ export default function App() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const handleLogin = (newToken, user) => {
+  const handleLogin = (newToken, user, newRefreshToken) => {
     setToken(newToken);
     setCurrentUser(user);
     localStorage.setItem('ebs_token', newToken);
     localStorage.setItem('ebs_user', JSON.stringify(user));
+    if (newRefreshToken) localStorage.setItem('ebs_refresh', newRefreshToken);
     setAuthHeader(newToken);
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
+    axios.post('/api/auth/logout').catch(() => {});
     setToken('');
     setCurrentUser(null);
     setStudents([]);
     setClasses([]);
     localStorage.removeItem('ebs_token');
     localStorage.removeItem('ebs_user');
+    localStorage.removeItem('ebs_refresh');
     setAuthHeader(null);
-  };
+  }, []);
 
   const onUpdateUser = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -252,47 +275,49 @@ export default function App() {
       )}
 
       <main className={token ? 'main' : ''}>
-        <Routes>
-          <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
-          <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
-          <Route path="/" element={
-            <ProtectedRoute token={token}>
-              <Dashboard
-                students={students}
-                pagination={pagination}
-                classes={classes}
-                loading={loading}
-                onFilter={fetchStudents}
-                onDelete={deleteStudent}
-                onUpdate={updateStudent}
-                showToast={showToast}
-              />
-            </ProtectedRoute>
-          } />
-          <Route path="/subjects" element={
-            <ProtectedRoute token={token}>
-              <SubjectDashboard students={students} classes={classes} loading={loading} />
-            </ProtectedRoute>
-          } />
-          <Route path="/add" element={
-            <ProtectedRoute token={token}>
-              <AddStudent onAdd={addStudent} classes={classes} showToast={showToast} />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/:id" element={
-            <ProtectedRoute token={token}>
-              <StudentDetail onUpdate={updateStudent} onDelete={deleteStudent} showToast={showToast} />
-            </ProtectedRoute>
-          } />
-          <Route path="/change-password" element={
-            <ChangePassword token={token} currentUser={currentUser} showToast={showToast} />
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute token={token}>
-              <Profile currentUser={currentUser} onUpdateUser={onUpdateUser} showToast={showToast} />
-            </ProtectedRoute>
-          } />
-        </Routes>
+        <Suspense fallback={<div className="page-loading">Уншиж байна...</div>}>
+          <Routes>
+            <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+            <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
+            <Route path="/" element={
+              <ProtectedRoute token={token}>
+                <Dashboard
+                  students={students}
+                  pagination={pagination}
+                  classes={classes}
+                  loading={loading}
+                  onFilter={fetchStudents}
+                  onDelete={deleteStudent}
+                  onUpdate={updateStudent}
+                  showToast={showToast}
+                />
+              </ProtectedRoute>
+            } />
+            <Route path="/subjects" element={
+              <ProtectedRoute token={token}>
+                <SubjectDashboard students={students} classes={classes} loading={loading} />
+              </ProtectedRoute>
+            } />
+            <Route path="/add" element={
+              <ProtectedRoute token={token}>
+                <AddStudent onAdd={addStudent} classes={classes} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/:id" element={
+              <ProtectedRoute token={token}>
+                <StudentDetail onUpdate={updateStudent} onDelete={deleteStudent} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/change-password" element={
+              <ChangePassword token={token} currentUser={currentUser} showToast={showToast} />
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute token={token}>
+                <Profile currentUser={currentUser} onUpdateUser={onUpdateUser} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </Suspense>
       </main>
 
       {token && (

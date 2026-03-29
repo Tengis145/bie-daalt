@@ -1230,6 +1230,16 @@ body {
   letter-spacing: 0.02em;
 }
 
+/* ─── Lazy load fallback ─────────────────────────────────────── */
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.95rem;
+}
+
 /* ─── Pagination ─────────────────────────────────────────────── */
 .pagination {
   display: flex;

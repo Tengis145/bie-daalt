@@ -18,7 +18,7 @@ const storage = new CloudinaryStorage({
   params: async (_req, _file) => ({
     folder: 'bie-daalt',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 400, height: 400, crop: 'limit' }],
+    transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' }],
   }),
 });
 

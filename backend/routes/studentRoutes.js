@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const validator = require('validator');
 const Student = require('../models/Student');
 const authMiddleware = require('../middleware/auth');
 const cloudinary = require('cloudinary').v2;
+
+// HTML тэг болон аюултай тэмдэгтийг цэвэрлэнэ
+function sanitize(str) {
+  if (typeof str !== 'string') return '';
+  return validator.stripLow(validator.trim(str)).replace(/<[^>]*>/g, '');
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -121,9 +128,11 @@ router.get('/:id', async (req, res) => {
 // ── Шинэ сурагч нэмэх ───────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { name, className, grades, academicYear, semester, photo } = req.body;
-    if (!name || !name.trim())           return res.status(400).json({ message: 'Нэр шаардлагатай' });
-    if (!className || !className.trim()) return res.status(400).json({ message: 'Анги шаардлагатай' });
+    const { grades, academicYear, semester, photo } = req.body;
+    const name      = sanitize(req.body.name);
+    const className = sanitize(req.body.className);
+    if (!name)      return res.status(400).json({ message: 'Нэр шаардлагатай' });
+    if (!className) return res.status(400).json({ message: 'Анги шаардлагатай' });
     const sem = Number(semester);
     if (semester !== undefined && ![1, 2].includes(sem)) return res.status(400).json({ message: 'Улирал 1 эсвэл 2 байх ёстой' });
 
@@ -160,10 +169,10 @@ router.put('/:id', async (req, res) => {
       return res.status(403).json({ message: 'Хандах эрхгүй' });
     }
 
-    const { grades, name, className, academicYear, semester, photo } = req.body;
+    const { grades, academicYear, semester, photo } = req.body;
     const updateData = {};
-    if (name         !== undefined) updateData.name         = name.trim();
-    if (className    !== undefined) updateData.className    = className.trim();
+    if (req.body.name      !== undefined) updateData.name      = sanitize(req.body.name);
+    if (req.body.className !== undefined) updateData.className = sanitize(req.body.className);
     if (academicYear !== undefined) updateData.academicYear = academicYear;
     if (semester     !== undefined) updateData.semester     = semester;
     if (photo !== undefined) {

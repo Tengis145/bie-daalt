@@ -33,7 +33,7 @@ export default function Register({ onLogin }) {
         email: formData.email,
         password: formData.password,
       });
-      onLogin(res.data.token, res.data.user);
+      onLogin(res.data.token, res.data.user, res.data.refreshToken);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Бүртгэлд алдаа гарлаа');

@@ -12,8 +12,9 @@ const userSchema = new mongoose.Schema({
     match: [/^\S+@\S+\.\S+$/, 'Имэйл хаяг буруу байна'],
   },
   password: { type: String, required: true, minlength: 6 },
-  role: { type: String, enum: ['admin', 'teacher'], default: 'teacher' },
+  role:         { type: String, enum: ['admin', 'teacher'], default: 'teacher' },
   profileImage: { type: String, default: '' },
+  refreshToken: { type: String, default: '' },
 }, { timestamps: true });
 
 // Нууц үгийг хадгалахын өмнө шийфэрлэх

@@ -19,7 +19,7 @@ export default function Login({ onLogin }) {
     setLoading(true);
     try {
       const res = await axios.post('/api/auth/login', formData);
-      onLogin(res.data.token, res.data.user);
+      onLogin(res.data.token, res.data.user, res.data.refreshToken);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Нэвтрэхэд алдаа гарлаа');

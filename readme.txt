@@ -10,13 +10,13 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 1. ТЕХНОЛОГИЙН СТЕК (TECH STACK)
 ----------------------------------------------------------------
 
-  Frontend  — React 18, Vite, React Router v7, Axios, Recharts,
-              SheetJS (xlsx)
+  Frontend  — React 18 + Vite, React Router v7, Axios, Recharts,
+              SheetJS (xlsx), React.lazy + Suspense (lazy loading)
   Backend   — Node.js, Express 5
   Database  — MongoDB Atlas (Mongoose ODM)
-  Auth      — JWT (jsonwebtoken) + bcryptjs
-  Upload    — Multer + Cloudinary (үүлэн зураг хадгалалт)
-  Security  — express-rate-limit (brute force хамгаалалт)
+  Auth      — JWT access (15min) + Refresh token (30 хоног), bcryptjs
+  Upload    — Multer + Cloudinary (200×200, quality auto, face crop)
+  Security  — express-rate-limit, validator.js (input sanitization)
   Deploy    — Vercel (frontend) + Render (backend)
 
 ----------------------------------------------------------------
@@ -143,18 +143,34 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     /change-password → 15 минутэд 5 оролдлого хязгаар
     Хязгаараас хэтэрвэл 429 Too Many Requests буцаана
 
-  POST /api/auth/register  — Шинэ хэрэглэгч бүртгэх
-  POST /api/auth/login     — Нэвтрэх, JWT токен буцаана
-  POST /api/auth/change-password — Нууц үг солих (токен шаардлагагүй)
-  PATCH /api/auth/profile  — Профайл зураг шинэчлэх (токен шаардлагатай)
+  Input sanitization (validator.js):
+    sanitizeText(str): HTML тэг, тусгай тэмдэгт цэвэрлэнэ
+    → validator.stripLow + validator.trim + /<[^>]*>/g regex
+    → XSS халдлагаас хамгаалах зорилгоор бүх text input шалгана
 
-  Нэвтрэх жишээ:
-    Хүсэлт:  { email, password }
-    Хариу:   { token, user: { id, username, email, role, profileImage } }
+  Refresh Token систем:
+    generateAccessToken()  → expiresIn: '15m'  (богино хугацаа)
+    generateRefreshToken() → expiresIn: '30d'  (урт хугацаа)
+    Refresh token DB-д (User.refreshToken) хадгалагдана
+    POST /api/auth/refresh → шинэ access + refresh token буцаана
+                             (token rotation — хуучин refresh хүчингүй болно)
+    POST /api/auth/logout  → DB-ийн refreshToken-г '' болгоно (session цуцлана)
+    Нууц үг солих → refreshToken цэвэрлэгдэнэ (бүх session хаагдана)
+
+  POST /api/auth/register       — Шинэ хэрэглэгч бүртгэх
+  POST /api/auth/login          — Нэвтрэх, token + refreshToken буцаана
+  POST /api/auth/refresh        — Шинэ access token авах (refresh ашиглан)
+  POST /api/auth/logout         — Гарах, DB-ийн token устгана [JWT]
+  POST /api/auth/change-password — Нууц үг солих [rate: 5/15m]
+  PATCH /api/auth/profile        — Профайл зураг шинэчлэх [JWT]
+  GET   /api/auth/me             — Одоогийн хэрэглэгч [JWT]
+
+  Нэвтрэх хариу формат:
+    { token, refreshToken, user: { id, username, email, role, profileImage } }
 
   JWT payload:
     { id: user._id, username, email, role }
-    // Токен 7 хоногийн хугацаатай (expiresIn: '7d')
+    // Access token 15 минут, refresh token 30 хоногийн хугацаатай
 
 --- routes/studentRoutes.js ---
 
@@ -207,8 +223,12 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
     folder: 'bie-daalt'          → Cloudinary дахь хавтас
     allowed_formats: [...]        → зөвшөөрөгдсөн форматууд
-    transformation: [{width:400, height:400, crop:'limit'}]
-    // Upload хийхэд зургийг автоматаар max 400x400-д resize хийнэ
+    transformation: [{
+      width:200, height:200, crop:'fill', gravity:'face',
+      quality:'auto', fetch_format:'auto'
+    }]
+    // Upload хийхэд нүүрийг голлуулж 200×200 thumbnail үүсгэнэ
+    // quality:'auto' + fetch_format:'auto' → CDN WebP/AVIF болгоно
 
   fileFilter: mimetype шалгана (.jpg/.jpeg/.png/.gif/.webp)
   limits: 5MB хязгаар
@@ -240,6 +260,19 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     pagination  — { total, page, pages } — хуудаслалтын мэдээлэл
     toasts      — Notification-ууд
 
+  localStorage түлхүүрүүд:
+    ebs_token   — Access token (15 минут)
+    ebs_refresh — Refresh token (30 хоног)
+    ebs_user    — Хэрэглэгчийн мэдээлэл JSON
+
+  handleLogin(token, user, refreshToken):
+    Гурван утгыг localStorage + state-д хадгална
+    Login.jsx болон Register.jsx хоёулаа refreshToken дамжуулна
+
+  handleLogout():
+    POST /api/auth/logout → DB-ийн refreshToken устгана
+    localStorage-аас 3 түлхүүр бүгдийг устгана
+
   fetchStudents(params):
     URLSearchParams ашиглан query string бүрдүүлнэ
     { search, className, academicYear, semester, page }
@@ -249,8 +282,19 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     Profile зураг шинэчлэх үед Profile.jsx дуудна
     state + localStorage хоёуланг нь шинэчилнэ
 
-  Global 401 interceptor:
-    Хэрэв ямар нэг хүсэлт 401 буцаавал → автоматаар logout хийнэ
+  Global 401 interceptor (Refresh token auto-retry):
+    1. Хүсэлт 401 буцаана → localStorage-аас ebs_refresh авна
+    2. POST /api/auth/refresh → шинэ access + refresh token авна
+    3. localStorage шинэчлэгдэнэ, анхны хүсэлтийг retry хийнэ
+    4. Refresh дуусвал / алдаа гарвал → logout
+    // _retry flag: давтан retry-аас сэргийлнэ
+
+  Lazy Loading (React.lazy + Suspense):
+    StudentDetail, AddStudent, SubjectDashboard, Profile →
+      lazy(() => import('./pages/...'))
+    <Suspense fallback={<div className="page-loading">Уншиж байна...</div>}>
+    Dashboard, Login, Register → eager load (анхны хуудас)
+    // Bundle splitting: хэрэглэгч анхны хуудсыг хурдан ачаална
 
 --- pages/Dashboard.jsx ---
 
@@ -384,10 +428,16 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 6. АЮУЛГҮЙ БАЙДАЛ (SECURITY)
 ----------------------------------------------------------------
 
-  JWT Token:
-    - 7 хоногийн хугацаатай
-    - Authorization: Bearer <token> header-ээр дамжина
-    - Хугацаа дуусвал 401 → frontend автоматаар logout хийнэ
+  JWT Token (Refresh Token систем):
+    - Access token: 15 минут (богино хугацаа → алдагдсан ч аюул бага)
+    - Refresh token: 30 хоног → DB-д хадгалагдана
+    - Authorization: Bearer <access_token> header-ээр дамжина
+    - Access token дуусвал:
+        axios 401 interceptor → POST /api/auth/refresh автоматаар
+        → Шинэ access+refresh token авна → анхны хүсэлтийг дахин явуулна
+        → Refresh ч дуусвал / хүчингүй бол → logout
+    - Token rotation: refresh ашиглах бүрт шинэ refresh token буцаана
+      (хуучин нь хүчингүй болно — stolen token reuse хамгаалалт)
 
   Нууц үг:
     - bcrypt salt rounds = 12 (маш хүчтэй шифрлэлт)
@@ -399,6 +449,12 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     - /register       → 1 цагт 5 оролдлого → spam хамгаалалт
     - /change-password → 15 минутэд 5 оролдлого
     - Хязгаараас хэтрэвэл 429 + Монгол мессеж буцаана
+
+  Input sanitization (validator.js):
+    - name, className → sanitize(): HTML тэг + control char цэвэрлэнэ
+    - validator.stripLow() — нуугдсан control character устгана
+    - validator.trim() + /<[^>]*>/g — HTML тэг устгана
+    - XSS-ийг MongoDB-д хадгалагдахаас урьдчилан сэргийлнэ
 
   Input validation:
     - isNaN() шалгалт: "abc" гэх утга → 400 алдаа
@@ -415,7 +471,11 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     - Зөвхөн зураг файл (.jpg/.jpeg/.png/.gif/.webp)
     - 5MB хязгаар
     - Cloudinary автоматаар хадгалах — Render restart-д устахгүй
-    - Upload-д автоматаар 400x400-д resize хийнэ (bandwidth хэмнэнэ)
+    - transformation: 200×200, crop: fill, gravity: face
+      → Нүүрийг голлуулж, дөрвөлжин thumbnail үүсгэнэ
+    - quality: auto, fetch_format: auto
+      → Cloudinary CDN зургийг WebP/AVIF болгон хувиргана
+      → Bandwidth-ийг ≈30-50% хэмнэнэ
     - Сурагч устгах үед Cloudinary-аас зураг автоматаар устана
 
 ----------------------------------------------------------------
@@ -429,7 +489,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
        #   PORT=5000
        #   MONGODB_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/ebs_grades
        #   JWT_SECRET=your_secret_key
-       #   JWT_EXPIRES_IN=7d
+       #   JWT_EXPIRES_IN=15m
+       #   JWT_REFRESH_SECRET=your_refresh_secret_key
        #   CLOUDINARY_CLOUD_NAME=your_cloud_name
        #   CLOUDINARY_API_KEY=your_api_key
        #   CLOUDINARY_API_SECRET=your_api_secret
@@ -461,6 +522,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   AUTH
     POST  /api/auth/register        — Бүртгүүлэх         [rate: 5/hr]
     POST  /api/auth/login           — Нэвтрэх             [rate: 10/15m]
+    POST  /api/auth/refresh         — Access token шинэчлэх (refresh ашиглан)
+    POST  /api/auth/logout          — Гарах, session цуцлах  [JWT]
     POST  /api/auth/change-password — Нууц үг солих       [rate: 5/15m]
     PATCH /api/auth/profile         — Профайл зураг       [JWT]
     GET   /api/auth/me              — Одоогийн хэрэглэгч  [JWT]
@@ -482,6 +545,30 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 ================================================================
   ХИЙГДСЭН САЙЖРУУЛАЛТУУД (CHANGELOG)
 ================================================================
+
+  v3.0 — Аюулгүй байдал + Гүйцэтгэл:
+  ─────────────────────────────────────────────────────────────
+  [7] Refresh Token систем
+      Access token 7 хоног → 15 минут болгосон (алдагдвал аюул бага).
+      Refresh token 30 хоног, DB-д хадгалагдана.
+      Token rotation: ашиглах бүрт шинэ refresh буцаана.
+      axios 401 interceptor → автоматаар refresh хийж retry хийнэ.
+      Logout → DB-ийн refresh token устгана (session invalidation).
+
+  [8] Input Sanitization
+      validator.js нэмж name, className-г XSS халдлагаас хамгаалсан.
+      HTML тэг, control character-ийг цэвэрлэнэ.
+      Аль ч талаас оруулсан мөр аюулгүй болсны дараа хадгалагдана.
+
+  [9] Image Optimization
+      Cloudinary transformation: 200×200, crop:fill, gravity:face.
+      quality:auto + fetch_format:auto → WebP/AVIF автомат хөрвүүлэлт.
+      Bandwidth ≈30-50% хэмнэгдсэн. Нүүрийг голлуулдаг болсон.
+
+  [10] Lazy Loading
+      StudentDetail, AddStudent, SubjectDashboard, Profile хуудсуудыг
+      React.lazy() + Suspense ашиглан зөвхөн хэрэгтэй үед ачаалдаг.
+      Анхны bundle хэмжээ буурч эхний ачаалалт хурдан болсон.
 
   v2.0 — Сүүлийн шинэчлэлт:
   ─────────────────────────────────────────────────────────────

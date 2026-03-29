@@ -156,27 +156,29 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       <div className="detail-content">
         <div className="chart-box">
           <h3>Хичээл тус бүрийн нийт дүн</h3>
-          <ResponsiveContainer width="100%" height="90%">
-            <BarChart
-              data={student.grades}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-              <YAxis dataKey="subject" type="category" width={75} tick={{ fontSize: 11, fill: '#374151' }} />
-              <Tooltip
-                contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }}
-                cursor={{ fill: 'transparent' }}
-                formatter={(val) => [val, 'Нийт дүн']}
-              />
-              <Bar dataKey="score" name="Нийт дүн" radius={[0, 5, 5, 0]}>
-                {student.grades.map((entry, i) => (
-                  <Cell key={i} fill={getScoreColor(entry.score)} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={student.grades}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <YAxis dataKey="subject" type="category" width={75} tick={{ fontSize: 11, fill: '#374151' }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }}
+                  cursor={{ fill: 'transparent' }}
+                  formatter={(val) => [val, 'Нийт дүн']}
+                />
+                <Bar dataKey="score" name="Нийт дүн" radius={[0, 5, 5, 0]}>
+                  {student.grades.map((entry, i) => (
+                    <Cell key={i} fill={getScoreColor(entry.score)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div className="grades-list">

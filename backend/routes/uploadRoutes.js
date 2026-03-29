@@ -39,14 +39,19 @@ const upload = multer({
 });
 
 // POST /api/upload — Зураг Cloudinary руу upload хийх
-router.post('/', authMiddleware, upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'Зураг сонгоогүй байна' });
-  }
-  // multer-storage-cloudinary нь req.file.path дотор Cloudinary URL-г буцаана
-  res.json({
-    message: 'Зураг амжилттай хадгалагдлаа',
-    url: req.file.path,
+router.post('/', authMiddleware, (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Зураг оруулахад алдаа гарлаа' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'Зураг сонгоогүй байна' });
+    }
+    // multer-storage-cloudinary нь req.file.path дотор Cloudinary URL-г буцаана
+    res.json({
+      message: 'Зураг амжилттай хадгалагдлаа',
+      url: req.file.path,
+    });
   });
 });
 

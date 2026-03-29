@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldIcon } from '../components/Icons';
@@ -14,6 +14,8 @@ export default function ChangePassword({ token, currentUser, showToast }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const timerRef = useRef(null);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,7 +40,7 @@ export default function ChangePassword({ token, currentUser, showToast }) {
       setSuccess('Нууц үг амжилттай солигдлоо!');
       showToast?.('Нууц үг амжилттай солигдлоо');
       setFormData({ email: currentUser?.email || '', currentPassword: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => navigate(token ? '/' : '/login'), 1500);
+      timerRef.current = setTimeout(() => navigate(token ? '/' : '/login'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Нууц үг солиход алдаа гарлаа');
     } finally {

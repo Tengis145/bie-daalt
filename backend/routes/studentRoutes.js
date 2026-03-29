@@ -16,10 +16,10 @@ function validateAndCalcGrades(grades) {
     const exam2       = Number(g.exam2       ?? 0);
     const attendance  = Number(g.attendance  ?? 0);
     const independent = Number(g.independent ?? 0);
-    if (exam1 < 0 || exam1 > 30)             return { error: `${g.subject}: Шалгалт 1 оноо 0-30 байх ёстой` };
-    if (exam2 < 0 || exam2 > 30)             return { error: `${g.subject}: Шалгалт 2 оноо 0-30 байх ёстой` };
-    if (attendance < 0 || attendance > 20)   return { error: `${g.subject}: Ирц оноо 0-20 байх ёстой` };
-    if (independent < 0 || independent > 20) return { error: `${g.subject}: Бие даалт оноо 0-20 байх ёстой` };
+    if (isNaN(exam1) || exam1 < 0 || exam1 > 30)             return { error: `${g.subject}: Шалгалт 1 оноо 0-30 байх ёстой` };
+    if (isNaN(exam2) || exam2 < 0 || exam2 > 30)             return { error: `${g.subject}: Шалгалт 2 оноо 0-30 байх ёстой` };
+    if (isNaN(attendance) || attendance < 0 || attendance > 20)   return { error: `${g.subject}: Ирц оноо 0-20 байх ёстой` };
+    if (isNaN(independent) || independent < 0 || independent > 20) return { error: `${g.subject}: Бие даалт оноо 0-20 байх ёстой` };
     g.exam1       = exam1;
     g.exam2       = exam2;
     g.attendance  = attendance;
@@ -95,6 +95,8 @@ router.post('/', async (req, res) => {
     const { name, className, grades, academicYear, semester, photo } = req.body;
     if (!name || !name.trim())           return res.status(400).json({ message: 'Нэр шаардлагатай' });
     if (!className || !className.trim()) return res.status(400).json({ message: 'Анги шаардлагатай' });
+    const sem = Number(semester);
+    if (semester !== undefined && ![1, 2].includes(sem)) return res.status(400).json({ message: 'Улирал 1 эсвэл 2 байх ёстой' });
 
     let validatedGrades = [];
     if (grades && grades.length > 0) {

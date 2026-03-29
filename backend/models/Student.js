@@ -21,7 +21,7 @@ const studentSchema = new mongoose.Schema({
 
 studentSchema.virtual('average').get(function () {
   if (!this.grades || this.grades.length === 0) return 0;
-  const total = this.grades.reduce((sum, g) => sum + g.score, 0);
+  const total = this.grades.reduce((sum, g) => sum + (g.score ?? 0), 0);
   return (total / this.grades.length).toFixed(1);
 });
 

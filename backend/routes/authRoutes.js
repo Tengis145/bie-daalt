@@ -1,8 +1,37 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
+
+// ── Rate limiters ────────────────────────────────────────────
+// Нэвтрэх: 15 минутэд 10 оролдлого (brute force хамгаалалт)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: '15 минутэд 10-аас илүү оролдлого хийж болохгүй. Түр хүлээнэ үү.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Бүртгүүлэх: 1 цагт 5 оролдлого
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { message: '1 цагт 5-аас илүү бүртгэл үүсгэж болохгүй.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Нууц үг солих: 15 минутэд 5 оролдлого
+const passwordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: '15 минутэд 5-аас илүү оролдлого хийж болохгүй.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Токен үүсгэх туслах функц
 const generateToken = (user) => {
@@ -14,7 +43,7 @@ const generateToken = (user) => {
 };
 
 // POST /api/auth/register — Шинэ хэрэглэгч бүртгэх
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
@@ -48,7 +77,7 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login — Нэвтрэх
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -79,7 +108,7 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /api/auth/change-password — Нууц үг солих (имэйлээр, нэвтрэлгүй)
-router.post('/change-password', async (req, res) => {
+router.post('/change-password', passwordLimiter, async (req, res) => {
   try {
     const { email, currentPassword, newPassword } = req.body;
 

@@ -15,11 +15,11 @@ cloudinary.config({
 // Cloudinary storage — зургийг шууд Cloudinary руу хадгална
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'bie-daalt',          // Cloudinary дахь хавтас
+  params: async (_req, _file) => ({
+    folder: 'bie-daalt',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 400, height: 400, crop: 'limit' }], // Max 400x400
-  },
+    transformation: [{ width: 400, height: 400, crop: 'limit' }],
+  }),
 });
 
 // Зөвхөн зураг файл зөвшөөрөх

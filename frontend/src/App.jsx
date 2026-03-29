@@ -88,10 +88,15 @@ export default function App() {
     localStorage.setItem('ebs_user', JSON.stringify(updatedUser));
   };
 
-  const fetchStudents = async (className = '') => {
+  const fetchStudents = async (params = {}) => {
     setLoading(true);
     try {
-      const url = className ? `${API}?className=${encodeURIComponent(className)}` : API;
+      const query = new URLSearchParams();
+      if (params.className)    query.set('className',    params.className);
+      if (params.search)       query.set('search',       params.search);
+      if (params.academicYear) query.set('academicYear', params.academicYear);
+      if (params.semester)     query.set('semester',     params.semester);
+      const url = query.toString() ? `${API}?${query}` : API;
       const res = await axios.get(url);
       setStudents(res.data);
     } catch (e) {

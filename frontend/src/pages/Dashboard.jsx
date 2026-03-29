@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -75,17 +75,21 @@ function EditModal({ student, onSave, onClose }) {
 export default function Dashboard({ students, classes, loading, onFilter, onDelete, onUpdate, showToast }) {
   const [editingStudent, setEditingStudent] = useState(null);
   const [search,         setSearch]         = useState('');
+  const [classFilter,    setClassFilter]    = useState('');
   const [yearFilter,     setYearFilter]     = useState('');
   const [semFilter,      setSemFilter]      = useState('');
+  const debounceRef = useRef(null);
 
-  // Client-side filtering (search + year + semester)
-  const filtered = useMemo(() => {
-    let list = students;
-    if (search)     list = list.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
-    if (yearFilter) list = list.filter(s => s.academicYear === yearFilter);
-    if (semFilter)  list = list.filter(s => String(s.semester) === semFilter);
-    return list;
-  }, [students, search, yearFilter, semFilter]);
+  // Server-side filtering — debounce хайлтыг 400ms хойшлуулна
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onFilter({ search, className: classFilter, academicYear: yearFilter, semester: semFilter });
+    }, 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [search, classFilter, yearFilter, semFilter]);
+
+  const filtered = students;
 
   const totalStudents = filtered.length;
   const avgScore = totalStudents
@@ -212,7 +216,7 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
         {/* Class filter */}
         <div className="filter-group">
           <span className="filter-label">Анги:</span>
-          <select className="filter-select" onChange={e => onFilter(e.target.value)} defaultValue="" style={{ minWidth: 120 }}>
+          <select className="filter-select" value={classFilter} onChange={e => setClassFilter(e.target.value)} style={{ minWidth: 120 }}>
             <option value="">Бүгд</option>
             {classes.map(c => <option key={c} value={c}>{c}</option>)}
           </select>

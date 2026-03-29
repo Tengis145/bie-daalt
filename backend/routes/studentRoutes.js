@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
 const authMiddleware = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary URL-аас public_id гаргах
+function getPublicId(url) {
+  if (!url || !url.includes('cloudinary.com')) return null;
+  const parts = url.split('/upload/');
+  if (parts.length < 2) return null;
+  return parts[1].replace(/^v\d+\//, '').replace(/\.[^/.]+$/, '');
+}
+
+async function deleteCloudinaryImage(url) {
+  const publicId = getPublicId(url);
+  if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {});
+}
 
 router.use(authMiddleware);
 
@@ -64,6 +84,7 @@ router.get('/', async (req, res) => {
     if (req.query.className)    extra.className    = req.query.className;
     if (req.query.academicYear) extra.academicYear = req.query.academicYear;
     if (req.query.semester)     extra.semester     = Number(req.query.semester);
+    if (req.query.search)       extra.name         = { $regex: req.query.search.trim(), $options: 'i' };
 
     const filter = studentFilter(req, extra);
     const students = await Student.find(filter).sort({ createdAt: -1 });
@@ -137,7 +158,10 @@ router.put('/:id', async (req, res) => {
     if (className    !== undefined) updateData.className    = className.trim();
     if (academicYear !== undefined) updateData.academicYear = academicYear;
     if (semester     !== undefined) updateData.semester     = semester;
-    if (photo        !== undefined) updateData.photo        = photo;
+    if (photo !== undefined) {
+      if (photo !== student.photo) await deleteCloudinaryImage(student.photo);
+      updateData.photo = photo;
+    }
 
     if (grades !== undefined) {
       const result = validateAndCalcGrades(grades);
@@ -161,6 +185,7 @@ router.delete('/:id', async (req, res) => {
         student.createdBy.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Хандах эрхгүй' });
     }
+    await deleteCloudinaryImage(student.photo);
     await student.deleteOne();
     res.json({ message: 'Сурагч амжилттай устгагдлаа' });
   } catch (err) {

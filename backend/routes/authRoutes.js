@@ -78,22 +78,22 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/change-password — Нууц үг солих (хамгаалалттай)
-router.post('/change-password', authMiddleware, async (req, res) => {
+// POST /api/auth/change-password — Нууц үг солих (имэйлээр, нэвтрэлгүй)
+router.post('/change-password', async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { email, currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: 'Одоогийн болон шинэ нууц үг шаардлагатай' });
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Имэйл, одоогийн болон шинэ нууц үг шаардлагатай' });
     }
 
     if (newPassword.length < 6) {
       return res.status(400).json({ message: 'Шинэ нууц үг дор хаяж 6 тэмдэгт байх ёстой' });
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'Хэрэглэгч олдсонгүй' });
+      return res.status(404).json({ message: 'Тухайн имэйлтэй хэрэглэгч олдсонгүй' });
     }
 
     const isMatch = await user.comparePassword(currentPassword);

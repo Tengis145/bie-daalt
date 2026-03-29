@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldIcon } from '../components/Icons';
 
 export default function ChangePassword({ token }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    email: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -29,14 +30,14 @@ export default function ChangePassword({ token }) {
 
     setLoading(true);
     try {
-      await axios.post(
-        '/api/auth/change-password',
-        { currentPassword: formData.currentPassword, newPassword: formData.newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post('/api/auth/change-password', {
+        email: formData.email,
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
       setSuccess('Нууц үг амжилттай солигдлоо!');
-      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => navigate('/'), 1500);
+      setFormData({ email: '', currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => navigate(token ? '/' : '/login'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Нууц үг солиход алдаа гарлаа');
     } finally {
@@ -74,12 +75,23 @@ export default function ChangePassword({ token }) {
         {/* Right side */}
         <div className="auth-main">
           <h1 className="auth-main-title">Нууц үг солих</h1>
-          <p className="auth-main-sub">Одоогийн болон шинэ нууц үгийг оруулна уу</p>
+          <p className="auth-main-sub">Имэйл болон нууц үгийг оруулна уу</p>
 
           {error   && <div className="auth-error">{error}</div>}
           {success && <div className="auth-success">{success}</div>}
 
           <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Имэйл хаяг</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="email@example.com"
+                required
+              />
+            </div>
             <div className="form-group">
               <label>Одоогийн нууц үг</label>
               <input
@@ -117,7 +129,7 @@ export default function ChangePassword({ token }) {
               <button
                 type="button"
                 className="btn btn-secondary btn-lg"
-                onClick={() => navigate('/')}
+                onClick={() => navigate(token ? '/' : '/login')}
               >
                 ← Буцах
               </button>
@@ -131,6 +143,10 @@ export default function ChangePassword({ token }) {
               </button>
             </div>
           </form>
+
+          <p className="auth-footer" style={{ marginTop: 20 }}>
+            <Link to="/login">Нэвтрэх хуудас руу буцах</Link>
+          </p>
         </div>
       </div>
     </div>

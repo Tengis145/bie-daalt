@@ -100,6 +100,9 @@ export default function Login({ onLogin }) {
             Бүртгэлгүй юу?{' '}
             <Link to="/register">Бүртгүүлэх</Link>
           </p>
+          <p className="auth-footer" style={{ marginTop: 8 }}>
+            <Link to="/change-password">Нууц үг солих</Link>
+          </p>
         </div>
       </div>
     </div>

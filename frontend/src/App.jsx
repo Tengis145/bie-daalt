@@ -180,11 +180,7 @@ export default function App() {
               <StudentDetail onUpdate={updateStudent} onDelete={deleteStudent} />
             </ProtectedRoute>
           } />
-          <Route path="/change-password" element={
-            <ProtectedRoute token={token}>
-              <ChangePassword token={token} />
-            </ProtectedRoute>
-          } />
+          <Route path="/change-password" element={<ChangePassword token={token} />} />
         </Routes>
       </main>
 

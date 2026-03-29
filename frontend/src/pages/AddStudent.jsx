@@ -6,13 +6,17 @@ const DEFAULT_SUBJECTS = [
   'Газар зүй', 'Англи хэл', 'Биеийн тамир', 'Мэдээлэл зүй', 'Уран зохиол'
 ];
 
+function calcScore(exam1, exam2) {
+  return Math.round((Number(exam1) + Number(exam2)) / 2);
+}
+
 export default function AddStudent({ onAdd, classes }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     lastName: '',
     firstName: '',
     className: '',
-    grades: DEFAULT_SUBJECTS.map(sub => ({ subject: sub, score: 0 }))
+    grades: DEFAULT_SUBJECTS.map(sub => ({ subject: sub, exam1: 0, exam2: 0, score: 0 }))
   });
   const [loading, setLoading] = useState(false);
 
@@ -20,12 +24,13 @@ export default function AddStudent({ onAdd, classes }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleScoreChange = (index, value) => {
+  const handleExamChange = (index, field, value) => {
     const newGrades = [...formData.grades];
-    let score = Number(value);
-    if (score > 100) score = 100;
-    if (score < 0) score = 0;
-    newGrades[index].score = score;
+    let val = Number(value);
+    if (val > 100) val = 100;
+    if (val < 0) val = 0;
+    newGrades[index] = { ...newGrades[index], [field]: val };
+    newGrades[index].score = calcScore(newGrades[index].exam1, newGrades[index].exam2);
     setFormData({ ...formData, grades: newGrades });
   };
 
@@ -36,7 +41,6 @@ export default function AddStudent({ onAdd, classes }) {
 
     setLoading(true);
     try {
-      // Овог + Нэр-г нэгтгэж name болгоно
       const fullName = `${formData.lastName} ${formData.firstName}`;
       await onAdd({
         name: fullName,
@@ -100,7 +104,7 @@ export default function AddStudent({ onAdd, classes }) {
           </div>
         </div>
 
-        {/* Дүн preview */}
+        {/* Нэр preview */}
         {(formData.lastName || formData.firstName) && (
           <div style={{
             background: '#eef2ff',
@@ -119,20 +123,54 @@ export default function AddStudent({ onAdd, classes }) {
         {/* Хичээлийн дүнгүүд */}
         <div className="form-group">
           <div className="section-label">
-            Хичээлийн дүнгүүд (0 – 100) &nbsp;·&nbsp; Дундаж: <strong>{avg}</strong>
+            Хичээлийн дүнгүүд &nbsp;·&nbsp; Дундаж: <strong>{avg}</strong>
           </div>
-          <div className="subjects-grid">
-            {formData.grades.map((g, idx) => (
-              <div key={idx} className="subject-input">
-                <label>{g.subject}</label>
-                <input
-                  type="number"
-                  min="0" max="100"
-                  value={g.score}
-                  onChange={(e) => handleScoreChange(idx, e.target.value)}
-                />
-              </div>
-            ))}
+          <div style={{ overflowX: 'auto' }}>
+            <table className="exam-table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Хичээл</th>
+                  <th>Шалгалт 1</th>
+                  <th>Шалгалт 2</th>
+                  <th>Дүн</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.grades.map((g, idx) => (
+                  <tr key={idx}>
+                    <td className="subject-name">{g.subject}</td>
+                    <td>
+                      <input
+                        className="exam-input"
+                        type="number"
+                        min="0" max="100"
+                        value={g.exam1}
+                        onChange={(e) => handleExamChange(idx, 'exam1', e.target.value)}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="exam-input"
+                        type="number"
+                        min="0" max="100"
+                        value={g.exam2}
+                        onChange={(e) => handleExamChange(idx, 'exam2', e.target.value)}
+                      />
+                    </td>
+                    <td>
+                      <span className="score-pill" style={{
+                        float: 'none',
+                        display: 'inline-block',
+                        color: g.score >= 90 ? '#065f46' : g.score >= 75 ? '#1e40af' : '#92400e',
+                        backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
+                      }}>
+                        {g.score}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 

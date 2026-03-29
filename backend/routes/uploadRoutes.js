@@ -1,32 +1,31 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 const authMiddleware = require('../middleware/auth');
 
-// Зураг хадгалах тохиргоо
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '..', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `img-${uniqueSuffix}${ext}`);
+// Cloudinary тохиргоо (.env-аас уншина)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage — зургийг шууд Cloudinary руу хадгална
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'bie-daalt',          // Cloudinary дахь хавтас
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 400, height: 400, crop: 'limit' }], // Max 400x400
   },
 });
 
 // Зөвхөн зураг файл зөвшөөрөх
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extOk = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimeOk = allowedTypes.test(file.mimetype);
-  if (extOk && mimeOk) {
+const fileFilter = (_req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Зөвхөн зураг файл (.jpg, .jpeg, .png, .gif, .webp) оруулах боломжтой'));
@@ -39,16 +38,15 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB хязгаар
 });
 
-// POST /api/upload — Зураг upload хийх (хамгаалалттай)
+// POST /api/upload — Зураг Cloudinary руу upload хийх
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'Зураг сонгоогүй байна' });
   }
-  const imageUrl = `/uploads/${req.file.filename}`;
+  // multer-storage-cloudinary нь req.file.path дотор Cloudinary URL-г буцаана
   res.json({
     message: 'Зураг амжилттай хадгалагдлаа',
-    url: imageUrl,
-    filename: req.file.filename,
+    url: req.file.path,
   });
 });
 

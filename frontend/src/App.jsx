@@ -35,6 +35,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [students, setStudents] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,7 +99,13 @@ export default function App() {
       if (params.semester)     query.set('semester',     params.semester);
       const url = query.toString() ? `${API}?${query}` : API;
       const res = await axios.get(url);
-      setStudents(res.data);
+      const data = res.data;
+      if (data.students) {
+        setStudents(data.students);
+        setPagination({ total: data.total, page: data.page, pages: data.pages });
+      } else {
+        setStudents(data);
+      }
     } catch (e) {
       if (e.response?.status === 401) handleLogout();
     } finally {
@@ -252,6 +259,7 @@ export default function App() {
             <ProtectedRoute token={token}>
               <Dashboard
                 students={students}
+                pagination={pagination}
                 classes={classes}
                 loading={loading}
                 onFilter={fetchStudents}

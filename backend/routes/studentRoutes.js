@@ -87,8 +87,16 @@ router.get('/', async (req, res) => {
     if (req.query.search)       extra.name         = { $regex: req.query.search.trim(), $options: 'i' };
 
     const filter = studentFilter(req, extra);
-    const students = await Student.find(filter).sort({ createdAt: -1 });
-    res.json(students);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 12));
+    const skip  = (page - 1) * limit;
+
+    const [students, total] = await Promise.all([
+      Student.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Student.countDocuments(filter),
+    ]);
+
+    res.json({ students, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ message: 'Сурагчдын мэдээлэл авахад алдаа гарлаа', error: err.message });
   }

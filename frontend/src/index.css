@@ -1213,6 +1213,61 @@ body {
 .rank-num   { text-align: center; font-weight: 700; width: 32px; }
 .rank-score { text-align: center; color: #475569; }
 
+/* ─── At-risk student card ───────────────────────────────────── */
+.student-card.at-risk {
+  border: 1.5px solid #fca5a5;
+  background: #fff5f5;
+}
+.at-risk-banner {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 6px 0;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Pagination ─────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 28px 0 8px;
+  flex-wrap: wrap;
+}
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+.page-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+.page-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 /* ─── User Avatar Image (header) ────────────────────────────── */
 .user-avatar-img {
   width: 28px;

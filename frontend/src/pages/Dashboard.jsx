@@ -72,31 +72,38 @@ function EditModal({ student, onSave, onClose }) {
 }
 
 // ── Dashboard ────────────────────────────────────────────────
-export default function Dashboard({ students, classes, loading, onFilter, onDelete, onUpdate, showToast }) {
+export default function Dashboard({ students, pagination, classes, loading, onFilter, onDelete, onUpdate, showToast }) {
   const [editingStudent, setEditingStudent] = useState(null);
   const [search,         setSearch]         = useState('');
   const [classFilter,    setClassFilter]    = useState('');
   const [yearFilter,     setYearFilter]     = useState('');
   const [semFilter,      setSemFilter]      = useState('');
+  const [page,           setPage]           = useState(1);
   const debounceRef = useRef(null);
 
-  // Server-side filtering — debounce хайлтыг 400ms хойшлуулна
+  // Filter өөрчлөгдөх үед page-г 1 болгоно
+  useEffect(() => { setPage(1); }, [search, classFilter, yearFilter, semFilter]);
+
+  // Server-side filtering + pagination — debounce 400ms
   useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      onFilter({ search, className: classFilter, academicYear: yearFilter, semester: semFilter });
+      onFilter({ search, className: classFilter, academicYear: yearFilter, semester: semFilter, page });
     }, 400);
     return () => clearTimeout(debounceRef.current);
-  }, [search, classFilter, yearFilter, semFilter]);
+  }, [search, classFilter, yearFilter, semFilter, page]);
 
-  const filtered = students;
+  const filtered    = students;
+  const totalPages  = pagination?.pages || 1;
+  const currentPage = pagination?.page  || 1;
+  const totalCount  = pagination?.total || filtered.length;
 
   const totalStudents = filtered.length;
   const avgScore = totalStudents
     ? (filtered.reduce((sum, s) => sum + (parseFloat(s.average)||0), 0) / totalStudents).toFixed(1) : '—';
   const topStudent = totalStudents
     ? filtered.reduce((a,b) => (parseFloat(a.average)||0) >= (parseFloat(b.average)||0) ? a : b) : null;
-  const classCount = [...new Set(filtered.map(s => s.className))].length;
+  const atRiskCount = filtered.filter(s => parseFloat(s.average) < 60).length;
 
   const chartData = filtered
     .map(s => ({ name: s.name.split(' ')[0], average: parseFloat(s.average)||0 }))
@@ -178,7 +185,7 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue"><UsersIcon size={22} color="#2563eb" /></div>
-          <div className="stat-info"><div className="stat-value">{totalStudents}</div><div className="stat-label">Нийт сурагч</div></div>
+          <div className="stat-info"><div className="stat-value">{totalCount}</div><div className="stat-label">Нийт сурагч</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon indigo"><ChartIcon size={22} color="#4f46e5" /></div>
@@ -193,9 +200,14 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
             <div className="stat-label">Тэргүүлэгч сурагч</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon orange"><ClassIcon size={22} color="#d97706" /></div>
-          <div className="stat-info"><div className="stat-value">{classCount}</div><div className="stat-label">Нийт анги</div></div>
+        <div className="stat-card" style={atRiskCount > 0 ? { borderLeft: '3px solid #dc2626' } : {}}>
+          <div className="stat-icon" style={{ background: atRiskCount > 0 ? '#fee2e2' : undefined }}>
+            <ClassIcon size={22} color={atRiskCount > 0 ? '#dc2626' : '#d97706'} />
+          </div>
+          <div className="stat-info">
+            <div className="stat-value" style={{ color: atRiskCount > 0 ? '#dc2626' : undefined }}>{atRiskCount}</div>
+            <div className="stat-label">Анхааруулга (60-аас доош)</div>
+          </div>
         </div>
       </div>
 
@@ -280,10 +292,11 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
       ) : (
         <div className="student-grid">
           {filtered.map(student => {
-            const avgs = getComponentAvgs(student);
+            const avgs     = getComponentAvgs(student);
+            const isAtRisk = parseFloat(student.average) < 60;
             return (
-              <div key={student._id} className="student-card">
-                <div className="card-top-bar" />
+              <div key={student._id} className={`student-card${isAtRisk ? ' at-risk' : ''}`}>
+                <div className="card-top-bar" style={isAtRisk ? { background: '#dc2626' } : {}} />
                 <div className="card-header">
                   <div>
                     <h3 className="card-name">{student.name}</h3>
@@ -298,6 +311,9 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
                     <span className="score-label">Дундаж дүн</span>
                     <span className={`score-val ${getGradeClass(student.average)}`}>{student.average}</span>
                   </div>
+                  {isAtRisk && (
+                    <div className="at-risk-banner">Дүн хангалтгүй — анхааруулга</div>
+                  )}
                   {avgs && (
                     <div className="score-breakdown">
                       <span className="breakdown-item"><span className="breakdown-label">Ш1</span><span className="breakdown-val">{avgs.exam1.val}<em>/{avgs.exam1.max}</em></span></span>
@@ -307,7 +323,7 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
                     </div>
                   )}
                   <span className="subject-count">
-                    {parseFloat(student.average) >= 90 ? 'Тэрлэлт' : parseFloat(student.average) >= 75 ? 'Сайн' : 'Дунд'}
+                    {parseFloat(student.average) >= 90 ? 'Тэрлэлт' : parseFloat(student.average) >= 75 ? 'Сайн' : parseFloat(student.average) >= 60 ? 'Дунд' : 'Хангалтгүй'}
                   </span>
                 </div>
                 <div className="card-actions" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
@@ -318,6 +334,27 @@ export default function Dashboard({ students, classes, loading, onFilter, onDele
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={currentPage <= 1}>
+            ← Өмнөх
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              className={`page-btn${p === currentPage ? ' active' : ''}`}
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </button>
+          ))}
+          <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={currentPage >= totalPages}>
+            Дараах →
+          </button>
         </div>
       )}
 

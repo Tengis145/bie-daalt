@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, Cell,
+  ResponsiveContainer, Legend,
 } from 'recharts';
+import { BookIcon, ChartIcon, TrophyIcon, UsersIcon } from '../components/Icons';
 
 // ── helpers ────────────────────────────────────────────────────
 const SCORE_COLOR = (s) => s >= 90 ? '#059669' : s >= 75 ? '#3b82f6' : '#d97706';
-const GRADE_LABEL = (s) => s >= 90 ? 'Тэрлэлт' : s >= 75 ? 'Сайн' : 'Дунд';
 
 function pct(count, total) {
   return total ? Math.round((count / total) * 100) : 0;
@@ -208,7 +208,14 @@ function SubjectDetail({ stat }) {
                 {stat.entries.map((e, i) => (
                   <tr key={e.studentId}>
                     <td className="rank-num">
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 24, height: 24, borderRadius: '50%', fontSize: '0.75rem', fontWeight: 800,
+                        background: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#f97316' : 'transparent',
+                        color: i < 3 ? 'white' : '#64748b',
+                      }}>
+                        {i + 1}
+                      </span>
                     </td>
                     <td style={{ fontWeight: 600, fontSize: '0.875rem' }}>{e.studentName}</td>
                     <td style={{ textAlign: 'center' }}>
@@ -237,7 +244,7 @@ function SubjectDetail({ stat }) {
 }
 
 // ── Main page ───────────────────────────────────────────────────
-export default function SubjectDashboard({ students, classes, loading }) {
+export default function SubjectDashboard({ students = [], classes = [], loading }) {
   const [filterClass,      setFilterClass]      = useState('');
   const [selectedSubject,  setSelectedSubject]  = useState(null);
   const [sortBy,           setSortBy]           = useState('avg'); // avg | name | count
@@ -285,21 +292,21 @@ export default function SubjectDashboard({ students, classes, loading }) {
       {/* Summary stat cards */}
       <div className="stats-grid" style={{ marginBottom: 20 }}>
         <div className="stat-card">
-          <div className="stat-icon indigo" style={{ fontSize: 22 }}>📚</div>
+          <div className="stat-icon indigo"><BookIcon size={22} color="#4f46e5" /></div>
           <div className="stat-info">
             <div className="stat-value">{totalSubjects}</div>
             <div className="stat-label">Нийт хичээл</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon blue" style={{ fontSize: 22 }}>📝</div>
+          <div className="stat-icon blue"><UsersIcon size={22} color="#2563eb" /></div>
           <div className="stat-info">
             <div className="stat-value">{totalEntries}</div>
             <div className="stat-label">Нийт дүн оруулалт</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon green" style={{ fontSize: 22 }}>🏆</div>
+          <div className="stat-icon green"><TrophyIcon size={22} color="#059669" /></div>
           <div className="stat-info">
             <div className="stat-value" style={{ fontSize: bestSubject ? '1.05rem' : '1.75rem', fontWeight: 800 }}>
               {bestSubject ? bestSubject.subject : '—'}
@@ -308,7 +315,7 @@ export default function SubjectDashboard({ students, classes, loading }) {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon orange" style={{ fontSize: 22 }}>📉</div>
+          <div className="stat-icon orange"><ChartIcon size={22} color="#d97706" /></div>
           <div className="stat-info">
             <div className="stat-value" style={{ fontSize: worstSubject ? '1.05rem' : '1.75rem', fontWeight: 800 }}>
               {worstSubject && worstSubject !== bestSubject ? worstSubject.subject : '—'}
@@ -347,7 +354,7 @@ export default function SubjectDashboard({ students, classes, loading }) {
 
       {stats.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">📚</div>
+          <div className="empty-state-icon"><BookIcon size={48} color="#94a3b8" /></div>
           <h3>Хичээлийн мэдээлэл байхгүй байна</h3>
           <p>Эхлээд сурагч болон дүнгийн мэдээлэл оруулна уу.</p>
         </div>

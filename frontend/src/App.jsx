@@ -42,6 +42,18 @@ export default function App() {
   useEffect(() => { setAuthHeader(token); }, [token]);
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
+  // Global 401 interceptor — auto logout on expired token
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      res => res,
+      err => {
+        if (err.response?.status === 401 && token) handleLogout();
+        return Promise.reject(err);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, [token]);
+
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);

@@ -15,15 +15,31 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
+  const [fetchError, setFetchError] = useState('');
   const [editing, setEditing] = useState(false);
   const [editGrades, setEditGrades] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setFetchError('');
     axios.get(`/api/students/${id}`)
       .then(res => setStudent(res.data))
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setFetchError(err.response?.data?.message || 'Сурагчийн мэдээлэл авахад алдаа гарлаа');
+      });
   }, [id]);
+
+  if (fetchError) {
+    return (
+      <div className="loading-wrap">
+        <p style={{ color: '#dc2626', fontWeight: 600 }}>{fetchError}</p>
+        <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/')}>
+          ← Буцах
+        </button>
+      </div>
+    );
+  }
 
   if (!student) {
     return (

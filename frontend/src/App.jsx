@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon } from './components/Icons';
+import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } from './components/Icons';
 import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import StudentDetail from './pages/StudentDetail';
@@ -9,6 +9,7 @@ import AddStudent from './pages/AddStudent';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
+import SubjectDashboard from './pages/SubjectDashboard';
 
 const API = '/api/students';
 
@@ -117,8 +118,9 @@ export default function App() {
   }, [token]);
 
   const navLinks = [
-    { to: '/',    label: 'Хяналтын самбар', icon: <DashboardIcon size={16} color="currentColor" /> },
-    { to: '/add', label: 'Сурагч нэмэх',    icon: <PlusIcon size={16} color="currentColor" /> },
+    { to: '/',         label: 'Хяналтын самбар', icon: <DashboardIcon size={16} color="currentColor" /> },
+    { to: '/subjects', label: 'Хичээлүүд',        icon: <BookIcon      size={16} color="currentColor" /> },
+    { to: '/add',      label: 'Сурагч нэмэх',     icon: <PlusIcon      size={16} color="currentColor" /> },
   ];
 
   const initials = currentUser?.username
@@ -227,6 +229,11 @@ export default function App() {
                 onUpdate={updateStudent}
                 showToast={showToast}
               />
+            </ProtectedRoute>
+          } />
+          <Route path="/subjects" element={
+            <ProtectedRoute token={token}>
+              <SubjectDashboard students={students} classes={classes} loading={loading} />
             </ProtectedRoute>
           } />
           <Route path="/add" element={

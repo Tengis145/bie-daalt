@@ -5,14 +5,14 @@ import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } f
 import { getImageUrl } from './utils/imageUrl';
 import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
+import StudentDetail from './pages/StudentDetail';
+import SubjectDashboard from './pages/SubjectDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
 
-const StudentDetail    = lazy(() => import('./pages/StudentDetail'));
-const AddStudent       = lazy(() => import('./pages/AddStudent'));
-const SubjectDashboard = lazy(() => import('./pages/SubjectDashboard'));
-const Profile          = lazy(() => import('./pages/Profile'));
+const AddStudent = lazy(() => import('./pages/AddStudent'));
+const Profile    = lazy(() => import('./pages/Profile'));
 
 const API = '/api/students';
 

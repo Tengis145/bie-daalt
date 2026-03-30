@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } from './components/Icons';
@@ -7,12 +7,11 @@ import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import StudentDetail from './pages/StudentDetail';
 import SubjectDashboard from './pages/SubjectDashboard';
+import AddStudent from './pages/AddStudent';
+import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
-
-const AddStudent = lazy(() => import('./pages/AddStudent'));
-const Profile    = lazy(() => import('./pages/Profile'));
 
 const API = '/api/students';
 
@@ -275,7 +274,6 @@ export default function App() {
       )}
 
       <main className={token ? 'main' : ''}>
-        <Suspense fallback={<div className="page-loading">Уншиж байна...</div>}>
           <Routes>
             <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
             <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
@@ -317,7 +315,6 @@ export default function App() {
               </ProtectedRoute>
             } />
           </Routes>
-        </Suspense>
       </main>
 
       {token && (

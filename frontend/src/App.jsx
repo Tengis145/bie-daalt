@@ -45,7 +45,19 @@ export default function App() {
   useEffect(() => { setAuthHeader(token); }, [token]);
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
-  // Global 401 interceptor — auto-refresh access token, logout if refresh fails
+  const handleLogout = useCallback(() => {
+    axios.post('/api/auth/logout').catch(() => {});
+    setToken('');
+    setCurrentUser(null);
+    setStudents([]);
+    setClasses([]);
+    localStorage.removeItem('ebs_token');
+    localStorage.removeItem('ebs_user');
+    localStorage.removeItem('ebs_refresh');
+    setAuthHeader(null);
+  }, []);
+
+  // handleLogout is defined above — no TDZ when referenced in dependency array
   useEffect(() => {
     const id = axios.interceptors.response.use(
       res => res,
@@ -93,18 +105,6 @@ export default function App() {
     if (newRefreshToken) localStorage.setItem('ebs_refresh', newRefreshToken);
     setAuthHeader(newToken);
   };
-
-  const handleLogout = useCallback(() => {
-    axios.post('/api/auth/logout').catch(() => {});
-    setToken('');
-    setCurrentUser(null);
-    setStudents([]);
-    setClasses([]);
-    localStorage.removeItem('ebs_token');
-    localStorage.removeItem('ebs_user');
-    localStorage.removeItem('ebs_refresh');
-    setAuthHeader(null);
-  }, []);
 
   const onUpdateUser = (updatedUser) => {
     setCurrentUser(updatedUser);

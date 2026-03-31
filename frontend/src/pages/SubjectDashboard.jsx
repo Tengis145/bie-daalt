@@ -145,19 +145,19 @@ function SubjectDetail({ stat }) {
         <div className="subject-hero-stats">
           <div className="subject-hero-stat">
             <span>Дундаж</span>
-            <strong style={{ color: SCORE_COLOR(stat.avg) }}>{stat.avg}</strong>
+            <strong style={{ color: '#fff' }}>{stat.avg}</strong>
           </div>
           <div className="subject-hero-stat">
             <span>Өндөр</span>
-            <strong style={{ color: '#059669' }}>{stat.max}</strong>
+            <strong style={{ color: '#fff' }}>{stat.max}</strong>
           </div>
           <div className="subject-hero-stat">
             <span>Бага</span>
-            <strong style={{ color: '#d97706' }}>{stat.min}</strong>
+            <strong style={{ color: '#fff' }}>{stat.min}</strong>
           </div>
           <div className="subject-hero-stat">
             <span>Тэрлэлт</span>
-            <strong style={{ color: '#059669' }}>{stat.excellent}</strong>
+            <strong style={{ color: '#fff' }}>{stat.excellent}</strong>
           </div>
         </div>
       </div>

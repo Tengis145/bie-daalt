@@ -131,6 +131,34 @@
         { "subject": "Англи хэл",  "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
         { "subject": "Хими",       "exam1": 20, "exam2": 19, "attendance": 14, "independent": 15 }
       ]
+    },
+    {
+      "name": "Энхтүвшин Гантулга",
+      "className": "11Б",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_saran",
+      "grades": [
+        { "subject": "Математик",  "exam1": 19, "exam2": 17, "attendance": 13, "independent": 12 },
+        { "subject": "Физик",      "exam1": 16, "exam2": 14, "attendance": 12, "independent": 11 },
+        { "subject": "Монгол хэл", "exam1": 21, "exam2": 19, "attendance": 14, "independent": 13 },
+        { "subject": "Англи хэл",  "exam1": 14, "exam2": 13, "attendance": 11, "independent": 10 },
+        { "subject": "Хими",       "exam1": 17, "exam2": 16, "attendance": 12, "independent": 12 }
+      ]
+    },
+    {
+      "name": "Номинчимэг Батсүх",
+      "className": "10Б",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 27, "exam2": 26, "attendance": 18, "independent": 19 },
+        { "subject": "Физик",      "exam1": 24, "exam2": 25, "attendance": 17, "independent": 18 },
+        { "subject": "Монгол хэл", "exam1": 26, "exam2": 27, "attendance": 19, "independent": 17 },
+        { "subject": "Англи хэл",  "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
+        { "subject": "Хими",       "exam1": 22, "exam2": 23, "attendance": 16, "independent": 15 }
+      ]
     }
   ]
 }

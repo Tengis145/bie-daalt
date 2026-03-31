@@ -292,12 +292,10 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     4. Refresh дуусвал / алдаа гарвал → logout
     // _retry flag: давтан retry-аас сэргийлнэ
 
-  Lazy Loading (React.lazy + Suspense):
-    StudentDetail, AddStudent, SubjectDashboard, Profile →
-      lazy(() => import('./pages/...'))
-    <Suspense fallback={<div className="page-loading">Уншиж байна...</div>}>
-    Dashboard, Login, Register → eager load (анхны хуудас)
-    // Bundle splitting: хэрэглэгч анхны хуудсыг хурдан ачаална
+  Lazy Loading (хэсэгчлэн):
+    AddStudent, Profile → lazy() (recharts ашигладаггүй тул аюулгүй)
+    Dashboard, StudentDetail, SubjectDashboard → eager load
+    // Rollup TDZ асуудлаас болж recharts-тэй хуудсуудыг eager хийсэн
 
 --- pages/Dashboard.jsx ---
 
@@ -328,6 +326,10 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
   EditModal:
     Сурагч бүрийн хичээлийн дүнг modal-аас шууд засах боломж.
+    Шинэ хичээл нэмэх: доод мөрт нэр + оноо оруулж + дарна
+    Хичээл устгах: ✕ товч — тухайн хичээлийн мөрийг устгана
+    Enter дарж ч хичээл нэмэх боломжтой
+    Давхар нэр шалгана (case-insensitive)
 
 --- pages/AddStudent.jsx ---
 
@@ -354,6 +356,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
   Дүн засах (inline edit):
     editGrades state-д хуулж засна
+    Шинэ хичээл нэмэх: доод мөрт нэр + оноо оруулж + дарна
+    Хичээл устгах: ✕ товч — тухайн хичээлийн мөрийг устгана
     "Хадгалах" → PUT /api/students/:id
 
   Хэвлэх:
@@ -370,7 +374,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
   SubjectDetail BarChart:
     fixed-height div (300px) дотор ResponsiveContainer
-    // SubjectDashboard-д мөн Recharts dimensions засах хийсэн
+    Legend verticalAlign="top" — дээд талд байрлана
+    margin bottom=55 — налсан X-axis label-ууд legend-тэй давхцахгүй
 
 --- pages/Profile.jsx ---
 
@@ -532,9 +537,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
        npm run seed:clear
 
      seed_data.json-д байгаа жишээ нэвтрэх мэдээлэл:
-       👑 admin@school.mn   / admin123    (admin)
-       👨‍🏫 bold@school.mn    / teacher123  (teacher)
-       👨‍🏫 saran@school.mn   / teacher123  (teacher)
+        admin@school.mn   / admin123    (admin)
+        bold@school.mn    / teacher123  (teacher)
+       👨 saran@school.mn   / teacher123  (teacher)
 
      Анхааруулга: seed хийхэд DB-ийн бүх өгөгдөл устана!
 
@@ -597,9 +602,21 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   [11] Database Seeder
       seed/seed_data.json — жишээ өгөгдлийн эх файл (JSON).
       seed/seeder.js — DB цэвэрлэж, хэрэглэгч + сурагч оруулна.
-      npm run seed       → бүтэн seed
+      npm run seed       → бүтэн seed (3 хэрэглэгч, 10 сурагч)
       npm run seed:clear → DB цэвэрлэх
       Atlas руу seed: $env:MONGODB_URI="..." командаар URI дамжуулна.
+
+  [12] Хичээл нэмэх/устгах (Edit горимд)
+      Dashboard EditModal болон StudentDetail дэлгэрэнгүй хоёуланд:
+      - Засах горимд доод мөрт шинэ хичээл нэмэх боломж
+      - Хичээлийн нэр + Ш1/Ш2/Ирц/БД оруулж + товч дарна
+      - Enter товчоор ч нэмж болно
+      - ✕ товчоор хичээл устгана
+      - Давхар нэр case-insensitive шалгана
+
+  [13] SubjectDashboard chart legend засвар
+      Bar chart-ийн Legend-ийг дээш (verticalAlign="top") зөөсөн.
+      Bottom margin нэмж налсан X-axis label-уудтай давхцлыг арилгасан.
 
   v2.0 — Сүүлийн шинэчлэлт:
   ─────────────────────────────────────────────────────────────

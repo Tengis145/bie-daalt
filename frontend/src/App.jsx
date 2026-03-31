@@ -119,6 +119,7 @@ export default function App() {
       if (params.search)       query.set('search',       params.search);
       if (params.academicYear) query.set('academicYear', params.academicYear);
       if (params.semester)     query.set('semester',     params.semester);
+      if (params.page)         query.set('page',         params.page);
       const url = query.toString() ? `${API}?${query}` : API;
       const res = await axios.get(url);
       const data = res.data;

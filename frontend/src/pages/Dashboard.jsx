@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { UsersIcon, ChartIcon, TrophyIcon, ClassIcon, SearchIcon, DownloadIcon } from '../components/Icons';
+import { UsersIcon, ChartIcon, TrophyIcon, ClassIcon, SearchIcon, DownloadIcon, UploadIcon } from '../components/Icons';
 
 const CY = new Date().getFullYear();
 const YEARS = [`${CY - 2}-${CY - 1}`, `${CY - 1}-${CY}`, `${CY}-${CY + 1}`];
@@ -110,6 +111,7 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
   const [semFilter,      setSemFilter]      = useState('');
   const [page,           setPage]           = useState(1);
   const debounceRef = useRef(null);
+  const importRef   = useRef(null);
 
   // Filter өөрчлөгдөх үед page-г 1 болгоно
   useEffect(() => { setPage(1); }, [search, classFilter, yearFilter, semFilter]);
@@ -140,6 +142,74 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
     .sort((a,b) => b.average - a.average).slice(0, 15);
 
   const getGradeClass = (avg) => parseFloat(avg) >= 90 ? 'grade-excellent' : parseFloat(avg) >= 75 ? 'grade-good' : 'grade-average';
+
+  // ── Excel import template ────────────────────────────────
+  const downloadTemplate = () => {
+    const rows = [
+      { 'Нэр': 'Жишээ Сурагч', 'Анги': '10А', 'Хичээлийн жил': '2024-2025', 'Улирал': 1,
+        'Хичээл': 'Математик', 'Шалгалт 1 (/30)': 25, 'Шалгалт 2 (/30)': 27, 'Ирц (/20)': 18, 'Бие даалт (/20)': 16 },
+      { 'Нэр': 'Жишээ Сурагч', 'Анги': '10А', 'Хичээлийн жил': '2024-2025', 'Улирал': 1,
+        'Хичээл': 'Физик', 'Шалгалт 1 (/30)': 20, 'Шалгалт 2 (/30)': 22, 'Ирц (/20)': 15, 'Бие даалт (/20)': 14 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Загвар');
+    XLSX.writeFile(wb, 'suraguud_template.xlsx');
+    showToast('Загвар файл татаж авлаа');
+  };
+
+  // ── Excel import ─────────────────────────────────────────
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!importRef.current) return;
+    importRef.current.value = '';
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const wb   = XLSX.read(ev.target.result, { type: 'array' });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws);
+
+        // Group rows by "Нэр + Анги + Хичээлийн жил + Улирал"
+        const map = new Map();
+        for (const row of rows) {
+          const name  = String(row['Нэр'] || '').trim();
+          const cls   = String(row['Анги'] || '').trim();
+          const year  = String(row['Хичээлийн жил'] || '').trim();
+          const sem   = Number(row['Улирал'] || 1);
+          if (!name || !cls) continue;
+          const key = `${name}||${cls}||${year}||${sem}`;
+          if (!map.has(key)) map.set(key, { name, className: cls, academicYear: year, semester: sem, grades: [] });
+          const subj = String(row['Хичээл'] || '').trim();
+          if (subj) {
+            map.get(key).grades.push({
+              subject:     subj,
+              exam1:       Number(row['Шалгалт 1 (/30)'] || 0),
+              exam2:       Number(row['Шалгалт 2 (/30)'] || 0),
+              attendance:  Number(row['Ирц (/20)']       || 0),
+              independent: Number(row['Бие даалт (/20)'] || 0),
+            });
+          }
+        }
+
+        if (map.size === 0) { showToast('Файлд өгөгдөл олдсонгүй', 'error'); return; }
+
+        let ok = 0, fail = 0;
+        for (const student of map.values()) {
+          try {
+            await axios.post('/api/students', student);
+            ok++;
+          } catch { fail++; }
+        }
+        showToast(`${ok} сурагч нэмэгдлаа${fail ? `, ${fail} алдаа гарлаа` : ''}`, fail ? 'error' : 'success');
+        // Refresh list
+        onFilter({ search, className: classFilter, academicYear: yearFilter, semester: semFilter, page: 1 });
+        setPage(1);
+      } catch { showToast('Файл уншихад алдаа гарлаа', 'error'); }
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   // ── Excel export ─────────────────────────────────────────
   const exportExcel = () => {
@@ -285,6 +355,13 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="stats-pill"><span>Нийт:</span><strong>{totalStudents} сурагч</strong></div>
+          <button className="btn btn-secondary" style={{ padding:'8px 14px', fontSize:'0.82rem' }} onClick={downloadTemplate}>
+            <DownloadIcon size={15} color="currentColor" />Загвар
+          </button>
+          <button className="btn btn-secondary" style={{ padding:'8px 14px', fontSize:'0.82rem' }} onClick={() => importRef.current?.click()}>
+            <UploadIcon size={15} color="currentColor" />Excel оруулах
+          </button>
+          <input ref={importRef} type="file" accept=".xlsx,.xls" style={{ display:'none' }} onChange={handleImport} />
           {filtered.length > 0 && (
             <button className="btn btn-secondary" style={{ padding:'8px 14px', fontSize:'0.82rem' }} onClick={exportExcel}>
               <DownloadIcon size={15} color="currentColor" />Excel

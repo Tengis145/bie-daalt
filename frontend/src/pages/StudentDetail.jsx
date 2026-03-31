@@ -20,6 +20,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const [fetchError, setFetchError] = useState('');
   const [editing, setEditing] = useState(false);
   const [editGrades, setEditGrades] = useState([]);
+  const [newRow, setNewRow] = useState({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -59,6 +60,8 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
     }
   };
 
+  const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
+
   const handleEditStart = () => {
     setEditGrades(student.grades.map(g => ({
       subject:     g.subject,
@@ -68,16 +71,31 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       independent: g.independent ?? 0,
       score:       g.score       ?? 0,
     })));
+    setNewRow({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
     setEditing(true);
   };
 
   const handleFieldChange = (idx, field, value) => {
-    const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
     const updated = [...editGrades];
     updated[idx] = { ...updated[idx], [field]: clamp(value, 0, maxMap[field]) };
     updated[idx].score = calcScore(updated[idx]);
     setEditGrades(updated);
   };
+
+  const handleNewRowChange = (field, value) => {
+    setNewRow(prev => ({ ...prev, [field]: field === 'subject' ? value : clamp(value, 0, maxMap[field]) }));
+  };
+
+  const handleAddGrade = () => {
+    const name = newRow.subject.trim();
+    if (!name) return;
+    if (editGrades.some(g => g.subject.toLowerCase() === name.toLowerCase())) return;
+    const score = calcScore(newRow);
+    setEditGrades(prev => [...prev, { ...newRow, subject: name, score }]);
+    setNewRow({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
+  };
+
+  const handleRemoveGrade = (idx) => setEditGrades(prev => prev.filter((_, i) => i !== idx));
 
   const handleSave = async () => {
     setSaving(true);
@@ -210,6 +228,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ирц<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>БД<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Нийт</th>
+                  {editing && <th style={{ borderBottom: '1px solid #e2e8f0' }} />}
                 </tr>
               </thead>
               <tbody>
@@ -222,7 +241,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                           <input
                             className="exam-input"
                             type="number" min="0"
-                            max={field === 'attendance' || field === 'independent' ? 20 : 30}
+                            max={maxMap[field]}
                             value={g[field]}
                             onChange={e => handleFieldChange(i, field, e.target.value)}
                           />
@@ -242,8 +261,30 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                         backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
                       }}>{g.score}</span>
                     </td>
+                    {editing && (
+                      <td style={{ textAlign: 'center', padding: '8px 4px' }}>
+                        <button style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleRemoveGrade(i)}>✕</button>
+                      </td>
+                    )}
                   </tr>
                 ))}
+                {/* Шинэ хичээл нэмэх мөр */}
+                {editing && (
+                  <tr style={{ background: '#f8fafc' }}>
+                    <td style={{ padding: '5px 0' }}>
+                      <input className="exam-input" style={{ width: '100%', minWidth: 90 }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e => handleNewRowChange('subject', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddGrade()} />
+                    </td>
+                    {['exam1','exam2','attendance','independent'].map(f => (
+                      <td key={f} style={{ padding: '5px 4px', textAlign: 'center' }}>
+                        <input className="exam-input" type="number" min="0" max={maxMap[f]} value={newRow[f]} onChange={e => handleNewRowChange(f, e.target.value)} />
+                      </td>
+                    ))}
+                    <td />
+                    <td style={{ textAlign: 'center', padding: '5px 4px' }}>
+                      <button className="btn btn-success" style={{ padding: '4px 10px', fontSize: '1rem' }} onClick={handleAddGrade}>+</button>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

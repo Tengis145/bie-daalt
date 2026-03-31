@@ -11,6 +11,8 @@ function clamp(val, min, max) { const n = Number(val); return isNaN(n) ? min : M
 function calcScore(g) { return clamp(Number(g.exam1)+Number(g.exam2)+Number(g.attendance)+Number(g.independent),0,100); }
 
 // ── Inline Edit Modal ────────────────────────────────────────
+const EMPTY_NEW = { subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 };
+
 function EditModal({ student, onSave, onClose }) {
   const [grades, setGrades] = useState(
     student.grades.map(g => ({
@@ -18,7 +20,8 @@ function EditModal({ student, onSave, onClose }) {
       attendance: g.attendance??0, independent: g.independent??0, score: g.score??0,
     }))
   );
-  const [saving, setSaving] = useState(false);
+  const [newRow, setNewRow]   = useState(EMPTY_NEW);
+  const [saving, setSaving]   = useState(false);
   const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
 
   const handleChange = (idx, field, value) => {
@@ -27,6 +30,22 @@ function EditModal({ student, onSave, onClose }) {
     updated[idx].score = calcScore(updated[idx]);
     setGrades(updated);
   };
+
+  const handleNewChange = (field, value) => {
+    const updated = { ...newRow, [field]: field === 'subject' ? value : clamp(value, 0, maxMap[field]) };
+    setNewRow(updated);
+  };
+
+  const handleAddRow = () => {
+    const name = newRow.subject.trim();
+    if (!name) return;
+    if (grades.some(g => g.subject.toLowerCase() === name.toLowerCase())) return;
+    const score = calcScore(newRow);
+    setGrades([...grades, { ...newRow, subject: name, score }]);
+    setNewRow(EMPTY_NEW);
+  };
+
+  const handleRemove = (idx) => setGrades(grades.filter((_, i) => i !== idx));
 
   const handleSave = async () => { setSaving(true); try { await onSave(grades); } finally { setSaving(false); } };
 
@@ -47,6 +66,7 @@ function EditModal({ student, onSave, onClose }) {
                 <th>Ирц<span className="th-max">/20</span></th>
                 <th>БД<span className="th-max">/20</span></th>
                 <th>Нийт</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -57,8 +77,18 @@ function EditModal({ student, onSave, onClose }) {
                     <td key={f}><input className="exam-input" type="number" min="0" max={maxMap[f]} value={g[f]} onChange={e=>handleChange(i,f,e.target.value)} /></td>
                   ))}
                   <td><span className="score-pill" style={{ float:'none', display:'inline-block', color:g.score>=90?'#065f46':g.score>=75?'#1e40af':'#92400e', backgroundColor:g.score>=90?'#d1fae5':g.score>=75?'#dbeafe':'#fef3c7' }}>{g.score}</span></td>
+                  <td><button style={{ background:'none', border:'none', color:'#dc2626', cursor:'pointer', fontSize:'1rem', lineHeight:1 }} onClick={()=>handleRemove(i)}>✕</button></td>
                 </tr>
               ))}
+              {/* Шинэ хичээл нэмэх мөр */}
+              <tr style={{ background: '#f8fafc' }}>
+                <td><input className="exam-input" style={{ width:'100%', minWidth:90 }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e=>handleNewChange('subject',e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleAddRow()} /></td>
+                {['exam1','exam2','attendance','independent'].map(f => (
+                  <td key={f}><input className="exam-input" type="number" min="0" max={maxMap[f]} value={newRow[f]} onChange={e=>handleNewChange(f,e.target.value)} /></td>
+                ))}
+                <td />
+                <td><button className="btn btn-success" style={{ padding:'4px 10px', fontSize:'1rem', lineHeight:1 }} onClick={handleAddRow}>+</button></td>
+              </tr>
             </tbody>
           </table>
         </div>

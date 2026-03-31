@@ -168,7 +168,7 @@ function SubjectDetail({ stat }) {
           <h3>Сурагч бүрийн оноо (бүрэлдэхүүнээр)</h3>
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 30 }}>
+              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 55 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis
                   dataKey="name"
@@ -179,7 +179,7 @@ function SubjectDetail({ stat }) {
                 />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
                 <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" />
                 <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
                 <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />

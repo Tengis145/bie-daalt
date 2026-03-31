@@ -35,6 +35,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   │   │   ├── authRoutes.js    ← /api/auth — нэвтрэх, бүртгэх, нууц үг
   │   │   ├── studentRoutes.js ← /api/students — CRUD + role + pagination
   │   │   └── uploadRoutes.js  ← /api/upload — Cloudinary зураг хадгалах
+  │   ├── seed/
+  │   │   ├── seed_data.json   ← Жишээ өгөгдөл (3 хэрэглэгч, 10 сурагч)
+  │   │   └── seeder.js        ← DB seed/clear скрипт
   │   ├── .env.example         ← Шаардлагатай орчны хувьсагчдын жишээ
   │   └── server.js            ← Express app, MongoDB холболт
   │
@@ -515,6 +518,26 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     2. Dashboard → Cloud Name, API Key, API Secret авна
     3. .env файл болон Render Environment-д тавина
 
+  3. Database Seeder (жишээ өгөгдөл оруулах):
+       cd backend
+
+       # Локал MongoDB руу seed хийх:
+       npm run seed
+
+       # MongoDB Atlas (production) руу seed хийх:
+       # PowerShell:
+       $env:MONGODB_URI="mongodb+srv://<user>:<pass>@cluster.mongodb.net/ebs_grades"; node seed/seeder.js
+
+       # Зөвхөн DB цэвэрлэх:
+       npm run seed:clear
+
+     seed_data.json-д байгаа жишээ нэвтрэх мэдээлэл:
+       👑 admin@school.mn   / admin123    (admin)
+       👨‍🏫 bold@school.mn    / teacher123  (teacher)
+       👨‍🏫 saran@school.mn   / teacher123  (teacher)
+
+     Анхааруулга: seed хийхэд DB-ийн бүх өгөгдөл устана!
+
 ----------------------------------------------------------------
 8. API ENDPOINTS ХУРААНГУЙ
 ----------------------------------------------------------------
@@ -565,10 +588,18 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
       quality:auto + fetch_format:auto → WebP/AVIF автомат хөрвүүлэлт.
       Bandwidth ≈30-50% хэмнэгдсэн. Нүүрийг голлуулдаг болсон.
 
-  [10] Lazy Loading
-      StudentDetail, AddStudent, SubjectDashboard, Profile хуудсуудыг
-      React.lazy() + Suspense ашиглан зөвхөн хэрэгтэй үед ачаалдаг.
-      Анхны bundle хэмжээ буурч эхний ачаалалт хурдан болсон.
+  [10] Lazy Loading (хэсэгчлэн)
+      AddStudent, Profile хуудсуудыг React.lazy() + Suspense ашиглан
+      зөвхөн хэрэгтэй үед ачаалдаг.
+      Dashboard, StudentDetail, SubjectDashboard → eager load
+      (recharts-тэй хуудсуудад Rollup TDZ асуудлаас болж eager).
+
+  [11] Database Seeder
+      seed/seed_data.json — жишээ өгөгдлийн эх файл (JSON).
+      seed/seeder.js — DB цэвэрлэж, хэрэглэгч + сурагч оруулна.
+      npm run seed       → бүтэн seed
+      npm run seed:clear → DB цэвэрлэх
+      Atlas руу seed: $env:MONGODB_URI="..." командаар URI дамжуулна.
 
   v2.0 — Сүүлийн шинэчлэлт:
   ─────────────────────────────────────────────────────────────

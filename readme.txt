@@ -324,6 +324,21 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
       Sheet 1 "Ерөнхий жагсаалт" — нэр, анги, жил, дундаж, үнэлгээ
       Sheet 2 "Дэлгэрэнгүй дүн"  — хичээл тус бүрийн 4 оноо
 
+  downloadTemplate():
+    Импортын загвар .xlsx файл татна (suraguud_template.xlsx).
+    Баганууд: Нэр, Анги, Хичээлийн жил, Улирал, Хичээл,
+              Шалгалт 1 (/30), Шалгалт 2 (/30), Ирц (/20), Бие даалт (/20)
+    Нэг сурагч нэг мөр биш — хичээл тус бүр тусдаа мөр байна.
+
+  handleImport(e):
+    FileReader + XLSX.read() → sheet_to_json() → мөр бүрийг унших
+    Нэр + Анги + Хичээлийн жил + Улирал гэсэн түлхүүрээр мөрүүдийг
+    бүлэглэж, сурагч тус бүрт grades масив үүсгэнэ.
+    POST /api/students — сурагч тус бүр тусдаа API дуудлага
+    Амжилт/алдааны тоог toast-ээр мэдэгдэнэ, жагсаалт автоматаар шинэчлэгдэнэ.
+    "Загвар" товч → template татах
+    "Excel оруулах" товч → file picker нээх (hidden input)
+
   EditModal:
     Сурагч бүрийн хичээлийн дүнг modal-аас шууд засах боломж.
     Шинэ хичээл нэмэх: доод мөрт нэр + оноо оруулж + дарна
@@ -539,7 +554,7 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
      seed_data.json-д байгаа жишээ нэвтрэх мэдээлэл:
         admin@school.mn   / admin123    (admin)
         bold@school.mn    / teacher123  (teacher)
-       👨 saran@school.mn   / teacher123  (teacher)
+        saran@school.mn   / teacher123  (teacher)
 
      Анхааруулга: seed хийхэд DB-ийн бүх өгөгдөл устана!
 
@@ -617,6 +632,14 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   [13] SubjectDashboard chart legend засвар
       Bar chart-ийн Legend-ийг дээш (verticalAlign="top") зөөсөн.
       Bottom margin нэмж налсан X-axis label-уудтай давхцлыг арилгасан.
+
+  [14] Excel импорт (bulk import)
+      Dashboard-д "Загвар" болон "Excel оруулах" товч нэмсэн.
+      downloadTemplate() → хичээл тус бүр мөр бүхий .xlsx загвар татна.
+      handleImport() → FileReader+SheetJS ашиглан файл уншина,
+      Нэр+Анги+Жил+Улирал түлхүүрээр мөрүүдийг бүлэглэж,
+      POST /api/students ашиглан сурагч тус бүр оруулна.
+      UploadIcon (Icons.jsx) шинэ SVG нэмсэн.
 
   v2.0 — Сүүлийн шинэчлэлт:
   ─────────────────────────────────────────────────────────────

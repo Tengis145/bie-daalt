@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@school.mn",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "username": "bagsh_bold",
+      "email": "bold@school.mn",
+      "password": "teacher123",
+      "role": "teacher"
+    },
+    {
+      "username": "bagsh_saran",
+      "email": "saran@school.mn",
+      "password": "teacher123",
+      "role": "teacher"
+    }
+  ],
+  "students": [
+    {
+      "name": "Болд Батбаяр",
+      "className": "10А",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 28, "exam2": 27, "attendance": 18, "independent": 19 },
+        { "subject": "Физик",      "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
+        { "subject": "Монгол хэл", "exam1": 22, "exam2": 24, "attendance": 19, "independent": 17 },
+        { "subject": "Англи хэл",  "exam1": 20, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Хими",       "exam1": 24, "exam2": 25, "attendance": 18, "independent": 16 }
+      ]
+    },
+    {
+      "name": "Сарантуяа Нарантуяа",
+      "className": "10А",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 30, "exam2": 29, "attendance": 20, "independent": 20 },
+        { "subject": "Физик",      "exam1": 27, "exam2": 28, "attendance": 19, "independent": 20 },
+        { "subject": "Монгол хэл", "exam1": 29, "exam2": 30, "attendance": 20, "independent": 19 },
+        { "subject": "Англи хэл",  "exam1": 28, "exam2": 27, "attendance": 20, "independent": 18 },
+        { "subject": "Хими",       "exam1": 26, "exam2": 27, "attendance": 19, "independent": 20 }
+      ]
+    },
+    {
+      "name": "Ганбаяр Дорждагва",
+      "className": "10А",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 15, "exam2": 14, "attendance": 12, "independent": 11 },
+        { "subject": "Физик",      "exam1": 12, "exam2": 13, "attendance": 10, "independent": 10 },
+        { "subject": "Монгол хэл", "exam1": 18, "exam2": 16, "attendance": 14, "independent": 13 },
+        { "subject": "Англи хэл",  "exam1": 10, "exam2": 11, "attendance": 9,  "independent": 8  },
+        { "subject": "Хими",       "exam1": 13, "exam2": 12, "attendance": 11, "independent": 10 }
+      ]
+    },
+    {
+      "name": "Оюунчимэг Баярмаа",
+      "className": "10Б",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_saran",
+      "grades": [
+        { "subject": "Математик",  "exam1": 26, "exam2": 25, "attendance": 17, "independent": 18 },
+        { "subject": "Физик",      "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
+        { "subject": "Монгол хэл", "exam1": 27, "exam2": 28, "attendance": 18, "independent": 19 },
+        { "subject": "Англи хэл",  "exam1": 25, "exam2": 24, "attendance": 17, "independent": 16 },
+        { "subject": "Хими",       "exam1": 21, "exam2": 22, "attendance": 15, "independent": 16 }
+      ]
+    },
+    {
+      "name": "Мөнхбат Энхбаяр",
+      "className": "10Б",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_saran",
+      "grades": [
+        { "subject": "Математик",  "exam1": 20, "exam2": 18, "attendance": 14, "independent": 13 },
+        { "subject": "Физик",      "exam1": 17, "exam2": 16, "attendance": 13, "independent": 12 },
+        { "subject": "Монгол хэл", "exam1": 22, "exam2": 20, "attendance": 15, "independent": 14 },
+        { "subject": "Англи хэл",  "exam1": 16, "exam2": 15, "attendance": 12, "independent": 11 },
+        { "subject": "Хими",       "exam1": 18, "exam2": 17, "attendance": 14, "independent": 13 }
+      ]
+    },
+    {
+      "name": "Анхзаяа Цэцэгмаа",
+      "className": "11А",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 29, "exam2": 28, "attendance": 20, "independent": 19 },
+        { "subject": "Физик",      "exam1": 26, "exam2": 27, "attendance": 18, "independent": 19 },
+        { "subject": "Монгол хэл", "exam1": 28, "exam2": 29, "attendance": 19, "independent": 20 },
+        { "subject": "Англи хэл",  "exam1": 27, "exam2": 26, "attendance": 20, "independent": 18 },
+        { "subject": "Хими",       "exam1": 25, "exam2": 24, "attendance": 17, "independent": 18 }
+      ]
+    },
+    {
+      "name": "Батбаяр Лхагвасүрэн",
+      "className": "11А",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_bold",
+      "grades": [
+        { "subject": "Математик",  "exam1": 8,  "exam2": 9,  "attendance": 7,  "independent": 6  },
+        { "subject": "Физик",      "exam1": 10, "exam2": 8,  "attendance": 8,  "independent": 7  },
+        { "subject": "Монгол хэл", "exam1": 12, "exam2": 11, "attendance": 9,  "independent": 8  },
+        { "subject": "Англи хэл",  "exam1": 7,  "exam2": 8,  "attendance": 6,  "independent": 5  },
+        { "subject": "Хими",       "exam1": 9,  "exam2": 10, "attendance": 7,  "independent": 7  }
+      ]
+    },
+    {
+      "name": "Дөлгөөн Мөнхзаяа",
+      "className": "11Б",
+      "academicYear": "2024-2025",
+      "semester": 1,
+      "createdByUsername": "bagsh_saran",
+      "grades": [
+        { "subject": "Математик",  "exam1": 24, "exam2": 23, "attendance": 16, "independent": 17 },
+        { "subject": "Физик",      "exam1": 21, "exam2": 20, "attendance": 15, "independent": 14 },
+        { "subject": "Монгол хэл", "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
+        { "subject": "Англи хэл",  "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Хими",       "exam1": 20, "exam2": 19, "attendance": 14, "independent": 15 }
+      ]
+    }
+  ]
+}

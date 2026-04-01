@@ -641,6 +641,30 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
       POST /api/students ашиглан сурагч тус бүр оруулна.
       UploadIcon (Icons.jsx) шинэ SVG нэмсэн.
 
+  [15] fetchStudents page param засвар
+      App.jsx fetchStudents() URLSearchParams-д page дамжуулахгүй байсан.
+      Dashboard → onFilter({ ..., page }) дуудахад page хэзээ ч API-д
+      очдоггүй байсан. ?page= query param нэмж засагдлаа.
+
+  [16] Хичээл нэмэх UX засвар (auto-add + duplicate feedback)
+      Dashboard EditModal болон StudentDetail-д:
+      - "+" дарахгүйгээр шууд "Хадгалах" дарахад шинэ мөр автоматаар
+        нэмэгддэг болсон (newRow → grades/editGrades merge хийгдэнэ).
+      - Давхар нэр оруулвал улаан inline алдаа харагдана:
+        '"Биеийн тамир" хичээл аль хэдийн байна'
+      - Хадгалах catch-д backend-ийн яг алдааны мессеж харагдана.
+
+  [17] Аюулгүй байдал + алдааны засварууд (bug fix session)
+      authRoutes.js — бүртгэл: role: role||'teacher' → role: 'teacher'
+        Өмнө нь POST /api/auth/register-д { role: 'admin' } илгээж
+        admin эрх авах боломж байсан. Одоо role үргэлж 'teacher'.
+      App.jsx — updateStudent дотор fetchStudents()-г await хийхгүй болсон.
+        Засах modal-д "Хадгалах" дарахад loading spinner харагдаж
+        modal хаагддаг байсан алдаа засагдлаа (background refresh).
+      Profile.jsx — upload амжилттай дууссаны дараа fileRef цэвэрлэгдэнэ.
+        Ижил зургийг дахин сонгоход onChange ажиллахгүй байсан.
+      server.js — error middleware-д res.headersSent шалгалт нэмсэн.
+
   v2.0 — Сүүлийн шинэчлэлт:
   ─────────────────────────────────────────────────────────────
   [1] Cloudinary upload

@@ -40,6 +40,7 @@ app.get('/', (req, res) => {
 // Алдааны middleware
 app.use((err, req, res, next) => {
   console.error('Серверийн алдаа:', err.stack);
+  if (res.headersSent) return next(err);
   res.status(500).json({ message: 'Серверийн дотоод алдаа', error: err.message });
 });
 

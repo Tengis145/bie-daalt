@@ -78,7 +78,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     if (existingUser)
       return res.status(409).json({ message: 'Хэрэглэгчийн нэр эсвэл имэйл аль хэдийн бүртгэлтэй байна' });
 
-    const user = new User({ username, email, password, role: role || 'teacher' });
+    const user = new User({ username, email, password, role: 'teacher' });
 
     const refreshToken = generateRefreshToken(user);
     user.refreshToken  = refreshToken;

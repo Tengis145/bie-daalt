@@ -39,6 +39,7 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
       const profileRes = await axios.patch('/api/auth/profile', { profileImage: uploadRes.data.url });
       onUpdateUser(profileRes.data.user);
       setPreview(null);
+      if (fileRef.current) fileRef.current.value = '';
       showToast('Профайл зураг шинэчлэгдлээ');
     } catch (err) {
       showToast(err.response?.data?.message || 'Зураг оруулахад алдаа гарлаа', 'error');

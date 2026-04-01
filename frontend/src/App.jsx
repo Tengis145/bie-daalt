@@ -154,7 +154,7 @@ export default function App() {
 
   const updateStudent = async (id, data) => {
     const res = await axios.put(`${API}/${id}`, data);
-    await fetchStudents();
+    fetchStudents(); // background refresh — don't await to avoid loading flash during modal save
     return res.data;
   };
 

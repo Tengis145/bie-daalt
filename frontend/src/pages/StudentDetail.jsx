@@ -102,12 +102,23 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const handleRemoveGrade = (idx) => setEditGrades(prev => prev.filter((_, i) => i !== idx));
 
   const handleSave = async () => {
+    // Шинэ мөр дүүрсэн байвал автоматаар нэмнэ (+ дарахгүйгээр хадгалах боломж)
+    let finalGrades = editGrades;
+    const pendingName = newRow.subject.trim();
+    if (pendingName) {
+      if (editGrades.some(g => g.subject.toLowerCase() === pendingName.toLowerCase())) {
+        setAddError(`"${pendingName}" хичээл аль хэдийн байна`); return;
+      }
+      finalGrades = [...editGrades, { ...newRow, subject: pendingName, score: calcScore(newRow) }];
+      setEditGrades(finalGrades);
+      setNewRow({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
+      setAddError('');
+    }
     setSaving(true);
     try {
-      const updated = await onUpdate(id, { grades: editGrades });
+      const updated = await onUpdate(id, { grades: finalGrades });
       setStudent(updated);
       setEditing(false);
-      setAddError('');
       showToast('Дүн амжилттай хадгалагдлаа');
     } catch (err) {
       const msg = err.response?.data?.message || 'Хадгалахад алдаа гарлаа';

@@ -52,7 +52,22 @@ function EditModal({ student, onSave, onClose }) {
 
   const handleRemove = (idx) => setGrades(grades.filter((_, i) => i !== idx));
 
-  const handleSave = async () => { setSaving(true); try { await onSave(grades); } finally { setSaving(false); } };
+  const handleSave = async () => {
+    // Шинэ мөр дүүрсэн байвал автоматаар нэмнэ (+ дарахгүйгээр хадгалах боломж)
+    let finalGrades = grades;
+    const pendingName = newRow.subject.trim();
+    if (pendingName) {
+      if (grades.some(g => g.subject.toLowerCase() === pendingName.toLowerCase())) {
+        setAddError(`"${pendingName}" хичээл аль хэдийн байна`); return;
+      }
+      finalGrades = [...grades, { ...newRow, subject: pendingName, score: calcScore(newRow) }];
+      setGrades(finalGrades);
+      setNewRow(EMPTY_NEW);
+      setAddError('');
+    }
+    setSaving(true);
+    try { await onSave(finalGrades); } finally { setSaving(false); }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>

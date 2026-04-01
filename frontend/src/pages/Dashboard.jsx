@@ -23,6 +23,7 @@ function EditModal({ student, onSave, onClose }) {
   );
   const [newRow, setNewRow]   = useState(EMPTY_NEW);
   const [saving, setSaving]   = useState(false);
+  const [addError, setAddError] = useState('');
   const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
 
   const handleChange = (idx, field, value) => {
@@ -39,11 +40,14 @@ function EditModal({ student, onSave, onClose }) {
 
   const handleAddRow = () => {
     const name = newRow.subject.trim();
-    if (!name) return;
-    if (grades.some(g => g.subject.toLowerCase() === name.toLowerCase())) return;
+    if (!name) { setAddError('Хичээлийн нэр оруулна уу'); return; }
+    if (grades.some(g => g.subject.toLowerCase() === name.toLowerCase())) {
+      setAddError(`"${name}" хичээл аль хэдийн байна`); return;
+    }
     const score = calcScore(newRow);
     setGrades([...grades, { ...newRow, subject: name, score }]);
     setNewRow(EMPTY_NEW);
+    setAddError('');
   };
 
   const handleRemove = (idx) => setGrades(grades.filter((_, i) => i !== idx));
@@ -83,7 +87,10 @@ function EditModal({ student, onSave, onClose }) {
               ))}
               {/* Шинэ хичээл нэмэх мөр */}
               <tr style={{ background: '#f8fafc' }}>
-                <td><input className="exam-input" style={{ width:'100%', minWidth:90 }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e=>handleNewChange('subject',e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleAddRow()} /></td>
+                <td>
+                  <input className="exam-input" style={{ width:'100%', minWidth:90, borderColor: addError ? '#dc2626' : '' }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e=>{handleNewChange('subject',e.target.value);setAddError('');}} onKeyDown={e=>e.key==='Enter'&&handleAddRow()} />
+                  {addError && <div style={{ color:'#dc2626', fontSize:'0.72rem', marginTop:2 }}>{addError}</div>}
+                </td>
                 {['exam1','exam2','attendance','independent'].map(f => (
                   <td key={f}><input className="exam-input" type="number" min="0" max={maxMap[f]} value={newRow[f]} onChange={e=>handleNewChange(f,e.target.value)} /></td>
                 ))}
@@ -262,7 +269,10 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
       await onUpdate(editingStudent._id, { grades });
       showToast('Дүн амжилттай хадгалагдлаа');
       setEditingStudent(null);
-    } catch { showToast('Хадгалахад алдаа гарлаа', 'error'); }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Хадгалахад алдаа гарлаа';
+      showToast(msg, 'error');
+    }
   };
 
   const getComponentAvgs = (student) => {

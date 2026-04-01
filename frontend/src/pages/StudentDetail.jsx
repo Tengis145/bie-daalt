@@ -22,6 +22,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const [editGrades, setEditGrades] = useState([]);
   const [newRow, setNewRow] = useState({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
   const [saving, setSaving] = useState(false);
+  const [addError, setAddError] = useState('');
 
   useEffect(() => {
     setFetchError('');
@@ -88,11 +89,14 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
 
   const handleAddGrade = () => {
     const name = newRow.subject.trim();
-    if (!name) return;
-    if (editGrades.some(g => g.subject.toLowerCase() === name.toLowerCase())) return;
+    if (!name) { setAddError('Хичээлийн нэр оруулна уу'); return; }
+    if (editGrades.some(g => g.subject.toLowerCase() === name.toLowerCase())) {
+      setAddError(`"${name}" хичээл аль хэдийн байна`); return;
+    }
     const score = calcScore(newRow);
     setEditGrades(prev => [...prev, { ...newRow, subject: name, score }]);
     setNewRow({ subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 });
+    setAddError('');
   };
 
   const handleRemoveGrade = (idx) => setEditGrades(prev => prev.filter((_, i) => i !== idx));
@@ -103,9 +107,11 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       const updated = await onUpdate(id, { grades: editGrades });
       setStudent(updated);
       setEditing(false);
+      setAddError('');
       showToast('Дүн амжилттай хадгалагдлаа');
-    } catch {
-      showToast('Хадгалахад алдаа гарлаа', 'error');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Хадгалахад алдаа гарлаа';
+      showToast(msg, 'error');
     } finally {
       setSaving(false);
     }
@@ -272,7 +278,8 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 {editing && (
                   <tr style={{ background: '#f8fafc' }}>
                     <td style={{ padding: '5px 0' }}>
-                      <input className="exam-input" style={{ width: '100%', minWidth: 90 }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e => handleNewRowChange('subject', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddGrade()} />
+                      <input className="exam-input" style={{ width: '100%', minWidth: 90, borderColor: addError ? '#dc2626' : '' }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e => { handleNewRowChange('subject', e.target.value); setAddError(''); }} onKeyDown={e => e.key === 'Enter' && handleAddGrade()} />
+                      {addError && <div style={{ color: '#dc2626', fontSize: '0.72rem', marginTop: 2 }}>{addError}</div>}
                     </td>
                     {['exam1','exam2','attendance','independent'].map(f => (
                       <td key={f} style={{ padding: '5px 4px', textAlign: 'center' }}>

@@ -198,8 +198,10 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
         for (const row of rows) {
           const name  = String(row['Нэр'] || '').trim();
           const cls   = String(row['Анги'] || '').trim();
-          const year  = String(row['Хичээлийн жил'] || '').trim();
-          const sem   = Number(row['Улирал'] || 1);
+          const year  = String(row['Хичээлийн жил'] || '2024-2025').trim() || '2024-2025';
+          // semester: number 1 or 2 only — clamp robustly
+          const rawSem = Number(row['Улирал']);
+          const sem    = (rawSem === 2) ? 2 : 1;
           if (!name || !cls) continue;
           const key = `${name}||${cls}||${year}||${sem}`;
           if (!map.has(key)) map.set(key, { name, className: cls, academicYear: year, semester: sem, grades: [] });
@@ -207,24 +209,30 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
           if (subj) {
             map.get(key).grades.push({
               subject:     subj,
-              exam1:       Number(row['Шалгалт 1 (/30)'] || 0),
-              exam2:       Number(row['Шалгалт 2 (/30)'] || 0),
-              attendance:  Number(row['Ирц (/20)']       || 0),
-              independent: Number(row['Бие даалт (/20)'] || 0),
+              exam1:       Math.min(30, Math.max(0, Number(row['Шалгалт 1 (/30)']) || 0)),
+              exam2:       Math.min(30, Math.max(0, Number(row['Шалгалт 2 (/30)']) || 0)),
+              attendance:  Math.min(20, Math.max(0, Number(row['Ирц (/20)'])       || 0)),
+              independent: Math.min(20, Math.max(0, Number(row['Бие даалт (/20)']) || 0)),
             });
           }
         }
 
         if (map.size === 0) { showToast('Файлд өгөгдөл олдсонгүй', 'error'); return; }
 
-        let ok = 0, fail = 0;
+        let ok = 0, fail = 0, lastError = '';
         for (const student of map.values()) {
           try {
             await axios.post('/api/students', student);
             ok++;
-          } catch { fail++; }
+          } catch (err) {
+            fail++;
+            lastError = err.response?.data?.message || 'Алдаа гарлаа';
+          }
         }
-        showToast(`${ok} сурагч нэмэгдлаа${fail ? `, ${fail} алдаа гарлаа` : ''}`, fail ? 'error' : 'success');
+        const msg = ok > 0
+          ? `${ok} сурагч нэмэгдлаа${fail ? `, ${fail} алдаа: ${lastError}` : ''}`
+          : `Нэмэгдсэнгүй — ${lastError}`;
+        showToast(msg, fail ? 'error' : 'success');
         // Refresh list
         onFilter({ search, className: classFilter, academicYear: yearFilter, semester: semFilter, page: 1 });
         setPage(1);

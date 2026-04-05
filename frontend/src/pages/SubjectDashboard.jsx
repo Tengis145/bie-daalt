@@ -36,16 +36,22 @@ function buildSubjectStats(students) {
       const scores = entries.map(e => e.score);
       const sum    = scores.reduce((a, b) => a + b, 0);
       const avg    = scores.length ? sum / scores.length : 0;
+      const excellent = entries.filter(e => e.score >= 90).length;
+      const good      = entries.filter(e => e.score >= 75 && e.score < 90).length;
+      const below     = entries.filter(e => e.score < 75).length;
+      // Сурлагын чанар (%) = 75-аас дээш оноотой сурагч / нийт * 100
+      const qualityPct = pct(excellent + good, entries.length);
       return {
         subject,
         entries: entries.sort((a, b) => b.score - a.score),
-        count:     entries.length,
-        avg:       parseFloat(avg.toFixed(1)),
-        max:       Math.max(...scores),
-        min:       Math.min(...scores),
-        excellent: entries.filter(e => e.score >= 90).length,
-        good:      entries.filter(e => e.score >= 75 && e.score < 90).length,
-        below:     entries.filter(e => e.score < 75).length,
+        count:   entries.length,
+        avg:     parseFloat(avg.toFixed(1)),
+        max:     Math.max(...scores),
+        min:     Math.min(...scores),
+        excellent,
+        good,
+        below,
+        qualityPct,
         avgExam1:  parseFloat((entries.reduce((s, e) => s + e.exam1, 0) / entries.length).toFixed(1)),
         avgExam2:  parseFloat((entries.reduce((s, e) => s + e.exam2, 0) / entries.length).toFixed(1)),
         avgAtt:    parseFloat((entries.reduce((s, e) => s + e.attendance, 0) / entries.length).toFixed(1)),
@@ -93,9 +99,9 @@ function SubjectCard({ stat, selected, onClick }) {
 
       {/* Distribution bar */}
       <div className="dist-bar">
-        {exPct   > 0 && <div className="dist-seg dist-excellent" style={{ width: `${exPct}%` }}   title={`Тэрлэлт: ${stat.excellent}`} />}
-        {goodPct > 0 && <div className="dist-seg dist-good"      style={{ width: `${goodPct}%` }} title={`Сайн: ${stat.good}`} />}
-        {lowPct  > 0 && <div className="dist-seg dist-below"     style={{ width: `${lowPct}%` }}  title={`Дунд: ${stat.below}`} />}
+        {exPct   > 0 && <div className="dist-seg dist-excellent" style={{ width: `${exPct}%` }}   title={`Тэрлэлт (≥90): ${stat.excellent}`} />}
+        {goodPct > 0 && <div className="dist-seg dist-good"      style={{ width: `${goodPct}%` }} title={`Сайн (75-89): ${stat.good}`} />}
+        {lowPct  > 0 && <div className="dist-seg dist-below"     style={{ width: `${lowPct}%` }}  title={`Дунд (<75): ${stat.below}`} />}
       </div>
       <div className="dist-legend">
         <span style={{ color: '#059669' }}>●&nbsp;{stat.excellent} тэрлэлт</span>
@@ -105,6 +111,7 @@ function SubjectCard({ stat, selected, onClick }) {
 
       <div className="subject-card-meta">
         <div className="subject-meta-item"><span>Сурагч</span><strong>{stat.count}</strong></div>
+        <div className="subject-meta-item"><span>Чанар</span><strong style={{ color: stat.qualityPct >= 75 ? '#059669' : stat.qualityPct >= 50 ? '#2563eb' : '#d97706' }}>{stat.qualityPct}%</strong></div>
         <div className="subject-meta-item"><span>Хамгийн өндөр</span><strong style={{ color: '#059669' }}>{stat.max}</strong></div>
         <div className="subject-meta-item"><span>Хамгийн бага</span><strong style={{ color: '#d97706' }}>{stat.min}</strong></div>
       </div>
@@ -156,8 +163,8 @@ function SubjectDetail({ stat }) {
             <strong style={{ color: '#fff' }}>{stat.min}</strong>
           </div>
           <div className="subject-hero-stat">
-            <span>Тэрлэлт</span>
-            <strong style={{ color: '#fff' }}>{stat.excellent}</strong>
+            <span>Чанар</span>
+            <strong style={{ color: '#fff' }}>{stat.qualityPct}%</strong>
           </div>
         </div>
       </div>

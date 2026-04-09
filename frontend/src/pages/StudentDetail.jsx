@@ -175,6 +175,11 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 {student.academicYear} · {student.semester}-р улирал
               </span>
             )}
+            {student.email && (
+              <span className="hero-class" style={{ display: 'block', marginTop: 4, color: '#6366f1' }}>
+                ✉ {student.email}
+              </span>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>

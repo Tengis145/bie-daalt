@@ -25,6 +25,7 @@ export default function AddStudent({ onAdd, classes, showToast }) {
     lastName: '', firstName: '', className: '',
     academicYear: YEARS[0],
     semester: 1,
+    email: '',
     grades: DEFAULT_SUBJECTS.map(emptyGrade),
   });
   const [newSubject,  setNewSubject]  = useState('');
@@ -85,7 +86,8 @@ export default function AddStudent({ onAdd, classes, showToast }) {
       await onAdd({
         name: fullName, className: formData.className,
         academicYear: formData.academicYear, semester: Number(formData.semester),
-        photo: photoUrl, grades: formData.grades,
+        photo: photoUrl, email: formData.email.trim(),
+        grades: formData.grades,
       });
       showToast(`${fullName} амжилттай бүртгэгдлээ`);
       navigate('/');
@@ -154,6 +156,10 @@ export default function AddStudent({ onAdd, classes, showToast }) {
                   <option value={2}>2-р улирал</option>
                 </select>
               </div>
+            </div>
+            <div className="form-group" style={{ marginBottom: 0, marginTop: 16 }}>
+              <label>Gmail хаяг <span style={{ color: '#94a3b8', fontWeight: 400 }}>(заавал биш — сурагч дүнгээ харахад хэрэглэнэ)</span></label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="student@gmail.com" />
             </div>
           </div>
         </div>

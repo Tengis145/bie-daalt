@@ -165,17 +165,6 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
 
   const getGradeClass = (avg) => parseFloat(avg) >= 90 ? 'grade-excellent' : parseFloat(avg) >= 75 ? 'grade-good' : 'grade-average';
 
-  const gradeDist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-  filtered.forEach(s => {
-    const avg = parseFloat(s.average) || 0;
-    if (avg >= 90) gradeDist.A++;
-    else if (avg >= 75) gradeDist.B++;
-    else if (avg >= 60) gradeDist.C++;
-    else if (avg >= 50) gradeDist.D++;
-    else gradeDist.F++;
-  });
-  const LETTER_STYLE = { A: { color:'#065f46', bg:'#d1fae5' }, B: { color:'#1e40af', bg:'#dbeafe' }, C: { color:'#92400e', bg:'#fef3c7' }, D: { color:'#7c2d12', bg:'#ffedd5' }, F: { color:'#7f1d1d', bg:'#fee2e2' } };
-
   // ── Excel import template ────────────────────────────────
   const downloadTemplate = () => {
     const rows = [
@@ -354,32 +343,6 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
           </div>
         </div>
       </div>
-
-      {/* Grade Distribution */}
-      {totalStudents > 0 && (
-        <div style={{ background: 'white', borderRadius: 14, padding: '16px 20px', marginBottom: 20, boxShadow: '0 1px 6px rgba(0,0,0,.07)' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Үсгэн дүнгийн тархалт</h3>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {Object.entries(gradeDist).map(([lg, cnt]) => {
-              const ls = LETTER_STYLE[lg];
-              return (
-                <div key={lg} style={{ flex: '1 1 60px', minWidth: 60, background: ls.bg, borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: ls.color, lineHeight: 1 }}>{lg}</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: ls.color }}>{cnt}</div>
-                  <div style={{ fontSize: '0.68rem', color: ls.color, opacity: 0.8 }}>{totalStudents ? Math.round(cnt/totalStudents*100) : 0}%</div>
-                </div>
-              );
-            })}
-          </div>
-          {totalStudents > 0 && (
-            <div style={{ display: 'flex', height: 6, borderRadius: 6, overflow: 'hidden', gap: 2, marginTop: 10 }}>
-              {Object.entries(gradeDist).map(([lg, cnt]) => cnt > 0 && (
-                <div key={lg} style={{ flex: cnt, background: LETTER_STYLE[lg].bg, border: `2px solid ${LETTER_STYLE[lg].color}`, borderRadius: 3 }} title={`${lg}: ${cnt}`} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Controls — search + filters + export */}
       <div className="controls" style={{ flexWrap: 'wrap', gap: 12 }}>

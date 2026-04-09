@@ -12,20 +12,6 @@ function clamp(val, min, max) {
 function calcScore(g) {
   return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
 }
-function getLetterGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 75) return 'B';
-  if (score >= 60) return 'C';
-  if (score >= 50) return 'D';
-  return 'F';
-}
-const LETTER_STYLE = {
-  A: { color: '#065f46', bg: '#d1fae5' },
-  B: { color: '#1e40af', bg: '#dbeafe' },
-  C: { color: '#92400e', bg: '#fef3c7' },
-  D: { color: '#7c2d12', bg: '#ffedd5' },
-  F: { color: '#7f1d1d', bg: '#fee2e2' },
-};
 
 export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const { id } = useParams();
@@ -175,11 +161,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 {student.academicYear} · {student.semester}-р улирал
               </span>
             )}
-            {student.email && (
-              <span className="hero-class" style={{ marginLeft: 8, opacity: 0.75 }}>
-                ✉ {student.email}
-              </span>
-            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -205,42 +186,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           )}
         </div>
       </div>
-
-      {/* Grade Statistics */}
-      {student.grades.length > 0 && (() => {
-        const dist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-        student.grades.forEach(g => { dist[getLetterGrade(g.score)]++; });
-        const total = student.grades.length;
-        return (
-          <div style={{ background: 'white', borderRadius: 14, padding: '18px 22px', marginBottom: 20, boxShadow: '0 1px 6px rgba(0,0,0,.07)' }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Дүнгийн статистик</h3>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-              {Object.entries(dist).map(([lg, cnt]) => {
-                const ls = LETTER_STYLE[lg];
-                return (
-                  <div key={lg} style={{ flex: '1 1 70px', minWidth: 70, background: ls.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: ls.color, lineHeight: 1 }}>{lg}</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 800, color: ls.color, marginTop: 4 }}>{cnt}</div>
-                    <div style={{ fontSize: '0.7rem', color: ls.color, opacity: 0.8 }}>{total ? Math.round(cnt/total*100) : 0}%</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: 'flex', height: 8, borderRadius: 8, overflow: 'hidden', gap: 2 }}>
-              {Object.entries(dist).map(([lg, cnt]) => cnt > 0 && (
-                <div key={lg} style={{ flex: cnt, background: LETTER_STYLE[lg].bg, border: `2px solid ${LETTER_STYLE[lg].color}` }} title={`${lg}: ${cnt}`} />
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Нийт хичээл: <strong>{total}</strong></span>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Дундаж: <strong>{student.average}</strong></span>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Үсгэн дундаж: <strong style={{ color: LETTER_STYLE[getLetterGrade(parseFloat(student.average))].color }}>{getLetterGrade(parseFloat(student.average))}</strong></span>
-              <span style={{ fontSize: '0.78rem', color: '#059669' }}>A+B (≥75): <strong>{dist.A + dist.B}</strong></span>
-              <span style={{ fontSize: '0.78rem', color: '#dc2626' }}>Хангалтгүй (&lt;60): <strong>{dist.D + dist.F}</strong></span>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Content */}
       <div className="detail-content">
@@ -300,7 +245,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ирц<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>БД<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Нийт</th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Үсгэн</th>
                   {editing && <th style={{ borderBottom: '1px solid #e2e8f0' }} />}
                 </tr>
               </thead>
@@ -334,11 +278,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                         backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
                       }}>{g.score}</span>
                     </td>
-                    <td style={{ textAlign: 'center', padding: '8px 4px' }}>
-                      {(() => { const lg = getLetterGrade(g.score); const ls = LETTER_STYLE[lg]; return (
-                        <span style={{ display: 'inline-block', minWidth: 28, padding: '2px 8px', borderRadius: 6, fontWeight: 800, fontSize: '0.85rem', color: ls.color, background: ls.bg }}>{lg}</span>
-                      ); })()}
-                    </td>
                     {editing && (
                       <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                         <button style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleRemoveGrade(i)}>✕</button>
@@ -358,7 +297,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                         <input className="exam-input" type="number" min="0" max={maxMap[f]} value={newRow[f]} onChange={e => handleNewRowChange(f, e.target.value)} />
                       </td>
                     ))}
-                    <td />
                     <td />
                     <td style={{ textAlign: 'center', padding: '5px 4px' }}>
                       <button className="btn btn-success" style={{ padding: '4px 10px', fontSize: '1rem' }} onClick={handleAddGrade}>+</button>
@@ -394,7 +332,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
             <tr>
               <th>#</th><th>Хичээл</th>
               <th>Шалгалт 1 (/30)</th><th>Шалгалт 2 (/30)</th>
-              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th><th>Үсгэн</th>
+              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th>
             </tr>
           </thead>
           <tbody>
@@ -407,7 +345,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 <td>{g.attendance ?? 0}</td>
                 <td>{g.independent ?? 0}</td>
                 <td><strong>{g.score}</strong></td>
-                <td><strong>{getLetterGrade(g.score)}</strong></td>
               </tr>
             ))}
           </tbody>
@@ -415,7 +352,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
             <tr>
               <td colSpan={6} style={{ textAlign: 'right' }}><strong>Дундаж нийт оноо:</strong></td>
               <td><strong>{student.average}</strong></td>
-              <td><strong>{getLetterGrade(parseFloat(student.average))}</strong></td>
             </tr>
           </tfoot>
         </table>

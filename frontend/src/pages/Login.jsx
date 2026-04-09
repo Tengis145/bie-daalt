@@ -194,25 +194,9 @@ export default function Login({ onLogin }) {
           {tab === 'student' && (
             <>
               <h1 className="auth-main-title">Дүн харах</h1>
-              <p className="auth-main-sub">Gmail-ээр нэвтэрч өөрийн дүнгийг харна уу</p>
+              <p className="auth-main-sub">Gmail хаягаараа өөрийн дүнгийг харна уу</p>
 
-              {/* Google button */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <GoogleLogin
-                  onSuccess={handleStudentGoogle}
-                  onError={() => setLookupErr('Google нэвтрэлт амжилтгүй болсон')}
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                  width="320"
-                />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл Gmail бичих</span>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-              </div>
+              {lookupErr && <div className="auth-error">{lookupErr}</div>}
 
               <form onSubmit={handleLookup}>
                 <div className="form-group">
@@ -225,11 +209,26 @@ export default function Login({ onLogin }) {
                     required
                   />
                 </div>
-                {lookupErr && <div className="auth-error">{lookupErr}</div>}
                 <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={looking}>
                   {looking ? 'Хайж байна...' : 'Дүн харах'}
                 </button>
               </form>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл</span>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                  onSuccess={handleStudentGoogle}
+                  onError={() => setLookupErr('Google нэвтрэлт амжилтгүй болсон')}
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
+                  width="320"
+                />
+              </div>
 
               {/* Result */}
               {student && (

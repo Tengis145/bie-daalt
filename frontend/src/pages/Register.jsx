@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
 import { SchoolIcon } from '../components/Icons';
 
 export default function Register({ onLogin }) {
@@ -17,6 +18,16 @@ export default function Register({ onLogin }) {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await axios.post('/api/auth/google', { credential: credentialResponse.credential });
+      onLogin(res.data.token, res.data.user, res.data.refreshToken);
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Google бүртгэл амжилтгүй болсон');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -130,6 +141,22 @@ export default function Register({ onLogin }) {
               {loading ? 'Бүртгэж байна...' : 'Бүртгүүлэх'}
             </button>
           </form>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл</span>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google бүртгэл амжилтгүй болсон')}
+              text="signup_with"
+              shape="rectangular"
+              logo_alignment="left"
+              width="320"
+            />
+          </div>
 
           <p className="auth-footer">
             Бүртгэлтэй юу?{' '}

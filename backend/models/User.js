@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Имэйл хаяг буруу байна'],
   },
-  password: { type: String, required: true, minlength: 6 },
+  password:     { type: String, minlength: 6, default: '' }, // Google-ээр нэвтэрвэл хоосон
+  googleId:     { type: String, default: '' },               // Google OAuth ID
   role:         { type: String, enum: ['admin', 'teacher'], default: 'teacher' },
   profileImage: { type: String, default: '' },
   refreshToken: { type: String, default: '' },
@@ -19,7 +20,7 @@ const userSchema = new mongoose.Schema({
 
 // Нууц үгийг хадгалахын өмнө шийфэрлэх
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+  if (!this.isModified('password') || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
 

@@ -155,8 +155,8 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
   const totalStudents = filtered.length;
   const avgScore = totalStudents
     ? (filtered.reduce((sum, s) => sum + (parseFloat(s.average)||0), 0) / totalStudents).toFixed(1) : '—';
-  const topStudent = totalStudents
-    ? filtered.reduce((a,b) => (parseFloat(a.average)||0) >= (parseFloat(b.average)||0) ? a : b) : null;
+  const successPct = totalStudents
+    ? Math.round(filtered.filter(s => parseFloat(s.average) >= 50).length / totalStudents * 100) : 0;
   const atRiskCount = filtered.filter(s => parseFloat(s.average) < 60).length;
 
   // Хичээл тус бүрийн Чанар% (≥75 оноо авсан сурагчийн хувь)
@@ -338,10 +338,10 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
         <div className="stat-card">
           <div className="stat-icon green"><TrophyIcon size={22} color="#059669" /></div>
           <div className="stat-info">
-            <div className="stat-value" style={{ fontSize: topStudent ? '1.1rem' : '1.75rem' }}>
-              {topStudent ? topStudent.name.split(' ')[0] : '—'}
+            <div className="stat-value" style={{ color: successPct >= 75 ? '#059669' : successPct >= 50 ? '#2563eb' : '#d97706' }}>
+              {totalStudents ? `${successPct}%` : '—'}
             </div>
-            <div className="stat-label">Тэргүүлэгч сурагч</div>
+            <div className="stat-label">Сурлагын амжилт</div>
           </div>
         </div>
         <div className="stat-card" style={atRiskCount > 0 ? { borderLeft: '3px solid #dc2626' } : {}}>

@@ -3,8 +3,11 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ── Rate limiters ────────────────────────────────────────────
 const loginLimiter = rateLimit({
@@ -69,6 +72,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     if (!username || !email || !password)
       return res.status(400).json({ message: 'Хэрэглэгчийн нэр, имэйл, нууц үг шаардлагатай' });
+
     if (!validator.isEmail(email))
       return res.status(400).json({ message: 'Имэйл хаяг буруу байна' });
     if (password.length < 6)
@@ -130,6 +134,42 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Нэвтрэхэд алдаа гарлаа' });
+  }
+});
+
+// ── POST /api/auth/google ────────────────────────────────────
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'Google credential байхгүй' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { sub: googleId, email, name, picture } = ticket.getPayload();
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+    if (!user) {
+      // Шинэ хэрэглэгч үүсгэх
+      const username = (name || email.split('@')[0]).replace(/\s+/g, '').slice(0, 20)
+        + Math.floor(Math.random() * 900 + 100);
+      user = new User({ username, email, googleId, profileImage: picture || '', password: '' });
+    } else {
+      // Google ID болон зургийг шинэчлэх
+      if (!user.googleId) user.googleId = googleId;
+      if (picture && !user.profileImage) user.profileImage = picture;
+    }
+
+    const accessToken  = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    user.refreshToken  = refreshToken;
+    await user.save();
+
+    res.json({ message: 'Google-ээр амжилттай нэвтэрлээ', token: accessToken, refreshToken, user: userPayload(user) });
+  } catch (err) {
+    console.error('GOOGLE AUTH АЛДАА:', err);
+    res.status(401).json({ message: 'Google нэвтрэлт амжилтгүй болсон' });
   }
 });
 

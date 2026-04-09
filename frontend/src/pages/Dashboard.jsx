@@ -10,20 +10,6 @@ const YEARS = [`${CY - 2}-${CY - 1}`, `${CY - 1}-${CY}`, `${CY}-${CY + 1}`];
 
 function clamp(val, min, max) { const n = Number(val); return isNaN(n) ? min : Math.min(max, Math.max(min, n)); }
 function calcScore(g) { return clamp(Number(g.exam1)+Number(g.exam2)+Number(g.attendance)+Number(g.independent),0,100); }
-function getLetterGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
-const LETTER_META = [
-  { grade: 'A', label: '≥90', color: '#065f46', bg: '#d1fae5' },
-  { grade: 'B', label: '≥80', color: '#1e40af', bg: '#dbeafe' },
-  { grade: 'C', label: '≥70', color: '#92400e', bg: '#fef3c7' },
-  { grade: 'D', label: '≥60', color: '#7c2d12', bg: '#ffedd5' },
-  { grade: 'F', label: '<60', color: '#7f1d1d', bg: '#fee2e2' },
-];
 
 // ── Inline Edit Modal ────────────────────────────────────────
 const EMPTY_NEW = { subject: '', exam1: 0, exam2: 0, attendance: 0, independent: 0 };
@@ -172,11 +158,6 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
   const topStudent = totalStudents
     ? filtered.reduce((a,b) => (parseFloat(a.average)||0) >= (parseFloat(b.average)||0) ? a : b) : null;
   const atRiskCount = filtered.filter(s => parseFloat(s.average) < 60).length;
-
-  const gradeDist = LETTER_META.map(m => ({
-    ...m,
-    count: filtered.filter(s => getLetterGrade(parseFloat(s.average)) === m.grade).length,
-  }));
 
   const chartData = filtered
     .map(s => ({ name: s.name.split(' ')[0], average: parseFloat(s.average)||0 }))
@@ -362,25 +343,6 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
           </div>
         </div>
       </div>
-
-      {/* Grade Distribution */}
-      {totalStudents > 0 && (
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-          {gradeDist.map(m => (
-            <div key={m.grade} style={{
-              flex: '1 1 80px', minWidth: 80, background: m.bg,
-              borderRadius: 12, padding: '14px 16px', textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.grade}</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: m.color, margin: '4px 0 2px' }}>{m.count}</div>
-              <div style={{ fontSize: '0.7rem', color: m.color, opacity: 0.8 }}>{m.label} оноо</div>
-              <div style={{ fontSize: '0.7rem', color: m.color, opacity: 0.7 }}>
-                {totalStudents ? Math.round((m.count / totalStudents) * 100) : 0}%
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Controls — search + filters + export */}
       <div className="controls" style={{ flexWrap: 'wrap', gap: 12 }}>

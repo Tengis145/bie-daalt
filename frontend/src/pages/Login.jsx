@@ -103,9 +103,6 @@ export default function Login({ onLogin }) {
           <p className="auth-footer" style={{ marginTop: 8 }}>
             <Link to="/change-password">Нууц үг солих</Link>
           </p>
-          <p className="auth-footer" style={{ marginTop: 12, padding: '10px 14px', background: '#eff6ff', borderRadius: 8 }}>
-            Сурагч уу? <Link to="/view-grades" style={{ fontWeight: 700, color: '#4f46e5' }}>Gmail-аар дүнгээ харах →</Link>
-          </p>
         </div>
       </div>
     </div>

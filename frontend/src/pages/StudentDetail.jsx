@@ -12,6 +12,20 @@ function clamp(val, min, max) {
 function calcScore(g) {
   return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
 }
+function getLetterGrade(score) {
+  if (score >= 90) return 'A';
+  if (score >= 75) return 'B';
+  if (score >= 60) return 'C';
+  if (score >= 50) return 'D';
+  return 'F';
+}
+const LETTER_STYLE = {
+  A: { color: '#065f46', bg: '#d1fae5' },
+  B: { color: '#1e40af', bg: '#dbeafe' },
+  C: { color: '#92400e', bg: '#fef3c7' },
+  D: { color: '#7c2d12', bg: '#ffedd5' },
+  F: { color: '#7f1d1d', bg: '#fee2e2' },
+};
 
 export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const { id } = useParams();
@@ -245,6 +259,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ирц<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>БД<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
                   <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Нийт</th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Үсгэн</th>
                   {editing && <th style={{ borderBottom: '1px solid #e2e8f0' }} />}
                 </tr>
               </thead>
@@ -278,6 +293,11 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                         backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
                       }}>{g.score}</span>
                     </td>
+                    <td style={{ textAlign: 'center', padding: '8px 4px' }}>
+                      {(() => { const lg = getLetterGrade(g.score); const ls = LETTER_STYLE[lg]; return (
+                        <span style={{ display: 'inline-block', minWidth: 28, padding: '2px 8px', borderRadius: 6, fontWeight: 800, fontSize: '0.85rem', color: ls.color, background: ls.bg }}>{lg}</span>
+                      ); })()}
+                    </td>
                     {editing && (
                       <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                         <button style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleRemoveGrade(i)}>✕</button>
@@ -297,6 +317,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                         <input className="exam-input" type="number" min="0" max={maxMap[f]} value={newRow[f]} onChange={e => handleNewRowChange(f, e.target.value)} />
                       </td>
                     ))}
+                    <td />
                     <td />
                     <td style={{ textAlign: 'center', padding: '5px 4px' }}>
                       <button className="btn btn-success" style={{ padding: '4px 10px', fontSize: '1rem' }} onClick={handleAddGrade}>+</button>
@@ -332,7 +353,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
             <tr>
               <th>#</th><th>Хичээл</th>
               <th>Шалгалт 1 (/30)</th><th>Шалгалт 2 (/30)</th>
-              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th>
+              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th><th>Үсгэн</th>
             </tr>
           </thead>
           <tbody>
@@ -345,6 +366,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 <td>{g.attendance ?? 0}</td>
                 <td>{g.independent ?? 0}</td>
                 <td><strong>{g.score}</strong></td>
+                <td><strong>{getLetterGrade(g.score)}</strong></td>
               </tr>
             ))}
           </tbody>
@@ -352,6 +374,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
             <tr>
               <td colSpan={6} style={{ textAlign: 'right' }}><strong>Дундаж нийт оноо:</strong></td>
               <td><strong>{student.average}</strong></td>
+              <td><strong>{getLetterGrade(parseFloat(student.average))}</strong></td>
             </tr>
           </tfoot>
         </table>

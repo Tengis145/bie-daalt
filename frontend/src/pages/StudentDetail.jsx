@@ -149,6 +149,19 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const grades    = editing ? editGrades : student.grades;
   const photoSrc  = getImageUrl(student.photo);
 
+  // Grade distribution (A/B/C/D/F count)
+  const gradeDist = ['A','B','C','D','F'].map(lg => ({
+    grade: lg,
+    count: student.grades.filter(g => getLetterGrade(g.score) === lg).length,
+  }));
+  const LDIST_STYLE = {
+    A: { color: '#065f46', bg: '#d1fae5' },
+    B: { color: '#1e40af', bg: '#dbeafe' },
+    C: { color: '#92400e', bg: '#fef3c7' },
+    D: { color: '#7c2d12', bg: '#ffedd5' },
+    F: { color: '#7f1d1d', bg: '#fee2e2' },
+  };
+
   // Totals for summary cards
   const totals = student.grades.length > 0 ? {
     exam1:       (student.grades.reduce((s, g) => s + (g.exam1 ?? 0), 0) / student.grades.length).toFixed(1),
@@ -248,6 +261,22 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
               </div>
             )}
           </div>
+
+          {/* Grade distribution stats */}
+          {student.grades.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+              {gradeDist.map(({ grade, count }) => (
+                <div key={grade} style={{
+                  flex: '1 1 52px', textAlign: 'center', borderRadius: 10,
+                  padding: '10px 8px', background: LDIST_STYLE[grade].bg,
+                }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: LDIST_STYLE[grade].color, lineHeight: 1 }}>{grade}</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: LDIST_STYLE[grade].color, margin: '3px 0 1px' }}>{count}</div>
+                  <div style={{ fontSize: '0.65rem', color: LDIST_STYLE[grade].color, opacity: 0.75 }}>хичээл</div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div style={{ overflowX: 'auto' }}>
             <table className="grades-table">

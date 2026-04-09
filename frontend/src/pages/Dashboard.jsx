@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { UsersIcon, ChartIcon, TrophyIcon, ClassIcon, SearchIcon, DownloadIcon, UploadIcon } from '../components/Icons';
 
 const CY = new Date().getFullYear();
@@ -159,9 +159,20 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
     ? filtered.reduce((a,b) => (parseFloat(a.average)||0) >= (parseFloat(b.average)||0) ? a : b) : null;
   const atRiskCount = filtered.filter(s => parseFloat(s.average) < 60).length;
 
-  const chartData = filtered
-    .map(s => ({ name: s.name.split(' ')[0], average: parseFloat(s.average)||0 }))
-    .sort((a,b) => b.average - a.average).slice(0, 15);
+  // Хичээл тус бүрийн Чанар% (≥75 оноо авсан сурагчийн хувь)
+  const subjectQualityData = useMemo(() => {
+    const map = {};
+    filtered.forEach(s => {
+      (s.grades || []).forEach(g => {
+        if (!map[g.subject]) map[g.subject] = { total: 0, pass: 0 };
+        map[g.subject].total++;
+        if ((g.score ?? 0) >= 75) map[g.subject].pass++;
+      });
+    });
+    return Object.entries(map)
+      .map(([name, v]) => ({ name, quality: v.total ? Math.round((v.pass / v.total) * 100) : 0 }))
+      .sort((a, b) => b.quality - a.quality);
+  }, [filtered]);
 
   const getGradeClass = (avg) => parseFloat(avg) >= 90 ? 'grade-excellent' : parseFloat(avg) >= 75 ? 'grade-good' : 'grade-average';
 
@@ -403,19 +414,26 @@ export default function Dashboard({ students, pagination, classes, loading, onFi
         </div>
       </div>
 
-      {/* Chart */}
-      {chartData.length > 0 && (
+      {/* Subject Quality Chart */}
+      {subjectQualityData.length > 0 && (
         <div className="chart-section">
-          <h3>Сурагчдын дундаж дүнгийн харьцуулалт</h3>
+          <h3>Хичээл тус бүрийн сурлагын чанар (≥75 оноо авсан сурагчийн %)</h3>
           <div style={{ height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <BarChart data={subjectQualityData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }} cursor={{ fill: '#f8fafc' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="average" fill="#4f46e5" name="Дундаж дүн" radius={[5, 5, 0, 0]} />
+                <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }}
+                  cursor={{ fill: '#f8fafc' }}
+                  formatter={(val) => [`${val}%`, 'Чанар']}
+                />
+                <Bar dataKey="quality" name="Чанар %" radius={[5, 5, 0, 0]}>
+                  {subjectQualityData.map((entry, i) => (
+                    <Cell key={i} fill={entry.quality >= 75 ? '#059669' : entry.quality >= 50 ? '#3b82f6' : '#d97706'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

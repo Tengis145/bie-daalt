@@ -134,6 +134,7 @@ function SubjectDetail({ stat }) {
     name:        e.studentName.split(' ')[0],
     fullName:    e.studentName,
     className:   e.className,
+    // Exact display order: Шалгалт 1 → Шалгалт 2 → Ирц → Бие даалт
     exam1:       e.exam1,
     exam2:       e.exam2,
     attendance:  e.attendance,
@@ -186,7 +187,7 @@ function SubjectDetail({ stat }) {
                 />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
+                <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} formatter={(value) => value} />
                 <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" />
                 <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
                 <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />

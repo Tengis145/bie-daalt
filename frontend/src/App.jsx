@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
+import StudentPortal from './pages/StudentPortal';
 
 const API = '/api/students';
 
@@ -276,6 +277,7 @@ export default function App() {
 
       <main className={token ? 'main' : ''}>
           <Routes>
+            <Route path="/view-grades" element={<StudentPortal />} />
             <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
             <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
             <Route path="/" element={

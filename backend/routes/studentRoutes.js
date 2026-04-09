@@ -30,6 +30,21 @@ async function deleteCloudinaryImage(url) {
   if (publicId) await cloudinary.uploader.destroy(publicId).catch(() => {});
 }
 
+// ── PUBLIC: Gmail/имэйлээр дүн харах (нэвтрэлт шаардлагагүй) ──
+router.get('/public/lookup', async (req, res) => {
+  try {
+    const email = sanitize(String(req.query.email || '')).toLowerCase();
+    if (!email || !validator.isEmail(email))
+      return res.status(400).json({ message: 'Зөв Gmail хаяг оруулна уу' });
+    const student = await Student.findOne({ email });
+    if (!student)
+      return res.status(404).json({ message: 'Тухайн Gmail хаягтай сурагч олдсонгүй. Багшдаа имэйл хаягаа бүртгүүлнэ үү.' });
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({ message: 'Алдаа гарлаа', error: err.message });
+  }
+});
+
 router.use(authMiddleware);
 
 // ── Grade validation + score recalc ─────────────────────────
@@ -131,8 +146,10 @@ router.post('/', async (req, res) => {
     const { grades, academicYear, semester, photo } = req.body;
     const name      = sanitize(req.body.name);
     const className = sanitize(req.body.className);
+    const email     = sanitize(String(req.body.email || '')).toLowerCase();
     if (!name)      return res.status(400).json({ message: 'Нэр шаардлагатай' });
     if (!className) return res.status(400).json({ message: 'Анги шаардлагатай' });
+    if (email && !validator.isEmail(email)) return res.status(400).json({ message: 'Имэйл хаяг буруу байна' });
     const sem = Number(semester);
     if (semester !== undefined && ![1, 2].includes(sem)) return res.status(400).json({ message: 'Улирал 1 эсвэл 2 байх ёстой' });
 
@@ -150,6 +167,7 @@ router.post('/', async (req, res) => {
       academicYear: academicYear || '2024-2025',
       semester:     semester || 1,
       photo:        photo || '',
+      email:        email || '',
       createdBy:    req.user.id,
     });
     const saved = await student.save();
@@ -175,6 +193,11 @@ router.put('/:id', async (req, res) => {
     if (req.body.className !== undefined) updateData.className = sanitize(req.body.className);
     if (academicYear !== undefined) updateData.academicYear = academicYear;
     if (semester     !== undefined) updateData.semester     = semester;
+    if (req.body.email !== undefined) {
+      const email = sanitize(String(req.body.email || '')).toLowerCase();
+      if (email && !validator.isEmail(email)) return res.status(400).json({ message: 'Имэйл хаяг буруу байна' });
+      updateData.email = email;
+    }
     if (photo !== undefined) {
       if (photo !== student.photo) await deleteCloudinaryImage(student.photo);
       updateData.photo = photo;

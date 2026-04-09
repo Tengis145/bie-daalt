@@ -63,19 +63,34 @@ export default function Login({ onLogin }) {
     }
   };
 
-  const handleLookup = async (e) => {
-    e.preventDefault();
+  const lookupByEmail = async (email) => {
     setLookupErr('');
     setStudent(null);
-    if (!gmail.trim()) { setLookupErr('Gmail хаягаа оруулна уу'); return; }
     setLooking(true);
     try {
-      const res = await axios.get(`/api/students/public/lookup?email=${encodeURIComponent(gmail.trim())}`);
+      const res = await axios.get(`/api/students/public/lookup?email=${encodeURIComponent(email.trim())}`);
       setStudent(res.data);
     } catch (err) {
       setLookupErr(err.response?.data?.message || 'Алдаа гарлаа');
     } finally {
       setLooking(false);
+    }
+  };
+
+  const handleLookup = async (e) => {
+    e.preventDefault();
+    if (!gmail.trim()) { setLookupErr('Gmail хаягаа оруулна уу'); return; }
+    await lookupByEmail(gmail.trim());
+  };
+
+  const handleStudentGoogle = (credentialResponse) => {
+    try {
+      const payload = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
+      const email = payload.email;
+      setGmail(email);
+      lookupByEmail(email);
+    } catch {
+      setLookupErr('Google нэвтрэлт амжилтгүй болсон');
     }
   };
 
@@ -179,7 +194,26 @@ export default function Login({ onLogin }) {
           {tab === 'student' && (
             <>
               <h1 className="auth-main-title">Дүн харах</h1>
-              <p className="auth-main-sub">Gmail хаягаараа өөрийн дүнгийг харна уу</p>
+              <p className="auth-main-sub">Gmail-ээр нэвтэрч өөрийн дүнгийг харна уу</p>
+
+              {/* Google button */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <GoogleLogin
+                  onSuccess={handleStudentGoogle}
+                  onError={() => setLookupErr('Google нэвтрэлт амжилтгүй болсон')}
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
+                  width="320"
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл Gmail бичих</span>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+              </div>
+
               <form onSubmit={handleLookup}>
                 <div className="form-group">
                   <label>Gmail хаяг</label>

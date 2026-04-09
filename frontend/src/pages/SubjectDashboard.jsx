@@ -8,6 +8,21 @@ import { BookIcon, ChartIcon, TrophyIcon, UsersIcon } from '../components/Icons'
 // ── helpers ────────────────────────────────────────────────────
 const SCORE_COLOR = (s) => s >= 90 ? '#059669' : s >= 75 ? '#3b82f6' : '#d97706';
 
+function getLetterGrade(score) {
+  if (score >= 90) return 'A';
+  if (score >= 75) return 'B';
+  if (score >= 60) return 'C';
+  if (score >= 50) return 'D';
+  return 'F';
+}
+const LETTER_STYLE = {
+  A: { color: '#065f46', bg: '#d1fae5' },
+  B: { color: '#1e40af', bg: '#dbeafe' },
+  C: { color: '#92400e', bg: '#fef3c7' },
+  D: { color: '#7c2d12', bg: '#ffedd5' },
+  F: { color: '#7f1d1d', bg: '#fee2e2' },
+};
+
 function pct(count, total) {
   return total ? Math.round((count / total) * 100) : 0;
 }
@@ -211,6 +226,7 @@ function SubjectDetail({ stat }) {
                   <th>Ирц</th>
                   <th>БД</th>
                   <th>Нийт</th>
+                  <th>Үсгэн</th>
                 </tr>
               </thead>
               <tbody>
@@ -240,6 +256,11 @@ function SubjectDetail({ stat }) {
                         color: e.score >= 90 ? '#065f46' : e.score >= 75 ? '#1e40af' : '#92400e',
                         backgroundColor: e.score >= 90 ? '#d1fae5' : e.score >= 75 ? '#dbeafe' : '#fef3c7',
                       }}>{e.score}</span>
+                    </td>
+                    <td style={{ textAlign: 'center', padding: '8px 4px' }}>
+                      {(() => { const lg = getLetterGrade(e.score); const ls = LETTER_STYLE[lg]; return (
+                        <span style={{ display: 'inline-block', minWidth: 26, padding: '2px 7px', borderRadius: 6, fontWeight: 800, fontSize: '0.82rem', color: ls.color, background: ls.bg }}>{lg}</span>
+                      ); })()}
                     </td>
                   </tr>
                 ))}

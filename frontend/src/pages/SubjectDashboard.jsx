@@ -202,10 +202,10 @@ function SubjectDetail({ stat }) {
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
-                <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" />
-                <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
+                <Bar dataKey="independent" name="Бие даалт"  stackId="a" fill="#10b981" />
                 <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />
-                <Bar dataKey="independent" name="Бие даалт"  stackId="a" fill="#10b981" radius={[4,4,0,0]} />
+                <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
+                <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

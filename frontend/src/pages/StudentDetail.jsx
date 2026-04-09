@@ -243,6 +243,22 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           </div>
         </div>
 
+        {/* Grade distribution stats — chart-ын доор */}
+        {student.grades.length > 0 && (
+          <div style={{ display: 'flex', gap: 8, margin: '0 0 16px', flexWrap: 'wrap' }}>
+            {gradeDist.map(({ grade, count }) => (
+              <div key={grade} style={{
+                flex: '1 1 52px', textAlign: 'center', borderRadius: 10,
+                padding: '10px 8px', background: LDIST_STYLE[grade].bg,
+              }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: LDIST_STYLE[grade].color, lineHeight: 1 }}>{grade}</div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: LDIST_STYLE[grade].color, margin: '3px 0 1px' }}>{count}</div>
+                <div style={{ fontSize: '0.65rem', color: LDIST_STYLE[grade].color, opacity: 0.75 }}>хичээл</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="grades-list">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>Дүнгийн дэлгэрэнгүй</h3>
@@ -261,22 +277,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
               </div>
             )}
           </div>
-
-          {/* Grade distribution stats */}
-          {student.grades.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-              {gradeDist.map(({ grade, count }) => (
-                <div key={grade} style={{
-                  flex: '1 1 52px', textAlign: 'center', borderRadius: 10,
-                  padding: '10px 8px', background: LDIST_STYLE[grade].bg,
-                }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: LDIST_STYLE[grade].color, lineHeight: 1 }}>{grade}</div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: LDIST_STYLE[grade].color, margin: '3px 0 1px' }}>{count}</div>
-                  <div style={{ fontSize: '0.65rem', color: LDIST_STYLE[grade].color, opacity: 0.75 }}>хичээл</div>
-                </div>
-              ))}
-            </div>
-          )}
 
           <div style={{ overflowX: 'auto' }}>
             <table className="grades-table">

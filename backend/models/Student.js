@@ -16,6 +16,7 @@ const studentSchema = new mongoose.Schema({
   academicYear: { type: String, default: '2024-2025' },  // Хичээлийн жил
   semester:     { type: Number, enum: [1, 2], default: 1 }, // Улирал
   photo:        { type: String, default: '' },              // Сурагчийн зураг URL
+  email:        { type: String, default: '', trim: true },  // Gmail хаяг
   createdBy:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Бүртгэсэн хэрэглэгч
 }, { timestamps: true });
 

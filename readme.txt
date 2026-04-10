@@ -44,30 +44,37 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   │   ├── .env.example         ← Шаардлагатай орчны хувьсагчдын жишээ
   │   └── server.js            ← Express app, MongoDB холболт
   │
-  └── frontend/src/
-      ├── App.jsx              ← Routing, global state, header, pagination
-      ├── index.css            ← Бүх CSS (design tokens, layout)
-      ├── index.jsx            ← GoogleOAuthProvider wrapper
-      ├── utils/
-      │   └── imageUrl.js      ← Cloudinary/Backend URL-г зурагт нэмдэг
-      ├── components/
-      │   ├── Icons.jsx        ← SVG icon компонентууд (EyeIcon нэмэгдсэн)
-      │   └── Toast.jsx        ← Notification (success/error/info)
-      └── pages/
-          ├── Login.jsx            ← Нэвтрэх (Багш/Сурагч tab, Google OAuth,
-          │                           нууц үг харах/нуух)
-          ├── Register.jsx         ← Бүртгүүлэх (Google OAuth)
-          ├── Dashboard.jsx        ← Хяналтын самбар (хайлт, Excel,
-          │                           pagination, чанар% график,
-          │                           сурлагын амжилт%, A/B/C/D/F тоо)
-          ├── AddStudent.jsx       ← Сурагч нэмэх (зураг, дүн, gmail,
-          │                           нэвтрэх нууц үг)
-          ├── StudentDetail.jsx    ← Сурагчийн дэлгэрэнгүй + хэвлэх
-          │                           (үсгэн дүн, A/B/C/D/F тоо)
-          ├── SubjectDashboard.jsx ← Хичээл тус бүрийн аналитик
-          │                           (үсгэн дүн, дүн эрэмбэлэлт)
-          ├── Profile.jsx          ← Хэрэглэгчийн профайл зураг
-          └── ChangePassword.jsx   ← Нууц үг солих (нууц үг харах/нуух)
+  └── frontend/
+      ├── vercel.json          ← Vercel: COOP header + API proxy + SPA rewrite
+      ├── vite.config.js       ← Vite тохиргоо (proxy, chunk split)
+      └── src/
+          ├── App.jsx          ← Routing, global state, 401 interceptor
+          ├── index.css        ← Бүх CSS (design tokens, layout)
+          ├── index.jsx        ← GoogleOAuthProvider wrapper
+          ├── utils/
+          │   ├── grades.js    ← getLetterGrade() + LETTER_STYLE (хуваалцсан)
+          │   └── imageUrl.js  ← Cloudinary/Backend URL-г зурагт нэмдэг
+          ├── components/
+          │   ├── Icons.jsx    ← SVG icon компонентууд (EyeIcon/EyeOffIcon)
+          │   └── Toast.jsx    ← Notification (success/error/info)
+          └── pages/
+              ├── Login.jsx            ← Нэвтрэх: Багш/Сурагч tab,
+              │                           Google OAuth, нууц үг харах/нуух,
+              │                           сурагч email+нууц үгээр нэвтрэх
+              ├── Register.jsx         ← Бүртгүүлэх (Google OAuth)
+              ├── Dashboard.jsx        ← Хяналтын самбар: хайлт, Excel,
+              │                           pagination, чанар% график,
+              │                           сурлагын амжилт%, A/B/C/D/F тоо
+              ├── AddStudent.jsx       ← Сурагч нэмэх: зураг, дүн,
+              │                           gmail, нэвтрэх нууц үг
+              ├── StudentDetail.jsx    ← Сурагчийн дэлгэрэнгүй + хэвлэх:
+              │                           үсгэн дүн, mini progress bars,
+              │                           мөрийн өнгөлгөө, A/B/C/D/F тоо,
+              │                           sticky action bar
+              ├── SubjectDashboard.jsx ← Хичээл тус бүрийн аналитик:
+              │                           үсгэн дүн, дүн эрэмбэлэлт
+              ├── Profile.jsx          ← Хэрэглэгчийн профайл зураг
+              └── ChangePassword.jsx   ← Нууц үг солих (нууц үг харах/нуух)
 
 ----------------------------------------------------------------
 3. BACKEND ТАЙЛБАР
@@ -75,488 +82,360 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
 --- server.js ---
 
-  Express app-ийг үүсгэж, MongoDB-тэй холбож, route-уудыг
-  бүртгэдэг файл.
+  Express app-ийг үүсгэж, MongoDB-тэй холбож, route-уудыг бүртгэдэг.
 
   app.use(cors({ origin: ['https://...vercel.app', 'localhost'] }));
-  // CORS: зөвхөн энэ 2 домэйноос хүсэлт зөвшөөрнө
-
   mongoose.connect(process.env.MONGODB_URI)
-  // .env файлаас MongoDB Atlas холболтын URL уншина
-
   app.use('/api/auth',     authRoutes);
   app.use('/api/students', studentRoutes);
   app.use('/api/upload',   uploadRoutes);
-  // Route бүр өөрийн файлд хуваарилагдсан
 
 --- middleware/auth.js ---
 
-  Хамгаалагдсан route бүрт хэрэглэгддэг JWT шалгагч.
-
   const token = req.headers.authorization.split(' ')[1];
-  // "Bearer <token>" гэж ирсэн header-аас токеныг авна
-
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = decoded;
-  // Токеныг тайлж req.user дотор { id, role, username } тавина
-  // Дараагийн route handler-д req.user-г ашиглана
+  req.user = decoded;  // { id, role, username }
 
 --- models/User.js ---
 
-  MongoDB-д хэрэглэгчийн мэдээллийг хадгалах схем.
+  password: { type: String }        // Google OAuth хэрэглэгч нууц үггүй байж болно
+  googleId: { type: String, default: '' }
 
-  password: { type: String }  // Google OAuth хэрэглэгчид нууц үггүй байж болно
-  googleId: { type: String, default: '' }  // Google OAuth-д хэрэглэнэ
-
-  userSchema.pre('save', async function () {
-    if (!this.isModified('password') || !this.password) return;
-    this.password = await bcrypt.hash(this.password, 12);
-  });
-  // Хадгалахын ӨМНӨ bcrypt-ээр шифрлэнэ (12 давтамж = хүчтэй)
-  // Google OAuth хэрэглэгч нууц үггүй тул skip хийнэ
-
-  userSchema.methods.comparePassword = async function (input) {
-    return bcrypt.compare(input, this.password);
-  };
-  // Нэвтрэх үед оруулсан нууц үгийг хадгалагдсантай харьцуулна
-
+  pre('save'): bcrypt.hash(password, 12) — нууц үгийг шифрлэнэ
+               isModified('password') && password байвал л ажиллана
+  comparePassword(): bcrypt.compare(input, this.password)
   role: { enum: ['admin', 'teacher'], default: 'teacher' }
-  // Шинэ хэрэглэгч автоматаар 'teacher' болно
 
 --- models/Student.js ---
 
-  Сурагчийн схем. Дүн нь 4 хэсгээс бүрдэнэ:
-
   gradeSchema:
-    exam1       — Шалгалт 1  (max 30)
-    exam2       — Шалгалт 2  (max 30)
-    attendance  — Ирц        (max 20)
-    independent — Бие даалт  (max 20)
-    score       — Нийт = дөрвийн нийлбэр (max 100)
+    exam1 (max 30), exam2 (max 30), attendance (max 20),
+    independent (max 20), score (max 100)
 
   studentSchema:
     name, className, grades: [gradeSchema]
-    academicYear — "2024-2025" гэх хэлбэрээр
-    semester     — 1 эсвэл 2 (enum)
-    photo        — Cloudinary URL (https://res.cloudinary.com/...)
-    email        — Gmail хаяг (сурагч дүнгээ харахад хэрэглэнэ)
-    password     — Нэвтрэх нууц үг (заавал биш, bcrypt-ээр шифрлэгдэнэ)
-    createdBy    — Бүртгэсэн хэрэглэгчийн ObjectId
+    academicYear  — "2024-2025"
+    semester      — 1 эсвэл 2 (enum)
+    photo         — Cloudinary URL
+    email         — Gmail хаяг (сурагч дүнгээ харахад)
+    password      — Нэвтрэх нууц үг (заавал биш, bcrypt)
+    createdBy     — Бүртгэсэн хэрэглэгчийн ObjectId
 
-  studentSchema.pre('save', async function () {
-    if (!this.isModified('password') || !this.password) return;
-    this.password = await bcrypt.hash(this.password, 12);
-  });
-  // User.js-тэй адил bcrypt pre-save hook
-
-  studentSchema.methods.comparePassword = async function (candidate) {
-    if (!this.password) return false;
-    return bcrypt.compare(candidate, this.password);
-  };
-
-  studentSchema.virtual('average').get(function () {
-    const total = this.grades.reduce((sum, g) => sum + (g.score ?? 0), 0);
-    return (total / this.grades.length).toFixed(1);
-  });
-  // "average" талбар MongoDB-д хадгалагддаггүй — унших үед тооцоолно
-  // toJSON: { virtuals: true } тохиргоо байгаа учир API-д харагдана
+  pre('save'): bcrypt.hash(password, 12) — User.js-тэй адил
+  comparePassword(): bcrypt.compare(candidate, this.password)
+  virtual 'average': grades-ийн score-уудын дундаж
+  toJSON: { virtuals: true } → API-д average харагдана
 
 --- routes/authRoutes.js ---
 
-  Rate limiting (express-rate-limit ашиглана):
-    /login          → 15 минутэд 10 оролдлого хязгаар
-    /register       → 1 цагт 5 оролдлого хязгаар
-    /change-password → 15 минутэд 5 оролдлого хязгаар
-    /student-login  → 15 минутэд 10 оролдлого хязгаар
-    Хязгаараас хэтэрвэл 429 Too Many Requests буцаана
-
-  Input sanitization (validator.js):
-    sanitizeText(str): HTML тэг, тусгай тэмдэгт цэвэрлэнэ
-    → XSS халдлагаас хамгаалах зорилгоор бүх text input шалгана
-
-  Refresh Token систем:
-    generateAccessToken()  → expiresIn: '15m'  (богино хугацаа)
-    generateRefreshToken() → expiresIn: '30d'  (урт хугацаа)
-    Refresh token DB-д (User.refreshToken) хадгалагдана
-    POST /api/auth/refresh → шинэ access + refresh token буцаана
-                             (token rotation — хуучин refresh хүчингүй болно)
-    POST /api/auth/logout  → DB-ийн refreshToken-г '' болгоно (session цуцлана)
-    Нууц үг солих → refreshToken цэвэрлэгдэнэ (бүх session хаагдана)
+  Rate limiting:
+    /login, /student-login  → 15 минутэд 10 оролдлого
+    /register               → 1 цагт 5 оролдлого
+    /change-password        → 15 минутэд 5 оролдлого
 
   POST /api/auth/register        — Шинэ хэрэглэгч бүртгэх
-  POST /api/auth/login           — Нэвтрэх, token + refreshToken буцаана
+  POST /api/auth/login           — Имэйл+нууц үгээр нэвтрэх
   POST /api/auth/google          — Google OAuth: багш нэвтрэх/бүртгэх
-  POST /api/auth/student-login   — Сурагч email+нууц үгээр нэвтрэх
-  POST /api/auth/refresh         — Шинэ access token авах (refresh ашиглан)
-  POST /api/auth/logout          — Гарах, DB-ийн token устгана [JWT]
+  POST /api/auth/student-login   — Сурагч имэйл+нууц үгээр нэвтрэх
+  POST /api/auth/refresh         — Refresh token → шинэ access token
+  POST /api/auth/logout          — Session цуцлах [JWT]
   POST /api/auth/change-password — Нууц үг солих [rate: 5/15m]
   PATCH /api/auth/profile        — Профайл зураг шинэчлэх [JWT]
   GET   /api/auth/me             — Одоогийн хэрэглэгч [JWT]
 
   POST /api/auth/google логик:
-    google-auth-library-ийн OAuth2Client.verifyIdToken() ашиглана
-    Google credential-аас { googleId, email, name, picture } авна
-    Хэрэглэгч олдвол googleId + profileImage шинэчилнэ
+    OAuth2Client.verifyIdToken() → { googleId, email, name, picture }
+    findOne({ $or: [{ googleId }, { email }] })
     Олдохгүй бол шинэ User үүсгэнэ (нууц үггүй)
     JWT access + refresh token буцаана
 
   POST /api/auth/student-login логик:
-    Student.findOne({ email: regex }) — мэйлээр хайна
-    student.comparePassword(password) — bcrypt шалгалт
-    Зөвхөн student мэдээллийг буцаана (JWT биш)
+    Student.findOne({ email: regex }) → comparePassword()
+    Зөвхөн student объект буцаана (JWT биш)
 
-  Нэвтрэх хариу формат (багш):
+  Refresh Token систем:
+    Access token: 15 минут | Refresh token: 30 хоног
+    Token rotation: refresh ашиглах бүрт шинэ refresh буцаана
+    Logout: DB-ийн refreshToken-г '' болгоно
+
+  Нэвтрэх хариу (багш):
     { token, refreshToken, user: { id, username, email, role, profileImage } }
 
-  Нэвтрэх хариу формат (сурагч):
+  Нэвтрэх хариу (сурагч):
     { message, student: { name, className, grades, email, average, ... } }
 
 --- routes/studentRoutes.js ---
 
-  GET  /api/students/public/lookup — Нийтийн endpoint (auth шаардлагагүй)
-    ?email=student@gmail.com → Google OAuth болон Gmail-ээр дүн харах
-    Зөвхөн { name, className, academicYear, semester, grades, email } буцаана
+  GET  /api/students/public/lookup  — Auth шаардлагагүй, rate: 20/15m
+    ?email= → Student.findOne({ email: regex })
+    .select('name className academicYear semester grades email')
     password талбар хэзээ ч буцаагддаггүй
 
-  Бусад бүх route-д authMiddleware ажилладаг (router.use(authMiddleware)).
+  router.use(authMiddleware)  ← Доорх бүх route хамгаалагдсан
 
   GET    /api/students           — Хуудаслагдсан жагсаалт
-  GET    /api/students/meta/classes — Байгаа ангиудын жагсаалт
+  GET    /api/students/meta/classes — Ангиудын жагсаалт
   GET    /api/students/:id       — Нэг сурагч
-  POST   /api/students           — Шинэ сурагч нэмэх (password заавал биш)
+  POST   /api/students           — Шинэ сурагч (password заавал биш, min 6)
   PUT    /api/students/:id       — Сурагч засах
-  DELETE /api/students/:id       — Сурагч устгах + Cloudinary зураг устгана
+  DELETE /api/students/:id       — Устгах + Cloudinary зураг устгана
 
-  GET /api/students query params:
-    ?search=Болд     → MongoDB $regex нэрээр хайлт (case-insensitive)
-    ?className=11А   → Тухайн ангийн сурагчид
-    ?academicYear=2024-2025 → Хичээлийн жилээр шүүнэ
-    ?semester=1      → Улирлаар шүүнэ
-    ?page=1          → Хуудасны дугаар (default: 1)
-    ?limit=12        → Нэг хуудсан дахь тоо (default: 12, max: 50)
+  GET query params:
+    ?search=, ?className=, ?academicYear=, ?semester=, ?page=, ?limit=
+  Хариу: { students: [...], total, page, pages }
 
-  Хариу формат (GET жагсаалт):
-    { students: [...], total: 45, page: 1, pages: 4 }
-
-  Role-based шүүлт (studentFilter):
-    admin   → бүх сурагчийг харна
-    teacher → зөвхөн өөрийн бүртгэсэн (createdBy === req.user.id)
-              + бүртгэгч байхгүй legacy сурагчдыг харна
+  Role-based шүүлт:
+    admin   → бүх сурагч
+    teacher → зөвхөн createdBy === req.user.id (+ legacy)
 
   validateAndCalcGrades():
-    Дүн хадгалахын өмнө ажилладаг validator.
-    - isNaN() шалгалт: "abc" гэх утга → 400 алдаа
-    - Мужийн шалгалт: 0-30, 0-20 хязгаараас хэтэрвэл → 400 алдаа
-    - score = exam1 + exam2 + attendance + independent автоматаар тооцоолно
-    - Frontend-ийн тооцоолол итгэгддэггүй — backend дахин шалгана
-
-  Cloudinary зураг устгах (deleteCloudinaryImage):
-    DELETE /:id  → сурагч устгахад зураг Cloudinary-аас устана
-    PUT /:id     → шинэ зураг орвол хуучныг Cloudinary-аас устана
+    isNaN шалгалт, мужийн шалгалт (0-30, 0-20),
+    score = exam1+exam2+attendance+independent автоматаар
 
 --- routes/uploadRoutes.js ---
 
-  POST /api/upload — Зураг Cloudinary руу хадгалах
-
-  CloudinaryStorage тохиргоо (multer-storage-cloudinary v4):
-    folder: 'bie-daalt', transformation: 200×200 face-crop thumbnail
-  fileFilter: .jpg/.jpeg/.png/.gif/.webp
-  limits: 5MB хязгаар
+  POST /api/upload [JWT] — Cloudinary руу зураг хадгалах
+  folder: 'bie-daalt', transformation: 200×200 face-crop
+  fileFilter: .jpg/.jpeg/.png/.gif/.webp | limits: 5MB
   Хариу: { url: 'https://res.cloudinary.com/...' }
 
 ----------------------------------------------------------------
 4. FRONTEND ТАЙЛБАР
 ----------------------------------------------------------------
 
+--- frontend/vercel.json ---
+
+  headers: Cross-Origin-Opener-Policy: same-origin-allow-popups
+    → Google OAuth popup-аас postMessage зөвшөөрнө
+
+  rewrites:
+    /api/:path* → https://bie-daalt.onrender.com/api/:path*
+    /(.*)       → /index.html  (SPA fallback)
+
 --- index.jsx ---
 
-  GoogleOAuthProvider бүх App-г бүрхэж байна:
-    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <BrowserRouter><App /></BrowserRouter>
-    </GoogleOAuthProvider>
-  // VITE_GOOGLE_CLIENT_ID орчны хувьсагч Vercel-д тохируулагдсан байх ёстой
-
---- utils/imageUrl.js ---
-
-  export function getImageUrl(url) {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;  // Cloudinary URL → шууд буцаана
-    return `${BACKEND_BASE}${url}`;          // /uploads/... → full URL болгоно
-  }
+  GoogleOAuthProvider(VITE_GOOGLE_CLIENT_ID) → BrowserRouter → App
+  // VITE_GOOGLE_CLIENT_ID Vercel-ийн Environment Variables-д байх ёстой
 
 --- App.jsx ---
 
-  Гол state-ууд:
-    token       — localStorage-аас уншиж эхэлнэ
-    currentUser — { username, email, role, profileImage }
-    students    — API-аас татсан хуудасны жагсаалт
-    pagination  — { total, page, pages } — хуудаслалтын мэдээлэл
-    toasts      — Notification-ууд
+  State: token, currentUser, students, pagination, classes, toasts
+  localStorage: ebs_token, ebs_refresh, ebs_user
 
-  localStorage түлхүүрүүд:
-    ebs_token   — Access token (15 минут)
-    ebs_refresh — Refresh token (30 хоног)
-    ebs_user    — Хэрэглэгчийн мэдээлэл JSON
+  Global 401 interceptor:
+    401 → POST /api/auth/refresh → шинэ token → retry
+    Refresh дуусвал → handleLogout()
 
-  Global 401 interceptor (Refresh token auto-retry):
-    1. Хүсэлт 401 буцаана → ebs_refresh авна
-    2. POST /api/auth/refresh → шинэ token авна → retry
-    3. Refresh дуусвал → logout
+  currentUser localStorage: try/catch-тэй JSON.parse
+    // Гэмтсэн JSON байвал crash болохгүй, null буцаана
+
+--- utils/grades.js ---
+
+  export function getLetterGrade(score):
+    ≥90→A, ≥80→B, ≥70→C, ≥60→D, else F
+
+  export const LETTER_STYLE:
+    { color, bg, rowBg } — Login, StudentDetail, SubjectDashboard
+    хуваалцан ашиглана (давхардал арилгасан)
+
+--- utils/imageUrl.js ---
+
+  BASE = VITE_API_URL?.replace('/api','') || ''
+  getImageUrl(url): http → шууд буцаана | харин → BASE + url
 
 --- pages/Login.jsx ---
 
   Tab: Багш нэвтрэх / Сурагч дүн харах
+  Хоёр tab-ийн агуулга үргэлж DOM-д байна (display:none/block)
+  → GoogleLogin нэг удаа initialize хийнэ, tab солих үед дахихгүй
+
+  PasswordInput компонент:
+    useState(show) → type="password"/"text" toggle
+    EyeIcon / EyeOffIcon → position:absolute right
 
   Багш tab:
-    - Имэйл + нууц үг form (нууц үг харах/нуух товч)
-    - "Нэвтрэх" товч
-    - "эсвэл" хуваагч
-    - Google OAuth товч (GoogleLogin component)
-    - "Бүртгүүлэх" холбоос
-    - "Нууц үг солих" холбоос
+    Имэйл + нууц үг → POST /api/auth/login → JWT → navigate('/')
+    Google → POST /api/auth/google → JWT → navigate('/')
+    "Бүртгүүлэх" + "Нууц үг солих" холбоос
 
   Сурагч tab:
-    - Имэйл + нууц үг form (нууц үг харах/нуух товч)
-    - "Нэвтрэх" товч → POST /api/auth/student-login
-    - "эсвэл" хуваагч
-    - Google OAuth товч → Gmail-ийг decode → /api/students/public/lookup
-    - Амжилттай нэвтэрсний дараа дүнгийн хүснэгт харагдана
-      (нэр, анги, дундаж оноо + үсгэн дүн, хичээл бүрийн дэлгэрэнгүй)
-
-  PasswordInput компонент (хоёр tab-д хуваалцана):
-    - useState(show) → type="password" ↔ type="text"
-    - EyeIcon / EyeOffIcon (Icons.jsx) → position: absolute, right: 10px
-    - tabIndex={-1} → Tab товчоор алгасна
-
-  handleGoogleSuccess → POST /api/auth/google → onLogin() → navigate('/')
-  handleStudentGoogle → JWT decode → atob(credential.split('.')[1])
-                      → email авна → /api/students/public/lookup
+    Имэйл + нууц үг → POST /api/auth/student-login → дүн харагдана
+    Google → Gmail decode → GET /api/students/public/lookup → дүн харагдана
+    Дүн хүснэгт: Ш1/Ш2/Ирц/БД/Нийт/Үсгэн баганатай
+    "Бүртгүүлэх" + "Нууц үг солих" холбоос
 
 --- pages/Register.jsx ---
 
-  Имэйл + нууц үг form + Google OAuth товч
-  handleGoogleSuccess → POST /api/auth/google → onLogin() → navigate('/')
+  Имэйл + нууц үг form + Google OAuth
+  → POST /api/auth/register эсвэл /api/auth/google
 
 --- pages/Dashboard.jsx ---
 
-  Хяналтын самбар — гол хуудас.
+  Stat card: Нийт сурагч, Дундаж оноо,
+             Сурлагын амжилт% (avg≥50/нийт×100), At-risk тоо
 
-  Stat card-ууд:
-    - Нийт сурагч
-    - Дундаж оноо
-    - Сурлагын амжилт %  (average ≥ 50 сурагч / нийт × 100)
-    - At-risk тоо (average < 60)
+  Хичээл чанар% BarChart:
+    Хичээл тус бүрт score≥75 сурагч/нийт × 100
+    ≥75% ногоон, ≥50% шар, бусад улаан (Cell өнгө)
 
-  Хичээл тус бүрийн чанар% график (BarChart):
-    - Хичээл тус бүрт score ≥ 75 сурагчдын хувийг тооцоолно
-    - Чанар% = (≥75 сурагч / нийт) × 100
-    - Өнгийг чанараар ялгана: ≥75% ногоон, ≥50% шар, бусад улаан (Cell)
+  A/B/C/D/F тоо карт: сурагч бүрийн дундаж оноогоор
 
-  A/B/C/D/F тоо карт (Dashboard-д):
-    A ≥90, B ≥80, C ≥70, D ≥60, F <60
-    Сурагч бүрийн дундаж оноогоор тооцоолно
-
-  Шүүлтүүр (server-side, debounce 400ms):
-    search, classFilter, yearFilter, semFilter, page
-
-  At-risk анхааруулга (average < 60):
-    Улаан зураасан карт + "Дүн хангалтгүй" banner
-
+  Шүүлтүүр: search, classFilter, yearFilter, semFilter (debounce 400ms)
+  Pagination: page state → API-д явна
+  At-risk: average<60 → улаан зураасан карт
   exportExcel(): SheetJS — 2 sheet (.xlsx)
-  handleImport(): Excel файлаас олон сурагч нэгэн зэрэг оруулах
+  handleImport(): Excel-аас олон сурагч оруулах
 
 --- pages/AddStudent.jsx ---
 
-  Шинэ сурагч бүртгэх маягт.
-
-  Шинэ талбарууд:
-    - Gmail хаяг (email) — сурагч дүнгээ харахад хэрэглэнэ
-    - Нэвтрэх нууц үг (password) — заавал биш
-      Оруулсан бол bcrypt-ээр шифрлэгдэнэ (pre-save hook)
-      Оруулаагүй бол сурагч зөвхөн Google OAuth-ээр нэвтрэх боломжтой
-
-  Зураг upload, хичээл нэмэх/хасах урсгал өмнөхтэй адил.
+  Талбарууд: овог, нэр, анги, жил, улирал, зураг, gmail, нууц үг
+  Gmail + нууц үг хоёулаа заавал биш
+  Нууц үг байвал bcrypt pre-save hook ажиллана
+  Зураг: Cloudinary upload → URL → submit-тэй хамт илгээнэ
 
 --- pages/StudentDetail.jsx ---
 
-  Нэг сурагчийн дэлгэрэнгүй хуудас.
+  Hero: зураг/initials, нэр, анги, жил, имэйл,
+        дундаж оноо + 4 component mini progress bars
 
-  Үсгэн дүн (Letter Grade):
-    A ≥90, B ≥80, C ≥70, D ≥60, F <60
-    Хүснэгтийн "Үсгэн" багана — нийт оноо бүрийн хажууд
-    Хэвлэх тайланд мөн харагдана
+  Chart (ResponsiveContainer):
+    Өндөр = max(280, хичээлийн тоо × 42px) — динамик
+    Custom tooltip: Ш1/Ш2/Ирц/БД бүгдийг харуулна
+    Өнгө: ≥90 ногоон, ≥75 цэнхэр, ≥60 шар, <60 улаан
 
-  A/B/C/D/F тоо (дүнгийн хүснэгтийн дор):
-    Хичээл бүрийн нийт оноогоор тооцоолсон ангилал
-    Өнгөт карт байдлаар харагдана
+  Дүн хүснэгт:
+    Мөрийн өнгөлгөө: A→ногоон, B→цэнхэр, C→шар, D→улбар, F→улаан
+    Mini progress bars: тоо бүрийн доор жижиг дүүргэлт
+    Үсгэн дүн баганa: A/B/C/D/F badge
 
-  BarChart (Recharts):
-    Хичээл тус бүрийн 4 оноог stacked bar-аар харуулна
-    Дээрээс доош: Шалгалт 1, Шалгалт 2, Ирц, Бие даалт
+  A/B/C/D/F карт: тоо + хувь (count / нийт × 100)
+
+  Sticky action bar: position:sticky, bottom:0,
+    backdrop-filter:blur → Буцах/Хэвлэх/Устгах үргэлж харагдана
+
+  Устгах confirm: "Та '[нэр]'-ийг устгахдаа итгэлтэй байна уу?"
+
+  Засах: editGrades state, шинэ хичээл нэмэх/хасах, PUT /api/students/:id
+  Хэвлэх: window.print() → @media print → .print-report
 
 --- pages/SubjectDashboard.jsx ---
 
-  Хичээл тус бүрийн аналитик самбар.
+  buildSubjectStats(): grades-ийг хичээлээр бүлэглэж
+    avg, max, min, excellent/good/below тоог тооцоолно
 
-  Сурагчдын эрэмбэлэлтийн хүснэгтэд "Үсгэн дүн" багана нэмэгдсэн.
+  Сурагчдын эрэмбэлэлт хүснэгтэд Үсгэн дүн баганa
 
-  BarChart дахь давхар баарны дараалал (визуалаар дээрээс):
-    Шалгалт 1 (indigo) → Шалгалт 2 (purple) → Ирц (cyan) → Бие даалт (green)
+  BarChart давхар баарны визуал дараалал (дээрээс):
+    Шалгалт 1 (indigo) → Шалгалт 2 (purple) →
+    Ирц (cyan) → Бие даалт (green)
 
 --- pages/ChangePassword.jsx ---
 
-  Нэвтрэлтгүйгээр хандах боломжтой (token шаардлагагүй).
-  Бүх нууц үгийн оруулах талбарт харах/нуух товч нэмэгдсэн:
-    - Одоогийн нууц үг
-    - Шинэ нууц үг
-    - Шинэ нууц үг давтах
+  Auth шаардлагагүй (нэвтрэлтгүй хандаж болно)
+  3 нууц үгийн талбар бүгдэд EyeIcon toggle
+  Амжилтанд: 1.5 сек хүлээгээд navigate('/login') эсвэл ('/')
+  timerRef + useEffect cleanup: unmount-д timeout цэвэрлэнэ
 
-  timerRef + useEffect cleanup:
-    timerRef.current = setTimeout(...)
-    useEffect(() => () => clearTimeout(timerRef.current), [])
-    // Unmount болоход timeout цэвэрлэнэ
+--- pages/Profile.jsx ---
+
+  Camera товч → file input → Cloudinary upload →
+  PATCH /api/auth/profile → onUpdateUser() → header avatar шинэчлэгдэнэ
 
 --- components/Icons.jsx ---
 
-  SVG icon компонентууд. Шинээр нэмэгдсэн:
-    EyeIcon    — нууц үг харуулах
-    EyeOffIcon — нууц үг нуух
+  SVG icon компонентууд:
+  SchoolIcon, UsersIcon, ChartIcon, TrophyIcon, ClassIcon,
+  LockIcon, UserIcon, DashboardIcon, PlusIcon, LogoutIcon,
+  SearchIcon, DownloadIcon, PrintIcon, CameraIcon, BookIcon,
+  ShieldIcon, UploadIcon, EyeIcon, EyeOffIcon
 
 --- components/Toast.jsx ---
 
-  ToastItem бүр:
-    0ms    → mount, харагдана
-    2600ms → fade out эхэлнэ
-    3000ms → state-аас устгана
-
-  Төрөл: 'success'(ногоон) / 'error'(улаан) / 'info'(цэнхэр)
+  Notification: success(ногоон) / error(улаан) / info(цэнхэр)
+  0ms mount → 2600ms fade → 3000ms remove
 
 ----------------------------------------------------------------
-5. GOOGLE OAUTH ТОХИРУУЛГА
-----------------------------------------------------------------
-
-  1. Google Cloud Console → APIs & Services → Credentials
-  2. "Create Credentials" → "OAuth 2.0 Client IDs" → Web application
-  3. Authorized JavaScript origins:
-       https://bie-daalt-smoky.vercel.app
-       http://localhost:5173
-  4. Client ID-г Vercel-ийн Environment Variables-д нэмнэ:
-       VITE_GOOGLE_CLIENT_ID = your_client_id_here
-  5. Vercel-д Redeploy хийнэ
-
-  Backend тохируулга (.env):
-    GOOGLE_CLIENT_ID = your_client_id_here
-  // Client secret шаардлагагүй (ID token verification хийдэг)
-
-  Багш нэвтрэх урсгал:
-    GoogleLogin → onSuccess(credentialResponse) →
-    POST /api/auth/google { credential } →
-    verifyIdToken → findOrCreate User → JWT tokens буцаана →
-    onLogin() → navigate('/')
-
-  Сурагч дүн харах урсгал (Google):
-    GoogleLogin → onSuccess → atob(credential.split('.')[1]) →
-    JSON.parse → payload.email →
-    GET /api/students/public/lookup?email=... →
-    дүн харагдана (нэвтрэлтгүй)
-
-----------------------------------------------------------------
-6. ДҮНГИЙН ТООЦООЛЛЫН СИСТЕМ
+5. ДҮНГИЙН ТООЦООЛЛЫН СИСТЕМ
 ----------------------------------------------------------------
 
   Хичээл бүрийн нийт оноо:
     score = exam1 + exam2 + attendance + independent
+    exam1, exam2 → max 30 | attendance, independent → max 20
+    score → max 100
 
-    exam1       → max 30  (Шалгалт 1)
-    exam2       → max 30  (Шалгалт 2)
-    attendance  → max 20  (Ирц)
-    independent → max 20  (Бие даалт)
-    ─────────────────────────────────
-    score       → max 100 (Нийт)
-
-  Сурагчийн дундаж:
-    average = (score1 + score2 + ... + scoreN) / N
+  Сурагчийн дундаж: average = sum(scores) / N
 
   Үсгэн дүн (Letter Grade):
-    ≥ 90 → A  (тэрлэлт,  ногоон)
-    ≥ 80 → B  (сайн,     цэнхэр)
-    ≥ 70 → C  (дунд,     шар)
-    ≥ 60 → D  (хангалттай, улбар шар)
-    < 60 → F  (хангалтгүй, улаан)
+    A ≥90 | B ≥80 | C ≥70 | D ≥60 | F <60
 
-  Үнэлгээний ангилал (Dashboard at-risk):
-    ≥ 90  → Тэрлэлт    (ногоон)
-    ≥ 75  → Сайн       (цэнхэр)
-    ≥ 60  → Дунд       (шар)
-    < 60  → Хангалтгүй (улаан — at-risk анхааруулга харагдана)
-
-  Сурлагын амжилт %:
-    average ≥ 50 сурагч / нийт сурагч × 100
-
-  Хичээлийн чанар %:
-    score ≥ 75 сурагч / тухайн хичээлд бүртгэлтэй нийт × 100
+  Сурлагын амжилт%: average≥50 сурагч / нийт × 100
+  Хичээлийн чанар%: score≥75 сурагч / тухайн хичээлд бүртгэлтэй × 100
 
   Тооцооллын дараалал:
-    Frontend тооцоолно (харуулах зорилгоор, UX)
-    Backend ДАХИН тооцоолно (validateAndCalcGrades, isNaN шалгалттай)
-    → Frontend-ийн утгыг итгэж авдаггүй, backend давхар баталгаажуулна
+    Frontend: UX зорилгоор харуулна
+    Backend:  validateAndCalcGrades() дахин шалгана (isNaN + муж)
+    → Frontend-ийн утгыг итгэдэггүй
 
 ----------------------------------------------------------------
-7. АЮУЛГҮЙ БАЙДАЛ (SECURITY)
+6. АЮУЛГҮЙ БАЙДАЛ (SECURITY)
 ----------------------------------------------------------------
 
-  JWT Token (Refresh Token систем):
-    - Access token: 15 минут (богино хугацаа → алдагдсан ч аюул бага)
-    - Refresh token: 30 хоног → DB-д хадгалагдана
-    - Authorization: Bearer <access_token> header-ээр дамжина
-    - Token rotation: refresh ашиглах бүрт шинэ refresh token буцаана
+  JWT + Refresh Token:
+    Access 15min | Refresh 30 хоног | DB-д хадгалагдана
+    Token rotation: ашиглах бүрт шинэ refresh → хуучин хүчингүй
+    401 interceptor: auto-retry → logout if expired
 
   Нууц үг:
-    - bcrypt salt rounds = 12 (маш хүчтэй шифрлэлт)
-    - Plain text нууц үг MongoDB-д хэзээ ч хадгалагдахгүй
-    - User болон Student хоёулаа pre-save hook + comparePassword() ашиглана
-    - Google OAuth хэрэглэгч нууц үггүй байж болно
+    bcrypt salt=12 | plain text хэзээ ч хадгалагддаггүй
+    User болон Student хоёулаа pre-save + comparePassword()
 
-  Google OAuth аюулгүй байдал:
-    - Frontend: @react-oauth/google → Google-ийн нэмэлт хуудсаас нэвтрэнэ
-    - Backend: OAuth2Client.verifyIdToken() → Google-ийн public key-ээр шалгана
-    - Credential client side-д шууд ашиглагддаггүй
+  Google OAuth:
+    OAuth2Client.verifyIdToken() → Google public key-ээр шалгана
+    COOP header: same-origin-allow-popups → popup postMessage зөвшөөрнө
 
-  Rate Limiting (express-rate-limit):
-    - /login, /student-login → 15 минутэд 10 оролдлого
-    - /register              → 1 цагт 5 оролдлого
-    - /change-password       → 15 минутэд 5 оролдлого
+  Rate Limiting:
+    /login, /student-login → 15min/10 | /register → 1h/5
+    /change-password → 15min/5 | /public/lookup → 15min/20
 
-  Input sanitization (validator.js):
-    - name, className → sanitize(): HTML тэг + control char цэвэрлэнэ
-    - XSS-ийг MongoDB-д хадгалагдахаас урьдчилан сэргийлнэ
+  Input sanitization: validator.js — XSS, HTML тэг цэвэрлэнэ
+  Role-based access: admin/teacher | teacher → зөвхөн өөрийн сурагч
+  Public endpoint: password талбар хэзээ ч буцаагддаггүй
+  localStorage JSON.parse: try/catch — гэмтсэн data-д crash болохгүй
 
-  Role-based access:
-    - admin: бүх сурагчийг харж, засах боломжтой
-    - teacher: зөвхөн өөрийн (createdBy) сурагчдыг харна
-    - Public endpoint: /api/students/public/lookup → password талбар ирдэггүй
+----------------------------------------------------------------
+7. GOOGLE OAUTH ТОХИРУУЛГА
+----------------------------------------------------------------
 
-  File upload (Cloudinary):
-    - Зөвхөн зураг файл (.jpg/.jpeg/.png/.gif/.webp)
-    - 5MB хязгаар
-    - transformation: 200×200, crop: fill, gravity: face
+  1. Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web)
+  2. Authorized JavaScript origins:
+       https://bie-daalt-smoky.vercel.app
+       http://localhost:5173
+  3. Vercel → Environment Variables:
+       VITE_GOOGLE_CLIENT_ID = your_client_id
+  4. Render → Environment Variables:
+       GOOGLE_CLIENT_ID = your_client_id
+  5. Redeploy хийнэ
+
+  Багш нэвтрэх:
+    GoogleLogin → POST /api/auth/google → JWT → navigate('/')
+
+  Сурагч дүн харах (Google):
+    GoogleLogin → atob(credential.split('.')[1]) → email →
+    GET /api/students/public/lookup → дүн хүснэгт
 
 ----------------------------------------------------------------
 8. ОРЧНЫ ХУВЬСАГЧИД (.env)
 ----------------------------------------------------------------
 
   Backend (.env):
-    MONGODB_URI         — MongoDB Atlas connection string
-    JWT_SECRET          — Access token нууц түлхүүр
-    JWT_REFRESH_SECRET  — Refresh token нууц түлхүүр (заавал биш)
-    CLOUDINARY_CLOUD_NAME
-    CLOUDINARY_API_KEY
-    CLOUDINARY_API_SECRET
-    GOOGLE_CLIENT_ID    — Google OAuth Client ID
+    MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET
+    CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+    GOOGLE_CLIENT_ID
 
-  Frontend (.env / Vercel):
-    VITE_GOOGLE_CLIENT_ID  — Google OAuth Client ID
-    VITE_API_URL           — Backend URL (заавал биш, proxy ашиглана)
+  Frontend (Vercel Environment Variables):
+    VITE_GOOGLE_CLIENT_ID
+    VITE_API_URL = https://bie-daalt.onrender.com/api
+
+  .gitignore: **/.env — .env файл git-д хэзээ ч оруулж болохгүй
 
 ================================================================

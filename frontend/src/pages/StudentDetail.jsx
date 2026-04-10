@@ -20,12 +20,49 @@ function getLetterGrade(score) {
   return 'F';
 }
 const LETTER_STYLE = {
-  A: { color: '#065f46', bg: '#d1fae5' },
-  B: { color: '#1e40af', bg: '#dbeafe' },
-  C: { color: '#92400e', bg: '#fef3c7' },
-  D: { color: '#7c2d12', bg: '#ffedd5' },
-  F: { color: '#7f1d1d', bg: '#fee2e2' },
+  A: { color: '#065f46', bg: '#d1fae5', rowBg: '#f0fdf4' },
+  B: { color: '#1e40af', bg: '#dbeafe', rowBg: '#eff6ff' },
+  C: { color: '#92400e', bg: '#fef3c7', rowBg: '#fffbeb' },
+  D: { color: '#7c2d12', bg: '#ffedd5', rowBg: '#fff7ed' },
+  F: { color: '#7f1d1d', bg: '#fee2e2', rowBg: '#fff5f5' },
 };
+
+// Mini horizontal progress bar
+function MiniBar({ value, max, color }) {
+  const pct = Math.min(100, Math.round((value / max) * 100));
+  return (
+    <div style={{ marginTop: 3, height: 4, borderRadius: 3, background: '#e2e8f0', width: '100%', minWidth: 32 }}>
+      <div style={{ height: '100%', borderRadius: 3, width: `${pct}%`, background: color, transition: 'width .3s' }} />
+    </div>
+  );
+}
+
+// Custom chart tooltip showing all 4 components
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const g = payload[0]?.payload;
+  if (!g) return null;
+  return (
+    <div style={{ background: 'white', borderRadius: 10, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,.13)', fontSize: '0.8rem', minWidth: 160 }}>
+      <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: 6, fontSize: '0.85rem' }}>{label}</div>
+      {[
+        { label: 'Шалгалт 1', key: 'exam1',       max: 30, color: '#6366f1' },
+        { label: 'Шалгалт 2', key: 'exam2',       max: 30, color: '#8b5cf6' },
+        { label: 'Ирц',       key: 'attendance',  max: 20, color: '#06b6d4' },
+        { label: 'Бие даалт', key: 'independent', max: 20, color: '#10b981' },
+      ].map(({ label: l, key, max, color }) => (
+        <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 3 }}>
+          <span style={{ color: '#64748b' }}>{l}</span>
+          <span style={{ fontWeight: 700, color }}>{g[key] ?? 0}<span style={{ color: '#94a3b8', fontWeight: 400 }}>/{max}</span></span>
+        </div>
+      ))}
+      <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontWeight: 700, color: '#1e293b' }}>Нийт</span>
+        <span style={{ fontWeight: 900, color: '#4f46e5' }}>{g.score}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const { id } = useParams();
@@ -69,13 +106,14 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   }
 
   const handleDelete = () => {
-    if (window.confirm('Та энэ сурагчийн мэдээллийг устгахдаа итгэлтэй байна уу?')) {
+    if (window.confirm(`Та "${student.name}"-ийг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцаах боломжгүй.`)) {
       onDelete(id);
       navigate('/');
     }
   };
 
   const maxMap = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
+  const barColors = { exam1: '#6366f1', exam2: '#8b5cf6', attendance: '#06b6d4', independent: '#10b981' };
 
   const handleEditStart = () => {
     setEditGrades(student.grades.map(g => ({
@@ -116,7 +154,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const handleRemoveGrade = (idx) => setEditGrades(prev => prev.filter((_, i) => i !== idx));
 
   const handleSave = async () => {
-    // Шинэ мөр дүүрсэн байвал автоматаар нэмнэ (+ дарахгүйгээр хадгалах боломж)
     let finalGrades = editGrades;
     const pendingName = newRow.subject.trim();
     if (pendingName) {
@@ -143,32 +180,26 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   };
 
   const getScoreColor = (score) =>
-    score >= 90 ? '#059669' : score >= 75 ? '#3b82f6' : '#d97706';
+    score >= 90 ? '#059669' : score >= 75 ? '#3b82f6' : score >= 60 ? '#d97706' : '#dc2626';
 
-  const initials  = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const grades    = editing ? editGrades : student.grades;
-  const photoSrc  = getImageUrl(student.photo);
+  const initials = student.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const grades   = editing ? editGrades : student.grades;
+  const photoSrc = getImageUrl(student.photo);
 
-  // Grade distribution (A/B/C/D/F count)
   const gradeDist = ['A','B','C','D','F'].map(lg => ({
     grade: lg,
     count: student.grades.filter(g => getLetterGrade(g.score) === lg).length,
   }));
-  const LDIST_STYLE = {
-    A: { color: '#065f46', bg: '#d1fae5' },
-    B: { color: '#1e40af', bg: '#dbeafe' },
-    C: { color: '#92400e', bg: '#fef3c7' },
-    D: { color: '#7c2d12', bg: '#ffedd5' },
-    F: { color: '#7f1d1d', bg: '#fee2e2' },
-  };
+  const total = student.grades.length || 1;
 
-  // Totals for summary cards
   const totals = student.grades.length > 0 ? {
     exam1:       (student.grades.reduce((s, g) => s + (g.exam1 ?? 0), 0) / student.grades.length).toFixed(1),
     exam2:       (student.grades.reduce((s, g) => s + (g.exam2 ?? 0), 0) / student.grades.length).toFixed(1),
     attendance:  (student.grades.reduce((s, g) => s + (g.attendance ?? 0), 0) / student.grades.length).toFixed(1),
     independent: (student.grades.reduce((s, g) => s + (g.independent ?? 0), 0) / student.grades.length).toFixed(1),
   } : null;
+
+  const chartHeight = Math.max(280, student.grades.length * 42);
 
   return (
     <div className="detail-container">
@@ -188,6 +219,11 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 {student.academicYear} · {student.semester}-р улирал
               </span>
             )}
+            {student.email && (
+              <div style={{ fontSize: '0.78rem', color: '#6366f1', marginTop: 4, fontWeight: 500 }}>
+                ✉ {student.email}
+              </div>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -197,18 +233,22 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           </div>
           {totals && (
             <div className="hero-breakdown">
-              <div className="hero-breakdown-row">
-                <span>Шалгалт 1</span><strong>{totals.exam1}<em>/30</em></strong>
-              </div>
-              <div className="hero-breakdown-row">
-                <span>Шалгалт 2</span><strong>{totals.exam2}<em>/30</em></strong>
-              </div>
-              <div className="hero-breakdown-row">
-                <span>Ирц</span><strong>{totals.attendance}<em>/20</em></strong>
-              </div>
-              <div className="hero-breakdown-row">
-                <span>Бие даалт</span><strong>{totals.independent}<em>/20</em></strong>
-              </div>
+              {[
+                { label: 'Шалгалт 1', val: totals.exam1,       max: 30, color: '#6366f1' },
+                { label: 'Шалгалт 2', val: totals.exam2,       max: 30, color: '#8b5cf6' },
+                { label: 'Ирц',       val: totals.attendance,  max: 20, color: '#06b6d4' },
+                { label: 'Бие даалт', val: totals.independent, max: 20, color: '#10b981' },
+              ].map(({ label, val, max, color }) => (
+                <div key={label} className="hero-breakdown-row">
+                  <span>{label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <strong>{val}<em>/{max}</em></strong>
+                    <div style={{ width: 40, height: 4, borderRadius: 3, background: '#e2e8f0' }}>
+                      <div style={{ height: '100%', borderRadius: 3, background: color, width: `${Math.round((val / max) * 100)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -216,9 +256,10 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
 
       {/* Content */}
       <div className="detail-content">
+        {/* Chart */}
         <div className="chart-box">
           <h3>Хичээл тус бүрийн нийт дүн</h3>
-          <div style={{ width: '100%', height: 320 }}>
+          <div style={{ width: '100%', height: chartHeight }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={student.grades}
@@ -228,11 +269,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <YAxis dataKey="subject" type="category" width={75} tick={{ fontSize: 11, fill: '#374151' }} />
-                <Tooltip
-                  contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.12)' }}
-                  cursor={{ fill: 'transparent' }}
-                  formatter={(val) => [val, 'Нийт дүн']}
-                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,.06)' }} />
                 <Bar dataKey="score" name="Нийт дүн" radius={[0, 5, 5, 0]}>
                   {student.grades.map((entry, i) => (
                     <Cell key={i} fill={getScoreColor(entry.score)} />
@@ -243,6 +280,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           </div>
         </div>
 
+        {/* Grades table */}
         <div className="grades-list">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>Дүнгийн дэлгэрэнгүй</h3>
@@ -277,48 +315,56 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 </tr>
               </thead>
               <tbody>
-                {grades.map((g, i) => (
-                  <tr key={i}>
-                    <td className="subject-name" style={{ fontSize: '0.82rem' }}>{g.subject}</td>
-                    {editing ? (
-                      ['exam1','exam2','attendance','independent'].map(field => (
-                        <td key={field} style={{ padding: '5px 4px', textAlign: 'center' }}>
-                          <input
-                            className="exam-input"
-                            type="number" min="0"
-                            max={maxMap[field]}
-                            value={g[field]}
-                            onChange={e => handleFieldChange(i, field, e.target.value)}
-                          />
-                        </td>
-                      ))
-                    ) : (
-                      ['exam1','exam2','attendance','independent'].map(field => (
-                        <td key={field} style={{ textAlign: 'center', fontSize: '0.82rem', color: '#64748b', padding: '8px 4px' }}>
-                          {(g[field] == null || g[field] === 0) ? <span style={{ color: '#cbd5e1' }}>—</span> : g[field]}
-                        </td>
-                      ))
-                    )}
-                    <td style={{ textAlign: 'center', padding: '8px 0' }}>
-                      <span className="score-pill" style={{
-                        float: 'none', display: 'inline-block',
-                        color: g.score >= 90 ? '#065f46' : g.score >= 75 ? '#1e40af' : '#92400e',
-                        backgroundColor: g.score >= 90 ? '#d1fae5' : g.score >= 75 ? '#dbeafe' : '#fef3c7',
-                      }}>{g.score}</span>
-                    </td>
-                    <td style={{ textAlign: 'center', padding: '8px 4px' }}>
-                      {(() => { const lg = getLetterGrade(g.score); const ls = LETTER_STYLE[lg]; return (
-                        <span style={{ display: 'inline-block', minWidth: 28, padding: '2px 8px', borderRadius: 6, fontWeight: 800, fontSize: '0.85rem', color: ls.color, background: ls.bg }}>{lg}</span>
-                      ); })()}
-                    </td>
-                    {editing && (
-                      <td style={{ textAlign: 'center', padding: '8px 4px' }}>
-                        <button style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleRemoveGrade(i)}>✕</button>
+                {grades.map((g, i) => {
+                  const lg = getLetterGrade(g.score);
+                  const ls = LETTER_STYLE[lg];
+                  return (
+                    <tr key={i} style={{ background: editing ? 'transparent' : ls.rowBg }}>
+                      <td className="subject-name" style={{ fontSize: '0.82rem' }}>{g.subject}</td>
+                      {editing ? (
+                        ['exam1','exam2','attendance','independent'].map(field => (
+                          <td key={field} style={{ padding: '5px 4px', textAlign: 'center' }}>
+                            <input
+                              className="exam-input"
+                              type="number" min="0"
+                              max={maxMap[field]}
+                              value={g[field]}
+                              onChange={e => handleFieldChange(i, field, e.target.value)}
+                            />
+                          </td>
+                        ))
+                      ) : (
+                        ['exam1','exam2','attendance','independent'].map(field => (
+                          <td key={field} style={{ textAlign: 'center', padding: '6px 4px' }}>
+                            {(g[field] == null || g[field] === 0)
+                              ? <span style={{ color: '#cbd5e1', fontSize: '0.82rem' }}>—</span>
+                              : (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>{g[field]}</span>
+                                  <MiniBar value={g[field]} max={maxMap[field]} color={barColors[field]} />
+                                </div>
+                              )
+                            }
+                          </td>
+                        ))
+                      )}
+                      <td style={{ textAlign: 'center', padding: '8px 0' }}>
+                        <span className="score-pill" style={{
+                          float: 'none', display: 'inline-block',
+                          color: ls.color, backgroundColor: ls.bg,
+                        }}>{g.score}</span>
                       </td>
-                    )}
-                  </tr>
-                ))}
-                {/* Шинэ хичээл нэмэх мөр */}
+                      <td style={{ textAlign: 'center', padding: '8px 4px' }}>
+                        <span style={{ display: 'inline-block', minWidth: 28, padding: '2px 8px', borderRadius: 6, fontWeight: 800, fontSize: '0.85rem', color: ls.color, background: ls.bg }}>{lg}</span>
+                      </td>
+                      {editing && (
+                        <td style={{ textAlign: 'center', padding: '8px 4px' }}>
+                          <button style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleRemoveGrade(i)}>✕</button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
                 {editing && (
                   <tr style={{ background: '#f8fafc' }}>
                     <td style={{ padding: '5px 0' }}>
@@ -342,24 +388,38 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           </div>
         </div>
 
-        {/* Grade distribution stats — Дүнгийн дэлгэрэнгүйн доор */}
+        {/* Grade distribution */}
         {student.grades.length > 0 && (
           <div style={{ display: 'flex', gap: 8, margin: '16px 0 0', flexWrap: 'wrap' }}>
-            {gradeDist.map(({ grade, count }) => (
-              <div key={grade} style={{
-                flex: '1 1 52px', textAlign: 'center', borderRadius: 10,
-                padding: '10px 8px', background: LDIST_STYLE[grade].bg,
-              }}>
-                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: LDIST_STYLE[grade].color, lineHeight: 1 }}>{grade}</div>
-                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: LDIST_STYLE[grade].color, margin: '3px 0 1px' }}>{count}</div>
-                <div style={{ fontSize: '0.65rem', color: LDIST_STYLE[grade].color, opacity: 0.75 }}>хичээл</div>
-              </div>
-            ))}
+            {gradeDist.map(({ grade, count }) => {
+              const pct = Math.round((count / total) * 100);
+              const ls  = LETTER_STYLE[grade];
+              return (
+                <div key={grade} style={{
+                  flex: '1 1 60px', textAlign: 'center', borderRadius: 10,
+                  padding: '10px 8px', background: ls.bg,
+                }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: ls.color, lineHeight: 1 }}>{grade}</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: ls.color, margin: '3px 0 1px' }}>{count}</div>
+                  <div style={{ fontSize: '0.62rem', color: ls.color, opacity: 0.8 }}>{pct}%</div>
+                  <div style={{ fontSize: '0.6rem', color: ls.color, opacity: 0.6 }}>хичээл</div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <div className="detail-actions">
+      {/* Sticky action bar */}
+      <div className="detail-actions" style={{
+        position: 'sticky', bottom: 0,
+        background: 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(8px)',
+        borderTop: '1px solid #e2e8f0',
+        zIndex: 10,
+        padding: '12px 0',
+        marginTop: 24,
+      }}>
         <button onClick={() => navigate('/')} className="btn btn-secondary">← Буцах</button>
         <button onClick={() => window.print()} className="btn btn-secondary">
           <PrintIcon size={15} color="currentColor" />Хэвлэх
@@ -367,7 +427,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
         <button onClick={handleDelete} className="btn btn-danger">Устгах</button>
       </div>
 
-      {/* ── Print-only report card ── */}
+      {/* Print report */}
       <div className="print-report">
         <div className="print-school">ЕБС ДҮН БҮРТГЭЛИЙН СИСТЕМ</div>
         <div className="print-title">ДҮНГИЙН ТАЙЛАН</div>

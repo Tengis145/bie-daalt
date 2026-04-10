@@ -163,9 +163,8 @@ export default function Login({ onLogin }) {
             </button>
           </div>
 
-          {/* Teacher login */}
-          {tab === 'teacher' && (
-            <>
+          {/* Teacher login — always mounted, hidden when inactive */}
+          <div style={{ display: tab === 'teacher' ? 'block' : 'none' }}>
               <h1 className="auth-main-title">Нэвтрэх</h1>
               <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
               {error && <div className="auth-error">{error}</div>}
@@ -205,12 +204,10 @@ export default function Login({ onLogin }) {
               <p className="auth-footer" style={{ marginTop: 8 }}>
                 <Link to="/change-password">Нууц үг солих</Link>
               </p>
-            </>
-          )}
+          </div>
 
-          {/* Student login */}
-          {tab === 'student' && (
-            <>
+          {/* Student login — always mounted, hidden when inactive */}
+          <div style={{ display: tab === 'student' ? 'block' : 'none' }}>
               <h1 className="auth-main-title">Нэвтрэх</h1>
               <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
 
@@ -333,8 +330,7 @@ export default function Login({ onLogin }) {
                   </p>
                 </div>
               )}
-            </>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -273,6 +273,13 @@ export default function Login({ onLogin }) {
                 />
               </div>
 
+              <p className="auth-footer">
+                Бүртгэлгүй юу?{' '}<Link to="/register">Бүртгүүлэх</Link>
+              </p>
+              <p className="auth-footer" style={{ marginTop: 8 }}>
+                <Link to="/change-password">Нууц үг солих</Link>
+              </p>
+
               {/* Grade result */}
               {student && (
                 <div style={{ marginTop: 24 }}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleLogin } from '@react-oauth/google';
-import { SchoolIcon } from '../components/Icons';
+import { SchoolIcon, EyeIcon, EyeOffIcon } from '../components/Icons';
 
 function getLetterGrade(score) {
   if (score >= 90) return 'A';
@@ -19,6 +19,32 @@ const LS = {
   F: { color: '#7f1d1d', bg: '#fee2e2' },
 };
 
+function PasswordInput({ name, value, onChange, placeholder, required }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        type={show ? 'text' : 'password'}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        style={{ paddingRight: 40 }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(s => !s)}
+        style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex', alignItems: 'center' }}
+        tabIndex={-1}
+        aria-label={show ? 'Нууц үг нуух' : 'Нууц үг харуулах'}
+      >
+        {show ? <EyeOffIcon size={17} /> : <EyeIcon size={17} />}
+      </button>
+    </div>
+  );
+}
+
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState('teacher'); // 'teacher' | 'student'
@@ -28,15 +54,20 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Student lookup
-  const [gmail, setGmail]       = useState('');
-  const [student, setStudent]   = useState(null);
-  const [lookupErr, setLookupErr] = useState('');
-  const [looking, setLooking]   = useState(false);
+  // Student login
+  const [stuData, setStuData]     = useState({ email: '', password: '' });
+  const [student, setStudent]     = useState(null);
+  const [stuErr,  setStuErr]      = useState('');
+  const [stuLoad, setStuLoad]     = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleStuChange = (e) => {
+    setStuData({ ...stuData, [e.target.name]: e.target.value });
+    setStuErr('');
   };
 
   const handleSubmit = async (e) => {
@@ -53,6 +84,21 @@ export default function Login({ onLogin }) {
     }
   };
 
+  const handleStudentLogin = async (e) => {
+    e.preventDefault();
+    setStuLoad(true);
+    setStuErr('');
+    setStudent(null);
+    try {
+      const res = await axios.post('/api/auth/student-login', stuData);
+      setStudent(res.data.student);
+    } catch (err) {
+      setStuErr(err.response?.data?.message || 'Нэвтрэхэд алдаа гарлаа');
+    } finally {
+      setStuLoad(false);
+    }
+  };
+
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const res = await axios.post('/api/auth/google', { credential: credentialResponse.credential });
@@ -63,34 +109,20 @@ export default function Login({ onLogin }) {
     }
   };
 
-  const lookupByEmail = async (email) => {
-    setLookupErr('');
-    setStudent(null);
-    setLooking(true);
-    try {
-      const res = await axios.get(`/api/students/public/lookup?email=${encodeURIComponent(email.trim())}`);
-      setStudent(res.data);
-    } catch (err) {
-      setLookupErr(err.response?.data?.message || 'Алдаа гарлаа');
-    } finally {
-      setLooking(false);
-    }
-  };
-
-  const handleLookup = async (e) => {
-    e.preventDefault();
-    if (!gmail.trim()) { setLookupErr('Gmail хаягаа оруулна уу'); return; }
-    await lookupByEmail(gmail.trim());
-  };
-
-  const handleStudentGoogle = (credentialResponse) => {
+  const handleStudentGoogle = async (credentialResponse) => {
     try {
       const payload = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
-      const email = payload.email;
-      setGmail(email);
-      lookupByEmail(email);
-    } catch {
-      setLookupErr('Google нэвтрэлт амжилтгүй болсон');
+      const email   = payload.email;
+      setStuData(d => ({ ...d, email }));
+      setStuErr('');
+      setStudent(null);
+      setStuLoad(true);
+      const res = await axios.get(`/api/students/public/lookup?email=${encodeURIComponent(email)}`);
+      setStudent(res.data);
+    } catch (err) {
+      setStuErr(err.response?.data?.message || 'Google нэвтрэлт амжилтгүй болсон');
+    } finally {
+      setStuLoad(false);
     }
   };
 
@@ -132,7 +164,7 @@ export default function Login({ onLogin }) {
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 0, marginBottom: 24, border: '1.5px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
             <button
-              onClick={() => { setTab('teacher'); setStudent(null); setLookupErr(''); }}
+              onClick={() => { setTab('teacher'); setStudent(null); setStuErr(''); }}
               style={{ flex: 1, padding: '10px', fontWeight: 700, fontSize: '0.875rem', border: 'none', cursor: 'pointer', background: tab === 'teacher' ? '#4f46e5' : 'white', color: tab === 'teacher' ? 'white' : '#64748b', transition: 'all .15s' }}
             >
               Багш нэвтрэх
@@ -158,7 +190,7 @@ export default function Login({ onLogin }) {
                 </div>
                 <div className="form-group">
                   <label>Нууц үг</label>
-                  <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
+                  <PasswordInput name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
                 </div>
                 <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={loading}>
                   {loading ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
@@ -190,27 +222,38 @@ export default function Login({ onLogin }) {
             </>
           )}
 
-          {/* Student Gmail lookup */}
+          {/* Student login */}
           {tab === 'student' && (
             <>
-              <h1 className="auth-main-title">Дүн харах</h1>
-              <p className="auth-main-sub">Gmail хаягаараа өөрийн дүнгийг харна уу</p>
+              <h1 className="auth-main-title">Нэвтрэх</h1>
+              <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
 
-              {lookupErr && <div className="auth-error">{lookupErr}</div>}
+              {stuErr && <div className="auth-error">{stuErr}</div>}
 
-              <form onSubmit={handleLookup}>
+              <form onSubmit={handleStudentLogin}>
                 <div className="form-group">
-                  <label>Gmail хаяг</label>
+                  <label>Имэйл хаяг</label>
                   <input
                     type="email"
-                    value={gmail}
-                    onChange={e => { setGmail(e.target.value); setLookupErr(''); setStudent(null); }}
-                    placeholder="student@gmail.com"
+                    name="email"
+                    value={stuData.email}
+                    onChange={handleStuChange}
+                    placeholder="email@example.com"
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={looking}>
-                  {looking ? 'Хайж байна...' : 'Дүн харах'}
+                <div className="form-group">
+                  <label>Нууц үг</label>
+                  <PasswordInput
+                    name="password"
+                    value={stuData.password}
+                    onChange={handleStuChange}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={stuLoad}>
+                  {stuLoad ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
                 </button>
               </form>
 
@@ -222,7 +265,7 @@ export default function Login({ onLogin }) {
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <GoogleLogin
                   onSuccess={handleStudentGoogle}
-                  onError={() => setLookupErr('Google нэвтрэлт амжилтгүй болсон')}
+                  onError={() => setStuErr('Google нэвтрэлт амжилтгүй болсон')}
                   text="signin_with"
                   shape="rectangular"
                   logo_alignment="left"
@@ -230,10 +273,9 @@ export default function Login({ onLogin }) {
                 />
               </div>
 
-              {/* Result */}
+              {/* Grade result */}
               {student && (
                 <div style={{ marginTop: 24 }}>
-                  {/* Student header */}
                   <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px', marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1e293b' }}>{student.name}</div>
@@ -257,7 +299,6 @@ export default function Login({ onLogin }) {
                     })()}
                   </div>
 
-                  {/* Grades table */}
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                       <thead>

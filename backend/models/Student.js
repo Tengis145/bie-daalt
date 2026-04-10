@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt   = require('bcryptjs');
 
 const gradeSchema = new mongoose.Schema({
   subject:     { type: String, required: true },
@@ -17,8 +18,20 @@ const studentSchema = new mongoose.Schema({
   semester:     { type: Number, enum: [1, 2], default: 1 }, // Улирал
   photo:        { type: String, default: '' },              // Сурагчийн зураг URL
   email:        { type: String, default: '', trim: true },  // Gmail хаяг
+  password:     { type: String, default: '' },               // Нэвтрэх нууц үг (заавал биш)
   createdBy:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Бүртгэсэн хэрэглэгч
 }, { timestamps: true });
+
+studentSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || !this.password) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+studentSchema.methods.comparePassword = async function (candidate) {
+  if (!this.password) return false;
+  return bcrypt.compare(candidate, this.password);
+};
 
 studentSchema.virtual('average').get(function () {
   if (!this.grades || this.grades.length === 0) return 0;

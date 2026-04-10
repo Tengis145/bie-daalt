@@ -26,6 +26,7 @@ export default function AddStudent({ onAdd, classes, showToast }) {
     academicYear: YEARS[0],
     semester: 1,
     email: '',
+    password: '',
     grades: DEFAULT_SUBJECTS.map(emptyGrade),
   });
   const [newSubject,  setNewSubject]  = useState('');
@@ -87,6 +88,7 @@ export default function AddStudent({ onAdd, classes, showToast }) {
         name: fullName, className: formData.className,
         academicYear: formData.academicYear, semester: Number(formData.semester),
         photo: photoUrl, email: formData.email.trim(),
+        ...(formData.password ? { password: formData.password } : {}),
         grades: formData.grades,
       });
       showToast(`${fullName} амжилттай бүртгэгдлээ`);
@@ -157,9 +159,15 @@ export default function AddStudent({ onAdd, classes, showToast }) {
                 </select>
               </div>
             </div>
-            <div className="form-group" style={{ marginBottom: 0, marginTop: 16 }}>
-              <label>Gmail хаяг <span style={{ color: '#94a3b8', fontWeight: 400 }}>(сурагч дүнгээ харахад хэрэглэнэ)</span></label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="student@gmail.com" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Gmail хаяг <span style={{ color: '#94a3b8', fontWeight: 400 }}>(заавал биш)</span></label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="student@gmail.com" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Нэвтрэх нууц үг <span style={{ color: '#94a3b8', fontWeight: 400 }}>(заавал биш)</span></label>
+                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Дор хаяж 6 тэмдэгт" />
+              </div>
             </div>
           </div>
         </div>

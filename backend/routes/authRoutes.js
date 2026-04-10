@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
 const { OAuth2Client } = require('google-auth-library');
-const User = require('../models/User');
+const User    = require('../models/User');
+const Student = require('../models/Student');
 const authMiddleware = require('../middleware/auth');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -170,6 +171,30 @@ router.post('/google', async (req, res) => {
   } catch (err) {
     console.error('GOOGLE AUTH АЛДАА:', err);
     res.status(401).json({ message: 'Google нэвтрэлт амжилтгүй болсон' });
+  }
+});
+
+// ── POST /api/auth/student-login ────────────────────────────
+router.post('/student-login', loginLimiter, async (req, res) => {
+  try {
+    const email    = sanitizeText(req.body.email).toLowerCase();
+    const password = req.body.password;
+
+    if (!email || !password)
+      return res.status(400).json({ message: 'Имэйл болон нууц үг шаардлагатай' });
+
+    const student = await Student.findOne({ email: { $regex: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+    if (!student || !student.password)
+      return res.status(401).json({ message: 'Имэйл эсвэл нууц үг буруу байна' });
+
+    const isMatch = await student.comparePassword(password);
+    if (!isMatch)
+      return res.status(401).json({ message: 'Имэйл эсвэл нууц үг буруу байна' });
+
+    res.json({ message: 'Амжилттай нэвтэрлээ', student });
+  } catch (err) {
+    console.error('STUDENT LOGIN АЛДАА:', err);
+    res.status(500).json({ message: 'Нэвтрэхэд алдаа гарлаа' });
   }
 });
 

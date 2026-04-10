@@ -142,7 +142,7 @@ router.get('/:id', async (req, res) => {
 // ── Шинэ сурагч нэмэх ───────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { grades, academicYear, semester, photo, email } = req.body;
+    const { grades, academicYear, semester, photo, email, password } = req.body;
     const name      = sanitize(req.body.name);
     const className = sanitize(req.body.className);
     if (!name)      return res.status(400).json({ message: 'Нэр шаардлагатай' });
@@ -165,6 +165,7 @@ router.post('/', async (req, res) => {
       semester:     semester || 1,
       photo:        photo || '',
       email:        (email || '').trim().toLowerCase(),
+      ...(password ? { password } : {}),
       createdBy:    req.user.id,
     });
     const saved = await student.save();

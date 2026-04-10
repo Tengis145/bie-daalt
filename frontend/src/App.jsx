@@ -31,8 +31,12 @@ function ProtectedRoute({ token, children }) {
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem('ebs_token') || '');
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('ebs_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('ebs_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });

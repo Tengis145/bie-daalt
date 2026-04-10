@@ -3,21 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleLogin } from '@react-oauth/google';
 import { SchoolIcon, EyeIcon, EyeOffIcon } from '../components/Icons';
-
-function getLetterGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
-const LS = {
-  A: { color: '#065f46', bg: '#d1fae5' },
-  B: { color: '#1e40af', bg: '#dbeafe' },
-  C: { color: '#92400e', bg: '#fef3c7' },
-  D: { color: '#7c2d12', bg: '#ffedd5' },
-  F: { color: '#7f1d1d', bg: '#fee2e2' },
-};
+import { getLetterGrade, LETTER_STYLE as LS } from '../utils/grades';
 
 function PasswordInput({ name, value, onChange, placeholder, required }) {
   const [show, setShow] = useState(false);

@@ -1,9 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const validator = require('validator');
-const Student = require('../models/Student');
+const express   = require('express');
+const router     = express.Router();
+const rateLimit  = require('express-rate-limit');
+const validator  = require('validator');
+const Student    = require('../models/Student');
 const authMiddleware = require('../middleware/auth');
 const cloudinary = require('cloudinary').v2;
+
+const lookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: '15 минутэд 20-оос илүү хүсэлт хийж болохгүй.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // HTML тэг болон аюултай тэмдэгтийг цэвэрлэнэ
 function sanitize(str) {
@@ -31,7 +40,7 @@ async function deleteCloudinaryImage(url) {
 }
 
 // ── Public: сурагч Gmail-аар дүн харах ──────────────────────
-router.get('/public/lookup', async (req, res) => {
+router.get('/public/lookup', lookupLimiter, async (req, res) => {
   try {
     const email = (req.query.email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ message: 'Gmail хаяг оруулна уу' });
@@ -147,6 +156,7 @@ router.post('/', async (req, res) => {
     const className = sanitize(req.body.className);
     if (!name)      return res.status(400).json({ message: 'Нэр шаардлагатай' });
     if (!className) return res.status(400).json({ message: 'Анги шаардлагатай' });
+    if (password && password.length < 6) return res.status(400).json({ message: 'Нууц үг дор хаяж 6 тэмдэгт байх ёстой' });
     const sem = Number(semester);
     if (semester !== undefined && ![1, 2].includes(sem)) return res.status(400).json({ message: 'Улирал 1 эсвэл 2 байх ёстой' });
 
@@ -166,7 +176,7 @@ router.post('/', async (req, res) => {
       photo:        photo || '',
       email:        (email || '').trim().toLowerCase(),
       ...(password ? { password } : {}),
-      createdBy:    req.user.id,
+      createdBy: req.user.id,
     });
     const saved = await student.save();
     res.status(201).json(saved);

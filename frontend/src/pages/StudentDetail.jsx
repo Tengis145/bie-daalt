@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { PrintIcon } from '../components/Icons';
 import { getImageUrl } from '../utils/imageUrl';
+import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
 
 function clamp(val, min, max) {
   const n = Number(val);
@@ -12,20 +13,6 @@ function clamp(val, min, max) {
 function calcScore(g) {
   return clamp(Number(g.exam1) + Number(g.exam2) + Number(g.attendance) + Number(g.independent), 0, 100);
 }
-function getLetterGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
-const LETTER_STYLE = {
-  A: { color: '#065f46', bg: '#d1fae5', rowBg: '#f0fdf4' },
-  B: { color: '#1e40af', bg: '#dbeafe', rowBg: '#eff6ff' },
-  C: { color: '#92400e', bg: '#fef3c7', rowBg: '#fffbeb' },
-  D: { color: '#7c2d12', bg: '#ffedd5', rowBg: '#fff7ed' },
-  F: { color: '#7f1d1d', bg: '#fee2e2', rowBg: '#fff5f5' },
-};
 
 // Mini horizontal progress bar
 function MiniBar({ value, max, color }) {

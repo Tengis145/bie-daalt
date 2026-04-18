@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
 import StudentGrades from './pages/StudentGrades';
+import StudentProfile from './pages/StudentProfile';
 
 const API = '/api/students';
 
@@ -302,6 +303,11 @@ export default function App() {
             <Route path="/my-grades" element={
               studentSession
                 ? <StudentGrades student={studentSession} onLogout={handleStudentLogout} standalone={!token} />
+                : <Navigate to="/login" replace />
+            } />
+            <Route path="/my-profile" element={
+              studentSession
+                ? <StudentProfile student={studentSession} onLogout={handleStudentLogout} standalone={!token} />
                 : <Navigate to="/login" replace />
             } />
             <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />

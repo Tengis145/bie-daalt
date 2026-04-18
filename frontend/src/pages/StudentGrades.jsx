@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
 import { getImageUrl } from '../utils/imageUrl';
+import { Link } from 'react-router-dom';
 import { SchoolIcon, LogoutIcon, PrintIcon, ChartIcon, TrophyIcon, BookIcon } from '../components/Icons';
 
 function MiniBar({ value, max, color }) {
@@ -110,13 +111,13 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div className="user-badge" style={{ background: 'rgba(255,255,255,.15)' }}>
+              <Link to="/my-profile" className="user-badge" style={{ background: 'rgba(255,255,255,.15)', textDecoration: 'none' }}>
                 {photoSrc
                   ? <img src={photoSrc} alt="" className="user-avatar-img" />
                   : <div className="user-avatar">{initials}</div>
                 }
                 <span className="user-name">{student.name}</span>
-              </div>
+              </Link>
               <button className="btn-logout" onClick={() => window.print()}>
                 <PrintIcon size={14} color="currentColor" />Хэвлэх
               </button>

@@ -232,10 +232,10 @@ export default function Login({ onLogin }) {
                 />
               </div>
 
-              <p className="auth-footer">
-                Бүртгэлгүй юу?{' '}<Link to="/register">Бүртгүүлэх</Link>
+              <p className="auth-footer" style={{ marginTop: 8, color: '#64748b', fontSize: '0.82rem' }}>
+                Нэвтрэх мэдээллийг багшаасаа аваарай
               </p>
-              <p className="auth-footer" style={{ marginTop: 8 }}>
+              <p className="auth-footer" style={{ marginTop: 4 }}>
                 <Link to="/change-password">Нууц үг солих</Link>
               </p>
 

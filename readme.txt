@@ -10,9 +10,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 1. ТЕХНОЛОГИЙН СТЕК (TECH STACK)
 ----------------------------------------------------------------
 
-  Frontend  — React 18 + Vite, React Router v7, Axios, Recharts,
-              SheetJS (xlsx), @react-oauth/google,
-              React.lazy + Suspense (lazy loading)
+  Frontend  — React 19 + Vite, React Router v7, Axios, Recharts,
+              SheetJS (xlsx), @react-oauth/google
   Backend   — Node.js, Express 5
   Database  — MongoDB Atlas (Mongoose ODM)
   Auth      — JWT access (15min) + Refresh token (30 хоног), bcryptjs,
@@ -39,7 +38,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   │   │   ├── studentRoutes.js ← /api/students — CRUD + public lookup
   │   │   └── uploadRoutes.js  ← /api/upload — Cloudinary зураг хадгалах
   │   ├── seed/
-  │   │   ├── seed_data.json   ← Жишээ өгөгдөл (3 хэрэглэгч, 10 сурагч)
+  │   │   ├── seed_data.json   ← Жишээ өгөгдөл (3 хэрэглэгч, 10 сурагч,
+  │   │   │                       8 хичээл: Математик, Монгол хэл, Физик,
+  │   │   │                       Хими, Англи хэл, Биологи, Газарзүй, Түүх)
   │   │   └── seeder.js        ← DB seed/clear скрипт
   │   ├── .env.example         ← Шаардлагатай орчны хувьсагчдын жишээ
   │   └── server.js            ← Express app, MongoDB холболт
@@ -254,8 +255,8 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 --- pages/Login.jsx ---
 
   Tab: Багш нэвтрэх / Сурагч дүн харах
-  Хоёр tab-ийн агуулга үргэлж DOM-д байна (display:none/block)
-  → GoogleLogin нэг удаа initialize хийнэ, tab солих үед дахихгүй
+  Conditional rendering: {tab === 'teacher' && <div>} / {tab === 'student' && <div>}
+  → Идэвхтэй tab-ийн агуулга л render хийгдэнэ
 
   avg: useMemo([student]) — render бүр дахин тооцохгүй
 
@@ -446,5 +447,30 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     VITE_API_URL = https://bie-daalt.onrender.com/api
 
   .gitignore: **/.env — .env файл git-д хэзээ ч оруулж болохгүй
+              backend/package-lock.json — Render cache conflict-аас зайлсхийх
+
+----------------------------------------------------------------
+9. RENDER DEPLOYMENT ТОХИРГОО
+----------------------------------------------------------------
+
+  render.yaml (repo root):
+    rootDir: backend          ← npm install болон node server.js-г
+                                backend/ дотор ажиллуулна
+    buildCommand: rm -rf node_modules package-lock.json && npm install
+                              ← Cache болон хуучин lock file-г арилгаж
+                                шинэхэн суулгана
+    startCommand: node server.js
+
+  Render Dashboard → Settings → Build & Deploy:
+    Build Command: rm -rf node_modules package-lock.json && npm install
+    Root Directory: backend
+
+  ТАЙЛБАР: render.yaml-ийн buildCommand нь гараар үүсгэсэн сервист
+  ажиллахгүй. Dashboard-аас Build Command-ийг зааж өгөх шаардлагатай.
+
+  Render-т заавал байх Environment Variables:
+    MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET
+    CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+    GOOGLE_CLIENT_ID
 
 ================================================================

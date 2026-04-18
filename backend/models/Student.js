@@ -22,10 +22,9 @@ const studentSchema = new mongoose.Schema({
   createdBy:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Бүртгэсэн хэрэглэгч
 }, { timestamps: true });
 
-studentSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || !this.password) return next();
+studentSchema.pre('save', async function () {
+  if (!this.isModified('password') || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 studentSchema.methods.comparePassword = async function (candidate) {

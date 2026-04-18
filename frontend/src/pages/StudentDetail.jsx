@@ -72,6 +72,31 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       });
   }, [id]);
 
+  // useMemo must be called before any early returns (Rules of Hooks)
+  const { gradeDist, totals, chartHeight } = useMemo(() => {
+    const gradeList = student?.grades ?? [];
+    const n = gradeList.length;
+    const dist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+    const sums = { exam1: 0, exam2: 0, attendance: 0, independent: 0 };
+    for (const g of gradeList) {
+      dist[getLetterGrade(g.score)]++;
+      sums.exam1       += g.exam1       ?? 0;
+      sums.exam2       += g.exam2       ?? 0;
+      sums.attendance  += g.attendance  ?? 0;
+      sums.independent += g.independent ?? 0;
+    }
+    return {
+      gradeDist:   ['A','B','C','D','F'].map(lg => ({ grade: lg, count: dist[lg] })),
+      totals:      n > 0 ? {
+        exam1:       (sums.exam1       / n).toFixed(1),
+        exam2:       (sums.exam2       / n).toFixed(1),
+        attendance:  (sums.attendance  / n).toFixed(1),
+        independent: (sums.independent / n).toFixed(1),
+      } : null,
+      chartHeight: Math.max(280, n * 42),
+    };
+  }, [student?.grades]);
+
   if (fetchError) {
     return (
       <div className="loading-wrap">
@@ -173,28 +198,6 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
   const grades   = editing ? editGrades : student.grades;
   const photoSrc = getImageUrl(student.photo);
 
-  const { gradeDist, totals, chartHeight } = useMemo(() => {
-    const n = student.grades.length;
-    const dist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-    const sums = { exam1: 0, exam2: 0, attendance: 0, independent: 0 };
-    for (const g of student.grades) {
-      dist[getLetterGrade(g.score)]++;
-      sums.exam1       += g.exam1       ?? 0;
-      sums.exam2       += g.exam2       ?? 0;
-      sums.attendance  += g.attendance  ?? 0;
-      sums.independent += g.independent ?? 0;
-    }
-    return {
-      gradeDist:   ['A','B','C','D','F'].map(lg => ({ grade: lg, count: dist[lg] })),
-      totals:      n > 0 ? {
-        exam1:       (sums.exam1       / n).toFixed(1),
-        exam2:       (sums.exam2       / n).toFixed(1),
-        attendance:  (sums.attendance  / n).toFixed(1),
-        independent: (sums.independent / n).toFixed(1),
-      } : null,
-      chartHeight: Math.max(280, n * 42),
-    };
-  }, [student.grades]);
   const total = student.grades.length || 1;
 
   return (

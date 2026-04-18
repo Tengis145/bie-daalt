@@ -29,7 +29,11 @@ function ProtectedRoute({ token, children }) {
 }
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('ebs_token') || '');
+  const [token, setToken] = useState(() => {
+    const t = localStorage.getItem('ebs_token') || '';
+    setAuthHeader(t);
+    return t;
+  });
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('ebs_user');

@@ -183,7 +183,7 @@ router.post('/student-login', loginLimiter, async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ message: 'Имэйл болон нууц үг шаардлагатай' });
 
-    const student = await Student.findOne({ email: { $regex: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+    const student = await Student.findOne({ email });
     if (!student || !student.password)
       return res.status(401).json({ message: 'Имэйл эсвэл нууц үг буруу байна' });
 
@@ -191,7 +191,9 @@ router.post('/student-login', loginLimiter, async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: 'Имэйл эсвэл нууц үг буруу байна' });
 
-    res.json({ message: 'Амжилттай нэвтэрлээ', student });
+    const safe = await Student.findById(student._id)
+      .select('name className academicYear semester grades email');
+    res.json({ message: 'Амжилттай нэвтэрлээ', student: safe });
   } catch (err) {
     console.error('STUDENT LOGIN АЛДАА:', err);
     res.status(500).json({ message: 'Нэвтрэхэд алдаа гарлаа' });

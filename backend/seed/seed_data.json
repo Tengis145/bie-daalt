@@ -27,11 +27,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 28, "exam2": 27, "attendance": 18, "independent": 19 },
-        { "subject": "Физик",      "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
-        { "subject": "Монгол хэл", "exam1": 22, "exam2": 24, "attendance": 19, "independent": 17 },
-        { "subject": "Англи хэл",  "exam1": 20, "exam2": 21, "attendance": 16, "independent": 15 },
-        { "subject": "Хими",       "exam1": 24, "exam2": 25, "attendance": 18, "independent": 16 }
+        { "subject": "Математик",    "exam1": 28, "exam2": 27, "attendance": 18, "independent": 19 },
+        { "subject": "Физик",        "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
+        { "subject": "Монгол хэл",   "exam1": 22, "exam2": 24, "attendance": 19, "independent": 17 },
+        { "subject": "Англи хэл",    "exam1": 20, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Хими",         "exam1": 24, "exam2": 25, "attendance": 18, "independent": 16 },
+        { "subject": "Биологи",      "exam1": 23, "exam2": 22, "attendance": 17, "independent": 16 },
+        { "subject": "Газарзүй",     "exam1": 21, "exam2": 20, "attendance": 16, "independent": 15 },
+        { "subject": "Түүх",         "exam1": 26, "exam2": 25, "attendance": 18, "independent": 17 }
       ]
     },
     {
@@ -41,11 +44,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 30, "exam2": 29, "attendance": 20, "independent": 20 },
-        { "subject": "Физик",      "exam1": 27, "exam2": 28, "attendance": 19, "independent": 20 },
-        { "subject": "Монгол хэл", "exam1": 29, "exam2": 30, "attendance": 20, "independent": 19 },
-        { "subject": "Англи хэл",  "exam1": 28, "exam2": 27, "attendance": 20, "independent": 18 },
-        { "subject": "Хими",       "exam1": 26, "exam2": 27, "attendance": 19, "independent": 20 }
+        { "subject": "Математик",    "exam1": 30, "exam2": 29, "attendance": 20, "independent": 20 },
+        { "subject": "Физик",        "exam1": 27, "exam2": 28, "attendance": 19, "independent": 20 },
+        { "subject": "Монгол хэл",   "exam1": 29, "exam2": 30, "attendance": 20, "independent": 19 },
+        { "subject": "Англи хэл",    "exam1": 28, "exam2": 27, "attendance": 20, "independent": 18 },
+        { "subject": "Хими",         "exam1": 26, "exam2": 27, "attendance": 19, "independent": 20 },
+        { "subject": "Биологи",      "exam1": 29, "exam2": 28, "attendance": 20, "independent": 19 },
+        { "subject": "Газарзүй",     "exam1": 27, "exam2": 26, "attendance": 19, "independent": 20 },
+        { "subject": "Түүх",         "exam1": 30, "exam2": 29, "attendance": 20, "independent": 19 }
       ]
     },
     {
@@ -55,11 +61,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 15, "exam2": 14, "attendance": 12, "independent": 11 },
-        { "subject": "Физик",      "exam1": 12, "exam2": 13, "attendance": 10, "independent": 10 },
-        { "subject": "Монгол хэл", "exam1": 18, "exam2": 16, "attendance": 14, "independent": 13 },
-        { "subject": "Англи хэл",  "exam1": 10, "exam2": 11, "attendance": 9,  "independent": 8  },
-        { "subject": "Хими",       "exam1": 13, "exam2": 12, "attendance": 11, "independent": 10 }
+        { "subject": "Математик",    "exam1": 15, "exam2": 14, "attendance": 12, "independent": 11 },
+        { "subject": "Физик",        "exam1": 12, "exam2": 13, "attendance": 10, "independent": 10 },
+        { "subject": "Монгол хэл",   "exam1": 18, "exam2": 16, "attendance": 14, "independent": 13 },
+        { "subject": "Англи хэл",    "exam1": 10, "exam2": 11, "attendance": 9,  "independent": 8  },
+        { "subject": "Хими",         "exam1": 13, "exam2": 12, "attendance": 11, "independent": 10 },
+        { "subject": "Биологи",      "exam1": 14, "exam2": 13, "attendance": 11, "independent": 10 },
+        { "subject": "Газарзүй",     "exam1": 11, "exam2": 12, "attendance": 10, "independent": 9  },
+        { "subject": "Түүх",         "exam1": 16, "exam2": 15, "attendance": 12, "independent": 11 }
       ]
     },
     {
@@ -69,11 +78,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_saran",
       "grades": [
-        { "subject": "Математик",  "exam1": 26, "exam2": 25, "attendance": 17, "independent": 18 },
-        { "subject": "Физик",      "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
-        { "subject": "Монгол хэл", "exam1": 27, "exam2": 28, "attendance": 18, "independent": 19 },
-        { "subject": "Англи хэл",  "exam1": 25, "exam2": 24, "attendance": 17, "independent": 16 },
-        { "subject": "Хими",       "exam1": 21, "exam2": 22, "attendance": 15, "independent": 16 }
+        { "subject": "Математик",    "exam1": 26, "exam2": 25, "attendance": 17, "independent": 18 },
+        { "subject": "Физик",        "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
+        { "subject": "Монгол хэл",   "exam1": 27, "exam2": 28, "attendance": 18, "independent": 19 },
+        { "subject": "Англи хэл",    "exam1": 25, "exam2": 24, "attendance": 17, "independent": 16 },
+        { "subject": "Хими",         "exam1": 21, "exam2": 22, "attendance": 15, "independent": 16 },
+        { "subject": "Биологи",      "exam1": 24, "exam2": 23, "attendance": 17, "independent": 16 },
+        { "subject": "Газарзүй",     "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Түүх",         "exam1": 25, "exam2": 26, "attendance": 18, "independent": 17 }
       ]
     },
     {
@@ -83,11 +95,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_saran",
       "grades": [
-        { "subject": "Математик",  "exam1": 20, "exam2": 18, "attendance": 14, "independent": 13 },
-        { "subject": "Физик",      "exam1": 17, "exam2": 16, "attendance": 13, "independent": 12 },
-        { "subject": "Монгол хэл", "exam1": 22, "exam2": 20, "attendance": 15, "independent": 14 },
-        { "subject": "Англи хэл",  "exam1": 16, "exam2": 15, "attendance": 12, "independent": 11 },
-        { "subject": "Хими",       "exam1": 18, "exam2": 17, "attendance": 14, "independent": 13 }
+        { "subject": "Математик",    "exam1": 20, "exam2": 18, "attendance": 14, "independent": 13 },
+        { "subject": "Физик",        "exam1": 17, "exam2": 16, "attendance": 13, "independent": 12 },
+        { "subject": "Монгол хэл",   "exam1": 22, "exam2": 20, "attendance": 15, "independent": 14 },
+        { "subject": "Англи хэл",    "exam1": 16, "exam2": 15, "attendance": 12, "independent": 11 },
+        { "subject": "Хими",         "exam1": 18, "exam2": 17, "attendance": 14, "independent": 13 },
+        { "subject": "Биологи",      "exam1": 19, "exam2": 18, "attendance": 13, "independent": 12 },
+        { "subject": "Газарзүй",     "exam1": 15, "exam2": 16, "attendance": 12, "independent": 11 },
+        { "subject": "Түүх",         "exam1": 21, "exam2": 19, "attendance": 14, "independent": 13 }
       ]
     },
     {
@@ -97,11 +112,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 29, "exam2": 28, "attendance": 20, "independent": 19 },
-        { "subject": "Физик",      "exam1": 26, "exam2": 27, "attendance": 18, "independent": 19 },
-        { "subject": "Монгол хэл", "exam1": 28, "exam2": 29, "attendance": 19, "independent": 20 },
-        { "subject": "Англи хэл",  "exam1": 27, "exam2": 26, "attendance": 20, "independent": 18 },
-        { "subject": "Хими",       "exam1": 25, "exam2": 24, "attendance": 17, "independent": 18 }
+        { "subject": "Математик",    "exam1": 29, "exam2": 28, "attendance": 20, "independent": 19 },
+        { "subject": "Физик",        "exam1": 26, "exam2": 27, "attendance": 18, "independent": 19 },
+        { "subject": "Монгол хэл",   "exam1": 28, "exam2": 29, "attendance": 19, "independent": 20 },
+        { "subject": "Англи хэл",    "exam1": 27, "exam2": 26, "attendance": 20, "independent": 18 },
+        { "subject": "Хими",         "exam1": 25, "exam2": 24, "attendance": 17, "independent": 18 },
+        { "subject": "Биологи",      "exam1": 28, "exam2": 27, "attendance": 19, "independent": 18 },
+        { "subject": "Газарзүй",     "exam1": 26, "exam2": 25, "attendance": 18, "independent": 19 },
+        { "subject": "Түүх",         "exam1": 29, "exam2": 28, "attendance": 20, "independent": 19 }
       ]
     },
     {
@@ -111,11 +129,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 8,  "exam2": 9,  "attendance": 7,  "independent": 6  },
-        { "subject": "Физик",      "exam1": 10, "exam2": 8,  "attendance": 8,  "independent": 7  },
-        { "subject": "Монгол хэл", "exam1": 12, "exam2": 11, "attendance": 9,  "independent": 8  },
-        { "subject": "Англи хэл",  "exam1": 7,  "exam2": 8,  "attendance": 6,  "independent": 5  },
-        { "subject": "Хими",       "exam1": 9,  "exam2": 10, "attendance": 7,  "independent": 7  }
+        { "subject": "Математик",    "exam1": 8,  "exam2": 9,  "attendance": 7,  "independent": 6  },
+        { "subject": "Физик",        "exam1": 10, "exam2": 8,  "attendance": 8,  "independent": 7  },
+        { "subject": "Монгол хэл",   "exam1": 12, "exam2": 11, "attendance": 9,  "independent": 8  },
+        { "subject": "Англи хэл",    "exam1": 7,  "exam2": 8,  "attendance": 6,  "independent": 5  },
+        { "subject": "Хими",         "exam1": 9,  "exam2": 10, "attendance": 7,  "independent": 7  },
+        { "subject": "Биологи",      "exam1": 11, "exam2": 10, "attendance": 8,  "independent": 7  },
+        { "subject": "Газарзүй",     "exam1": 8,  "exam2": 9,  "attendance": 7,  "independent": 6  },
+        { "subject": "Түүх",         "exam1": 13, "exam2": 12, "attendance": 9,  "independent": 8  }
       ]
     },
     {
@@ -125,11 +146,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_saran",
       "grades": [
-        { "subject": "Математик",  "exam1": 24, "exam2": 23, "attendance": 16, "independent": 17 },
-        { "subject": "Физик",      "exam1": 21, "exam2": 20, "attendance": 15, "independent": 14 },
-        { "subject": "Монгол хэл", "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
-        { "subject": "Англи хэл",  "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
-        { "subject": "Хими",       "exam1": 20, "exam2": 19, "attendance": 14, "independent": 15 }
+        { "subject": "Математик",    "exam1": 24, "exam2": 23, "attendance": 16, "independent": 17 },
+        { "subject": "Физик",        "exam1": 21, "exam2": 20, "attendance": 15, "independent": 14 },
+        { "subject": "Монгол хэл",   "exam1": 25, "exam2": 26, "attendance": 17, "independent": 18 },
+        { "subject": "Англи хэл",    "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Хими",         "exam1": 20, "exam2": 19, "attendance": 14, "independent": 15 },
+        { "subject": "Биологи",      "exam1": 23, "exam2": 22, "attendance": 16, "independent": 15 },
+        { "subject": "Газарзүй",     "exam1": 20, "exam2": 21, "attendance": 15, "independent": 14 },
+        { "subject": "Түүх",         "exam1": 24, "exam2": 23, "attendance": 17, "independent": 16 }
       ]
     },
     {
@@ -139,11 +163,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_saran",
       "grades": [
-        { "subject": "Математик",  "exam1": 19, "exam2": 17, "attendance": 13, "independent": 12 },
-        { "subject": "Физик",      "exam1": 16, "exam2": 14, "attendance": 12, "independent": 11 },
-        { "subject": "Монгол хэл", "exam1": 21, "exam2": 19, "attendance": 14, "independent": 13 },
-        { "subject": "Англи хэл",  "exam1": 14, "exam2": 13, "attendance": 11, "independent": 10 },
-        { "subject": "Хими",       "exam1": 17, "exam2": 16, "attendance": 12, "independent": 12 }
+        { "subject": "Математик",    "exam1": 19, "exam2": 17, "attendance": 13, "independent": 12 },
+        { "subject": "Физик",        "exam1": 16, "exam2": 14, "attendance": 12, "independent": 11 },
+        { "subject": "Монгол хэл",   "exam1": 21, "exam2": 19, "attendance": 14, "independent": 13 },
+        { "subject": "Англи хэл",    "exam1": 14, "exam2": 13, "attendance": 11, "independent": 10 },
+        { "subject": "Хими",         "exam1": 17, "exam2": 16, "attendance": 12, "independent": 12 },
+        { "subject": "Биологи",      "exam1": 18, "exam2": 17, "attendance": 12, "independent": 11 },
+        { "subject": "Газарзүй",     "exam1": 15, "exam2": 14, "attendance": 11, "independent": 10 },
+        { "subject": "Түүх",         "exam1": 20, "exam2": 18, "attendance": 13, "independent": 12 }
       ]
     },
     {
@@ -153,11 +180,14 @@
       "semester": 1,
       "createdByUsername": "bagsh_bold",
       "grades": [
-        { "subject": "Математик",  "exam1": 27, "exam2": 26, "attendance": 18, "independent": 19 },
-        { "subject": "Физик",      "exam1": 24, "exam2": 25, "attendance": 17, "independent": 18 },
-        { "subject": "Монгол хэл", "exam1": 26, "exam2": 27, "attendance": 19, "independent": 17 },
-        { "subject": "Англи хэл",  "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
-        { "subject": "Хими",       "exam1": 22, "exam2": 23, "attendance": 16, "independent": 15 }
+        { "subject": "Математик",    "exam1": 27, "exam2": 26, "attendance": 18, "independent": 19 },
+        { "subject": "Физик",        "exam1": 24, "exam2": 25, "attendance": 17, "independent": 18 },
+        { "subject": "Монгол хэл",   "exam1": 26, "exam2": 27, "attendance": 19, "independent": 17 },
+        { "subject": "Англи хэл",    "exam1": 23, "exam2": 22, "attendance": 16, "independent": 17 },
+        { "subject": "Хими",         "exam1": 22, "exam2": 23, "attendance": 16, "independent": 15 },
+        { "subject": "Биологи",      "exam1": 25, "exam2": 24, "attendance": 17, "independent": 16 },
+        { "subject": "Газарзүй",     "exam1": 22, "exam2": 21, "attendance": 16, "independent": 15 },
+        { "subject": "Түүх",         "exam1": 26, "exam2": 25, "attendance": 18, "independent": 17 }
       ]
     }
   ]

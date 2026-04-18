@@ -44,7 +44,7 @@ router.get('/public/lookup', lookupLimiter, async (req, res) => {
   try {
     const email = (req.query.email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ message: 'Gmail хаяг оруулна уу' });
-    const student = await Student.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
+    const student = await Student.findOne({ email })
       .select('name className academicYear semester grades email');
     if (!student) return res.status(404).json({ message: 'Тухайн Gmail-тай сурагч олдсонгүй' });
     res.json(student);

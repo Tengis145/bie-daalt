@@ -55,8 +55,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
           │   ├── grades.js    ← getLetterGrade() + LETTER_STYLE (хуваалцсан)
           │   └── imageUrl.js  ← Cloudinary/Backend URL-г зурагт нэмдэг
           ├── components/
-          │   ├── Icons.jsx    ← SVG icon компонентууд (EyeIcon/EyeOffIcon)
-          │   └── Toast.jsx    ← Notification (success/error/info)
+          │   ├── Icons.jsx         ← SVG icon компонентууд (EyeIcon/EyeOffIcon)
+          │   ├── PasswordInput.jsx ← Нууц үг харах/нуух toggle (хуваалцсан)
+          │   └── Toast.jsx         ← Notification (success/error/info)
           └── pages/
               ├── Login.jsx            ← Нэвтрэх: Багш/Сурагч tab,
               │                           Google OAuth, нууц үг харах/нуух,
@@ -150,8 +151,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     JWT access + refresh token буцаана
 
   POST /api/auth/student-login логик:
-    Student.findOne({ email: regex }) → comparePassword()
-    Зөвхөн student объект буцаана (JWT биш)
+    Student.findOne({ email }) → comparePassword()
+    .select('name className academicYear semester grades email')
+    Зөвхөн аюулгүй талбарууд буцаана (password хэзээ ч буцаагддаггүй)
 
   Refresh Token систем:
     Access token: 15 минут | Refresh token: 30 хоног
@@ -167,7 +169,7 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 --- routes/studentRoutes.js ---
 
   GET  /api/students/public/lookup  — Auth шаардлагагүй, rate: 20/15m
-    ?email= → Student.findOne({ email: regex })
+    ?email= → Student.findOne({ email })  (plain equality, lowercase)
     .select('name className academicYear semester grades email')
     password талбар хэзээ ч буцаагддаггүй
 
@@ -243,15 +245,19 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   BASE = VITE_API_URL?.replace('/api','') || ''
   getImageUrl(url): http → шууд буцаана | харин → BASE + url
 
+--- components/PasswordInput.jsx ---
+
+  useState(show) → type="password"/"text" toggle
+  EyeIcon / EyeOffIcon → position:absolute right
+  Login.jsx болон ChangePassword.jsx хоёулаа импортолдог
+
 --- pages/Login.jsx ---
 
   Tab: Багш нэвтрэх / Сурагч дүн харах
   Хоёр tab-ийн агуулга үргэлж DOM-д байна (display:none/block)
   → GoogleLogin нэг удаа initialize хийнэ, tab солих үед дахихгүй
 
-  PasswordInput компонент:
-    useState(show) → type="password"/"text" toggle
-    EyeIcon / EyeOffIcon → position:absolute right
+  avg: useMemo([student]) — render бүр дахин тооцохгүй
 
   Багш tab:
     Имэйл + нууц үг → POST /api/auth/login → JWT → navigate('/')
@@ -308,6 +314,9 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     Mini progress bars: тоо бүрийн доор жижиг дүүргэлт
     Үсгэн дүн баганa: A/B/C/D/F badge
 
+  gradeDist, totals, chartHeight: useMemo([student.grades])
+    totals: нэг reduce pass-аар 4 талбар нэгэн зэрэг нийлнэ
+
   A/B/C/D/F карт: тоо + хувь (count / нийт × 100)
 
   Sticky action bar: position:sticky, bottom:0,
@@ -332,7 +341,7 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 --- pages/ChangePassword.jsx ---
 
   Auth шаардлагагүй (нэвтрэлтгүй хандаж болно)
-  3 нууц үгийн талбар бүгдэд EyeIcon toggle
+  3 нууц үгийн талбар бүгдэд PasswordInput (хуваалцсан компонент)
   Амжилтанд: 1.5 сек хүлээгээд navigate('/login') эсвэл ('/')
   timerRef + useEffect cleanup: unmount-д timeout цэвэрлэнэ
 

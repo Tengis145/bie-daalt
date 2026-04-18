@@ -301,7 +301,7 @@ export default function App() {
             <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} onStudentLogin={handleStudentLogin} />} />
             <Route path="/my-grades" element={
               studentSession
-                ? <StudentGrades student={studentSession} onLogout={handleStudentLogout} />
+                ? <StudentGrades student={studentSession} onLogout={handleStudentLogout} standalone={!token} />
                 : <Navigate to="/login" replace />
             } />
             <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />

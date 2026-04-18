@@ -40,7 +40,7 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-export default function StudentGrades({ student, onLogout }) {
+export default function StudentGrades({ student, onLogout, standalone = true }) {
   const navigate = useNavigate();
 
   const { average, gradeDist, totals, chartHeight, best, worst } = useMemo(() => {
@@ -96,38 +96,40 @@ export default function StudentGrades({ student, onLogout }) {
   const maxMap     = { exam1: 30, exam2: 30, attendance: 20, independent: 20 };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
+    <div style={standalone ? { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f1f5f9' } : {}}>
 
-      {/* Gradient header — mirrors the app header */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="logo">
-            <div className="logo-icon-wrap"><SchoolIcon size={20} color="white" /></div>
-            <div>
-              <div className="logo-title">ЕБС Дүн Бүртгэл</div>
-              <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+      {/* Gradient header — only shown when no teacher header is present */}
+      {standalone && (
+        <header className="header">
+          <div className="header-inner">
+            <div className="logo">
+              <div className="logo-icon-wrap"><SchoolIcon size={20} color="white" /></div>
+              <div>
+                <div className="logo-title">ЕБС Дүн Бүртгэл</div>
+                <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="user-badge" style={{ background: 'rgba(255,255,255,.15)' }}>
+                {photoSrc
+                  ? <img src={photoSrc} alt="" className="user-avatar-img" />
+                  : <div className="user-avatar">{initials}</div>
+                }
+                <span className="user-name">{student.name}</span>
+              </div>
+              <button className="btn-logout" onClick={() => window.print()}>
+                <PrintIcon size={14} color="currentColor" />Хэвлэх
+              </button>
+              <button className="btn-logout" onClick={onLogout}>
+                <LogoutIcon size={14} color="currentColor" />Гарах
+              </button>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="user-badge" style={{ background: 'rgba(255,255,255,.15)' }}>
-              {photoSrc
-                ? <img src={photoSrc} alt="" className="user-avatar-img" />
-                : <div className="user-avatar">{initials}</div>
-              }
-              <span className="user-name">{student.name}</span>
-            </div>
-            <button className="btn-logout" onClick={() => window.print()}>
-              <PrintIcon size={14} color="currentColor" />Хэвлэх
-            </button>
-            <button className="btn-logout" onClick={onLogout}>
-              <LogoutIcon size={14} color="currentColor" />Гарах
-            </button>
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Content */}
-      <main className="main" style={{ flex: 1 }}>
+      <main className="main" style={standalone ? { flex: 1 } : {}}>
 
         {/* Page header */}
         <div className="page-header">
@@ -312,9 +314,11 @@ export default function StudentGrades({ student, onLogout }) {
         </p>
       </main>
 
-      <footer className="footer">
-        © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
-      </footer>
+      {standalone && (
+        <footer className="footer">
+          © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
+        </footer>
+      )}
     </div>
   );
 }

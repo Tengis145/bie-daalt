@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleLogin } from '@react-oauth/google';
 import { SchoolIcon } from '../components/Icons';
 import PasswordInput from '../components/PasswordInput';
-import { getLetterGrade, LETTER_STYLE as LS } from '../utils/grades';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onStudentLogin }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState('teacher'); // 'teacher' | 'student'
 
@@ -16,10 +15,9 @@ export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
 
   // Student login
-  const [stuData, setStuData]     = useState({ email: '', password: '' });
-  const [student, setStudent]     = useState(null);
-  const [stuErr,  setStuErr]      = useState('');
-  const [stuLoad, setStuLoad]     = useState(false);
+  const [stuData, setStuData] = useState({ email: '', password: '' });
+  const [stuErr,  setStuErr]  = useState('');
+  const [stuLoad, setStuLoad] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,10 +47,10 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setStuLoad(true);
     setStuErr('');
-    setStudent(null);
     try {
       const res = await axios.post('/api/auth/student-login', stuData);
-      setStudent(res.data.student);
+      onStudentLogin(res.data.student);
+      navigate('/my-grades');
     } catch (err) {
       setStuErr(err.response?.data?.message || 'Нэвтрэхэд алдаа гарлаа');
     } finally {
@@ -71,15 +69,14 @@ export default function Login({ onLogin }) {
   };
 
   const handleStudentGoogle = async (credentialResponse) => {
+    setStuLoad(true);
+    setStuErr('');
     try {
       const payload = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
       const email   = payload.email;
-      setStuData(d => ({ ...d, email }));
-      setStuErr('');
-      setStudent(null);
-      setStuLoad(true);
       const res = await axios.get(`/api/students/public/lookup?email=${encodeURIComponent(email)}`);
-      setStudent(res.data);
+      onStudentLogin(res.data);
+      navigate('/my-grades');
     } catch (err) {
       setStuErr(err.response?.data?.message || 'Google нэвтрэлт амжилтгүй болсон');
     } finally {
@@ -87,14 +84,9 @@ export default function Login({ onLogin }) {
     }
   };
 
-  const avg = useMemo(() => {
-    if (!student?.grades?.length) return null;
-    return (student.grades.reduce((s, g) => s + (g.score ?? 0), 0) / student.grades.length).toFixed(1);
-  }, [student]);
-
   return (
     <div className="auth-page">
-      <div className="auth-wrapper" style={{ maxWidth: student ? 900 : undefined }}>
+      <div className="auth-wrapper">
         {/* Left side */}
         <div className="auth-side">
           <div className="auth-side-logo">
@@ -239,73 +231,6 @@ export default function Login({ onLogin }) {
                 <Link to="/change-password">Нууц үг солих</Link>
               </p>
 
-              {/* Grade result */}
-              {student && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px', marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1e293b' }}>{student.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>
-                        Анги: <strong>{student.className}</strong>
-                        {student.academicYear && <> · {student.academicYear} · {student.semester}-р улирал</>}
-                      </div>
-                    </div>
-                    {avg && (() => {
-                      const lg = getLetterGrade(parseFloat(avg));
-                      const ls = LS[lg];
-                      return (
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>ДУНДАЖ</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e293b' }}>{avg}</span>
-                            <span style={{ padding: '2px 8px', borderRadius: 6, fontWeight: 900, fontSize: '1rem', color: ls.color, background: ls.bg }}>{lg}</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                          <th style={{ textAlign: 'left', padding: '6px 6px 8px 0', color: '#64748b', fontWeight: 600 }}>Хичээл</th>
-                          <th style={{ textAlign: 'center', padding: '6px 4px 8px', color: '#64748b', fontWeight: 600 }}>Ш1</th>
-                          <th style={{ textAlign: 'center', padding: '6px 4px 8px', color: '#64748b', fontWeight: 600 }}>Ш2</th>
-                          <th style={{ textAlign: 'center', padding: '6px 4px 8px', color: '#64748b', fontWeight: 600 }}>Ирц</th>
-                          <th style={{ textAlign: 'center', padding: '6px 4px 8px', color: '#64748b', fontWeight: 600 }}>БД</th>
-                          <th style={{ textAlign: 'center', padding: '6px 4px 8px', color: '#64748b', fontWeight: 600 }}>Нийт</th>
-                          <th style={{ textAlign: 'center', padding: '6px 0 8px', color: '#64748b', fontWeight: 600 }}>Үсгэн</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {student.grades.map((g, i) => {
-                          const lg = getLetterGrade(g.score);
-                          const ls = LS[lg];
-                          return (
-                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '8px 6px 8px 0', fontWeight: 600, color: '#1e293b' }}>{g.subject}</td>
-                              <td style={{ textAlign: 'center', padding: '8px 4px', color: '#64748b' }}>{g.exam1 ?? 0}</td>
-                              <td style={{ textAlign: 'center', padding: '8px 4px', color: '#64748b' }}>{g.exam2 ?? 0}</td>
-                              <td style={{ textAlign: 'center', padding: '8px 4px', color: '#64748b' }}>{g.attendance ?? 0}</td>
-                              <td style={{ textAlign: 'center', padding: '8px 4px', color: '#64748b' }}>{g.independent ?? 0}</td>
-                              <td style={{ textAlign: 'center', padding: '8px 4px' }}>
-                                <span style={{ display: 'inline-block', padding: '1px 8px', borderRadius: 5, fontWeight: 700, color: ls.color, background: ls.bg }}>{g.score}</span>
-                              </td>
-                              <td style={{ textAlign: 'center', padding: '8px 0' }}>
-                                <span style={{ display: 'inline-block', minWidth: 26, padding: '1px 7px', borderRadius: 5, fontWeight: 900, color: ls.color, background: ls.bg }}>{lg}</span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.72rem', marginTop: 12 }}>
-                    Дүн буруу байвал багшдаа хандана уу.
-                  </p>
-                </div>
-              )}
           </div>
         </div>
       </div>

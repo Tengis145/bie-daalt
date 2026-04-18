@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
+import StudentGrades from './pages/StudentGrades';
 
 const API = '/api/students';
 
@@ -41,6 +42,9 @@ export default function App() {
     } catch {
       return null;
     }
+  });
+  const [studentSession, setStudentSession] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ebs_student') || 'null'); } catch { return null; }
   });
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
@@ -112,6 +116,16 @@ export default function App() {
     localStorage.setItem('ebs_user', JSON.stringify(user));
     if (newRefreshToken) localStorage.setItem('ebs_refresh', newRefreshToken);
     setAuthHeader(newToken);
+  };
+
+  const handleStudentLogin = (student) => {
+    setStudentSession(student);
+    localStorage.setItem('ebs_student', JSON.stringify(student));
+  };
+
+  const handleStudentLogout = () => {
+    setStudentSession(null);
+    localStorage.removeItem('ebs_student');
   };
 
   const onUpdateUser = (updatedUser) => {
@@ -284,7 +298,12 @@ export default function App() {
 
       <main className={token ? 'main' : ''}>
           <Routes>
-            <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+            <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} onStudentLogin={handleStudentLogin} />} />
+            <Route path="/my-grades" element={
+              studentSession
+                ? <StudentGrades student={studentSession} onLogout={handleStudentLogout} />
+                : <Navigate to="/login" replace />
+            } />
             <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
             <Route path="/" element={
               <ProtectedRoute token={token}>

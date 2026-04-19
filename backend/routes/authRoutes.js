@@ -287,6 +287,65 @@ router.patch('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// ── Admin-only middleware ─────────────────────────────────────
+function adminOnly(req, res, next) {
+  if (req.user?.role !== 'admin')
+    return res.status(403).json({ message: 'Зөвхөн админ хандах боломжтой' });
+  next();
+}
+
+// ── GET /api/auth/users ── list all teachers (admin only) ────
+router.get('/users', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const users = await User.find().select('-password -refreshToken').sort({ createdAt: -1 });
+    res.json(users);
+  } catch {
+    res.status(500).json({ message: 'Хэрэглэгчид авахад алдаа гарлаа' });
+  }
+});
+
+// ── POST /api/auth/users ── create teacher (admin only) ──────
+router.post('/users', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const username = sanitizeText(req.body.username);
+    const email    = sanitizeText(req.body.email).toLowerCase();
+    const password = req.body.password;
+    const role     = req.body.role === 'admin' ? 'admin' : 'teacher';
+
+    if (!username || !email || !password)
+      return res.status(400).json({ message: 'Хэрэглэгчийн нэр, имэйл, нууц үг шаардлагатай' });
+    if (!validator.isEmail(email))
+      return res.status(400).json({ message: 'Имэйл хаяг буруу байна' });
+    if (password.length < 6)
+      return res.status(400).json({ message: 'Нууц үг дор хаяж 6 тэмдэгт байх ёстой' });
+
+    const existing = await User.findOne({ $or: [{ email }, { username }] });
+    if (existing)
+      return res.status(409).json({ message: 'Хэрэглэгчийн нэр эсвэл имэйл аль хэдийн бүртгэлтэй байна' });
+
+    const user = new User({ username, email, password, role });
+    await user.save();
+
+    res.status(201).json({ message: 'Хэрэглэгч амжилттай нэмэгдлээ', user: userPayload(user) });
+  } catch (err) {
+    console.error('CREATE USER АЛДАА:', err);
+    res.status(500).json({ message: 'Хэрэглэгч нэмэхэд алдаа гарлаа' });
+  }
+});
+
+// ── DELETE /api/auth/users/:id ── delete user (admin only) ───
+router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id)
+      return res.status(400).json({ message: 'Өөрийгөө устгах боломжгүй' });
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Хэрэглэгч олдсонгүй' });
+    res.json({ message: 'Хэрэглэгч амжилттай устгагдлаа' });
+  } catch {
+    res.status(500).json({ message: 'Устгахад алдаа гарлаа' });
+  }
+});
+
 // ── GET /api/auth/me ─────────────────────────────────────────
 router.get('/me', authMiddleware, async (req, res) => {
   try {

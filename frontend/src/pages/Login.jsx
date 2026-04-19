@@ -84,6 +84,10 @@ export default function Login({ onLogin, onStudentLogin }) {
     }
   };
 
+  // Single Google handler — dispatches based on active tab to avoid double initialize()
+  const handleGoogleAny  = (cr) => tab === 'teacher' ? handleGoogleSuccess(cr) : handleStudentGoogle(cr);
+  const handleGoogleError = ()  => tab === 'teacher' ? setError('Google нэвтрэлт амжилтгүй болсон') : setStuErr('Google нэвтрэлт амжилтгүй болсон');
+
   return (
     <div className="auth-page">
       <div className="auth-wrapper">
@@ -118,7 +122,7 @@ export default function Login({ onLogin, onStudentLogin }) {
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 0, marginBottom: 24, border: '1.5px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
             <button
-              onClick={() => { setTab('teacher'); setStudent(null); setStuErr(''); }}
+              onClick={() => { setTab('teacher'); setStuErr(''); }}
               style={{ flex: 1, padding: '10px', fontWeight: 700, fontSize: '0.875rem', border: 'none', cursor: 'pointer', background: tab === 'teacher' ? '#4f46e5' : 'white', color: tab === 'teacher' ? 'white' : '#64748b', transition: 'all .15s' }}
             >
               Багш нэвтрэх
@@ -150,22 +154,6 @@ export default function Login({ onLogin, onStudentLogin }) {
                 </button>
               </form>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл</span>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError('Google нэвтрэлт амжилтгүй болсон')}
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                  width="320"
-                />
-              </div>
-
               <p className="auth-footer">
                 Бүртгэлгүй юу?{' '}<Link to="/register">Бүртгүүлэх</Link>
               </p>
@@ -174,7 +162,7 @@ export default function Login({ onLogin, onStudentLogin }) {
               </p>
           </div>
 
-          {/* Student login — always mounted so GoogleLogin initializes only once */}
+          {/* Student login */}
           <div style={{ display: tab === 'student' ? 'block' : 'none' }}>
               <h1 className="auth-main-title">Нэвтрэх</h1>
               <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
@@ -208,29 +196,29 @@ export default function Login({ onLogin, onStudentLogin }) {
                 </button>
               </form>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл</span>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <GoogleLogin
-                  onSuccess={handleStudentGoogle}
-                  onError={() => setStuErr('Google нэвтрэлт амжилтгүй болсон')}
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                  width="320"
-                />
-              </div>
-
-              <p className="auth-footer" style={{ marginTop: 8, color: '#64748b', fontSize: '0.82rem' }}>
+              <p className="auth-footer" style={{ marginTop: 16, color: '#64748b', fontSize: '0.82rem' }}>
                 Нэвтрэх мэдээллийг багшаасаа аваарай
               </p>
               <p className="auth-footer" style={{ marginTop: 4 }}>
                 <Link to="/change-password">Нууц үг солих</Link>
               </p>
+          </div>
 
+          {/* Single GoogleLogin — shared between tabs to avoid double initialize() */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл Google-ээр</span>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleAny}
+              onError={handleGoogleError}
+              text="signin_with"
+              shape="rectangular"
+              logo_alignment="left"
+              width="320"
+            />
           </div>
         </div>
       </div>

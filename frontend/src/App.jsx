@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon } from './components/Icons';
+import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon, UsersIcon } from './components/Icons';
 import { getImageUrl } from './utils/imageUrl';
 import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +14,7 @@ import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
 import StudentGrades from './pages/StudentGrades';
 import StudentProfile from './pages/StudentProfile';
+import ManageTeachers from './pages/ManageTeachers';
 
 const API = '/api/students';
 
@@ -198,6 +199,9 @@ export default function App() {
     { to: '/',         label: 'Хяналтын самбар', icon: <DashboardIcon size={16} color="currentColor" /> },
     { to: '/subjects', label: 'Хичээлүүд',        icon: <BookIcon      size={16} color="currentColor" /> },
     { to: '/add',      label: 'Сурагч нэмэх',     icon: <PlusIcon      size={16} color="currentColor" /> },
+    ...(currentUser?.role === 'admin'
+      ? [{ to: '/teachers', label: 'Багш удирдах', icon: <UsersIcon size={16} color="currentColor" /> }]
+      : []),
   ];
 
   const initials = currentUser?.username
@@ -346,6 +350,13 @@ export default function App() {
             <Route path="/profile" element={
               <ProtectedRoute token={token}>
                 <Profile currentUser={currentUser} onUpdateUser={onUpdateUser} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/teachers" element={
+              <ProtectedRoute token={token}>
+                {currentUser?.role === 'admin'
+                  ? <ManageTeachers showToast={showToast} />
+                  : <Navigate to="/" replace />}
               </ProtectedRoute>
             } />
           </Routes>

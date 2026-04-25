@@ -1,33 +1,56 @@
-const fs = require('fs');
+const { createLogger, format, transports } = require('winston');
 const path = require('path');
+const fs   = require('fs');
 
-// Лог хадгалах хавтас
 const logDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
+if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
 
-const logFilePath = path.join(logDir, 'app.log');
+const logger = createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: format.combine(
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    format.errors({ stack: true }),
+    format.json()
+  ),
+  transports: [
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        format.printf(({ timestamp, level, message, ...meta }) => {
+          const extra = Object.keys(meta).length ? ' ' + JSON.stringify(meta) : '';
+          return `[${timestamp}] ${level}: ${message}${extra}`;
+        })
+      ),
+    }),
+    new transports.File({
+      filename: path.join(logDir, 'app.log'),
+      maxsize: 5 * 1024 * 1024, // 5 MB
+      maxFiles: 3,
+      tailable: true,
+    }),
+    new transports.File({
+      filename: path.join(logDir, 'error.log'),
+      level: 'error',
+      maxsize: 2 * 1024 * 1024,
+      maxFiles: 3,
+      tailable: true,
+    }),
+  ],
+});
 
-const logger = (req, res, next) => {
+// HTTP request middleware
+const requestLogger = (req, res, next) => {
   const start = Date.now();
-
   res.on('finish', () => {
-    const duration = Date.now() - start;
-    const timestamp = new Date().toISOString();
-    const user = req.user ? `[${req.user.username}]` : '[Нэвтрээгүй]';
-    const logLine = `[${timestamp}] ${user} ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)\n`;
-
-    // Console-д хэвлэх
-    console.log(logLine.trim());
-
-    // Файлд бичих
-    fs.appendFile(logFilePath, logLine, (err) => {
-      if (err) console.error('Лог бичихэд алдаа:', err);
+    logger.info('http', {
+      method:   req.method,
+      url:      req.originalUrl,
+      status:   res.statusCode,
+      ms:       Date.now() - start,
+      user:     req.user?.username || 'anonymous',
     });
   });
-
   next();
 };
 
-module.exports = logger;
+module.exports = { logger, requestLogger };

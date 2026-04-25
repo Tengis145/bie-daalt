@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
   refreshToken: { type: String, default: '' },
 }, { timestamps: true });
 
+// email and username already have unique indexes via `unique: true`
+// Additional indexes for frequently-queried fields
+userSchema.index({ googleId: 1 }, { sparse: true }); // Google OAuth lookups
+userSchema.index({ refreshToken: 1 }, { sparse: true }); // token rotation validation
+
 // Нууц үгийг хадгалахын өмнө шийфэрлэх
 userSchema.pre('save', async function () {
   if (!this.isModified('password') || !this.password) return;

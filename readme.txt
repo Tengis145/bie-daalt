@@ -18,6 +18,11 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
               Google OAuth 2.0 (багш болон сурагч)
   Upload    — Multer + Cloudinary (200×200, quality auto, face crop)
   Security  — express-rate-limit, validator.js (input sanitization)
+  Logging   — Winston (structured JSON logs, console + file rotation)
+  API Docs  — Swagger UI (/api-docs), OpenAPI 3.0 spec (/api-docs.json)
+  Testing   — Jest (backend unit tests), Vitest + @testing-library/react
+  TypeScript— tsconfig.json (backend checkJs, frontend strict),
+              utils/grades.ts + utils/imageUrl.ts fully typed
   Deploy    — Vercel (frontend) + Render (backend)
 
 ----------------------------------------------------------------
@@ -26,12 +31,14 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
 
   bie-daalt/
   ├── backend/
+  │   ├── __tests__/
+  │   │   └── utils.test.js    ← Jest: sanitizeText, validateAndCalcGrades, JWT
   │   ├── middleware/
   │   │   ├── auth.js          ← JWT шалгах middleware
-  │   │   └── logger.js        ← Хүсэлт бүрийг console-д бичдэг
+  │   │   └── logger.js        ← Winston structured logging (JSON файл + console)
   │   ├── models/
-  │   │   ├── Student.js       ← Сурагчийн схем (grades, email, password)
-  │   │   └── User.js          ← Хэрэглэгчийн схем (bcrypt, googleId)
+  │   │   ├── Student.js       ← Сурагчийн схем + DB indexes (email, createdBy, ...)
+  │   │   └── User.js          ← Хэрэглэгчийн схем + DB indexes (googleId, refreshToken)
   │   ├── routes/
   │   │   ├── authRoutes.js    ← /api/auth — нэвтрэх, бүртгэх, Google OAuth,
   │   │   │                       сурагч нэвтрэх, нууц үг солих
@@ -42,19 +49,30 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
   │   │   │                       8 хичээл: Математик, Монгол хэл, Физик,
   │   │   │                       Хими, Англи хэл, Биологи, Газарзүй, Түүх)
   │   │   └── seeder.js        ← DB seed/clear скрипт
+  │   ├── logs/
+  │   │   ├── app.log          ← JSON форматтай хүсэлтийн лог (max 5MB × 3)
+  │   │   └── error.log        ← Зөвхөн error түвшний лог (max 2MB × 3)
   │   ├── .env.example         ← Шаардлагатай орчны хувьсагчдын жишээ
-  │   └── server.js            ← Express app, MongoDB холболт
+  │   ├── swagger.js           ← OpenAPI 3.0 spec (бүх route, schema)
+  │   ├── tsconfig.json        ← TypeScript: allowJs + checkJs (JS-г шалгана)
+  │   └── server.js            ← Express app, MongoDB холболт,
+  │                               /api-docs Swagger UI, /api-docs.json spec
   │
   └── frontend/
       ├── vercel.json          ← Vercel: COOP header + API proxy + SPA rewrite
-      ├── vite.config.js       ← Vite тохиргоо (proxy, chunk split)
+      ├── vite.config.js       ← Vite тохиргоо (proxy, chunk split, vitest)
+      ├── tsconfig.json        ← TypeScript strict mode
       └── src/
           ├── App.jsx          ← Routing, global state, 401 interceptor
           ├── index.css        ← Бүх CSS (design tokens, layout)
           ├── index.jsx        ← GoogleOAuthProvider wrapper
+          ├── __tests__/
+          │   ├── setup.js          ← @testing-library/jest-dom setup
+          │   ├── grades.test.js    ← Vitest: getLetterGrade, LETTER_STYLE
+          │   └── imageUrl.test.js  ← Vitest: getImageUrl edge cases
           ├── utils/
-          │   ├── grades.js    ← getLetterGrade() + LETTER_STYLE (хуваалцсан)
-          │   └── imageUrl.js  ← Cloudinary/Backend URL-г зурагт нэмдэг
+          │   ├── grades.ts    ← getLetterGrade() + LETTER_STYLE (TypeScript)
+          │   └── imageUrl.ts  ← Cloudinary/Backend URL helper (TypeScript)
           ├── components/
           │   ├── Icons.jsx         ← SVG icon компонентууд (EyeIcon/EyeOffIcon)
           │   ├── PasswordInput.jsx ← Нууц үг харах/нуух toggle (хуваалцсан)
@@ -472,5 +490,133 @@ GitHub Repo     : https://github.com/Tengis145/bie-daalt
     MONGODB_URI, JWT_SECRET, JWT_REFRESH_SECRET
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
     GOOGLE_CLIENT_ID
+
+----------------------------------------------------------------
+10. WINSTON STRUCTURED LOGGING
+----------------------------------------------------------------
+
+  Winston нь Node.js-ийн өргөн ашиглагддаг logging сан.
+  Энгийн console.log-оос давуу талууд:
+    * JSON форматтай → log aggregator (Datadog, Logtail) руу шууд
+    * Log level шүүлт: error | warn | info | debug
+    * Файл эргэлт (rotation): max 5MB x 3 файл (хуучин автоматаар устана)
+    * Тусдаа error.log — зөвхөн алдааг тусад нь хадгална
+
+  Logger тохиргоо (backend/middleware/logger.js):
+    createLogger({ level: process.env.LOG_LEVEL || 'info' })
+    transports:
+      Console  → colorize + printf format
+      app.log  → JSON, maxsize 5MB, maxFiles 3
+      error.log→ JSON, level:'error', maxsize 2MB, maxFiles 3
+
+  HTTP хүсэлтийн лог формат (app.log):
+    { "level":"info", "message":"http", "method":"GET",
+      "url":"/api/students", "status":200, "ms":"12ms",
+      "user":"teacher01", "timestamp":"2025-01-01 12:00:00" }
+
+  Ашиглах:
+    const { logger } = require('./middleware/logger');
+    logger.info('message', { key: value });
+    logger.error('error message', { error: err.message });
+
+  LOG_LEVEL орчны хувьсагч .env-д нэмж болно (default: 'info'):
+    LOG_LEVEL=debug  <- development-д бүх мэдээллийг харна
+
+----------------------------------------------------------------
+11. DB INDEXES (ӨГӨГДЛИЙН САНГИЙН ИНДЕКС)
+----------------------------------------------------------------
+
+  MongoDB-д `unique: true` талбар автоматаар индекстэй болдог.
+  Гэвч байнга ашиглагддаг query талбаруудад нэмэлт индекс
+  шаардлагатай — хурдыг 10–100x сайжруулж болно.
+
+  User.js-д нэмэгдсэн индексүүд:
+    googleId     → sparse index (Google OAuth findOne хурдлана)
+    refreshToken → sparse index (token rotation шалгахад)
+
+  Student.js-д нэмэгдсэн индексүүд:
+    email                                        → student login + public lookup
+    createdBy                                    → багшийн сурагчдын жагсаалт
+    { className, academicYear, semester }        → шүүлт query
+    { createdBy, className, academicYear, semester } → нийлмэл шүүлт
+
+  sparse: true → утгагүй (null/'') document-ийг индексд оруулахгүй
+               → зай хэмнэж, Google OAuth-гүй хэрэглэгчдэд нөлөөлөхгүй
+
+----------------------------------------------------------------
+12. SWAGGER / OPENAPI БАРИМТЖУУЛАЛТ
+----------------------------------------------------------------
+
+  Swagger UI хаяг: http://localhost:5000/api-docs
+  JSON spec хаяг:  http://localhost:5000/api-docs.json
+  Production:      https://bie-daalt.onrender.com/api-docs
+
+  Бүртгэгдсэн tag-ууд: Auth | Students | Admin | Upload
+
+  Ашиглалт:
+    1. /api-docs хаягийг browser-т нээнэ
+    2. "Authorize" товч → Bearer токен оруулна
+    3. endpoint-ийг "Try it out" товчоор шууд туршиж болно
+
+  swagger.js файл:
+    swaggerJsdoc(options) → OpenAPI 3.0 spec object
+    Бүх schema (User, Student, Grade, AuthResponse, ...) нэг газарт
+    server.js-д: app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(spec))
+
+----------------------------------------------------------------
+13. ТЕСТ (JEST + VITEST)
+----------------------------------------------------------------
+
+  Backend тест (Jest):
+    Байрлал: backend/__tests__/utils.test.js
+    Ажиллуулах: cd backend && npm test
+
+    Тестийн бүлгүүд:
+      sanitizeText          — XSS тэг хасах, whitespace, non-string input
+      validateAndCalcGrades — массив шалгалт, мужийн алдаа, score тооцоо
+      JWT helpers           — access/refresh token агуулга, хугацаа
+
+  Frontend тест (Vitest):
+    Байрлал: frontend/src/__tests__/
+    Ажиллуулах: cd frontend && npm test
+
+    grades.test.js   — getLetterGrade() boundary тест (90→A, 89→B, ...)
+                        LETTER_STYLE бүтэц, өнгө утгууд
+    imageUrl.test.js — null/empty → null, absolute URL → тэр чигт,
+                        relative → BASE+url, BASE тооцоолол
+
+  Нэмэлт тест бичих:
+    Backend : backend/__tests__/*.test.js файл нэмнэ (Jest auto-detect)
+    Frontend: frontend/src/__tests__/*.test.js файл нэмнэ (Vitest)
+
+----------------------------------------------------------------
+14. TYPESCRIPT ТОХИРГОО
+----------------------------------------------------------------
+
+  Backend (backend/tsconfig.json):
+    allowJs: true   → .js файлуудыг TypeScript руу оруулна
+    checkJs: true   → JS файлуудад type checking хийнэ
+    strict: false   → одоогийн JS кодыг эвдэхгүйгээр шалгана
+    IDE (VS Code) TypeScript алдааг шууд харуулна
+
+  Frontend (frontend/tsconfig.json):
+    strict: true    → бүрэн TypeScript strict mode
+    checkJs: false  → .jsx файлуудыг шалгахгүй (тусдаа migrate хийнэ)
+    noEmit: true    → Vite compile хийдэг тул tsc зөвхөн шалгана
+
+  Converted файлууд (.js → .ts):
+    frontend/src/utils/grades.ts
+      export type LetterGrade = 'A'|'B'|'C'|'D'|'F'
+      export interface LetterStyle { color, bg, rowBg }
+      getLetterGrade(score: number): LetterGrade
+      LETTER_STYLE: Record<LetterGrade, LetterStyle>
+
+    frontend/src/utils/imageUrl.ts
+      getImageUrl(url: string | null | undefined): string | null
+
+  Цаашид migrate хийх дараалал:
+    1. components/*.jsx → *.tsx
+    2. pages/*.jsx → *.tsx
+    3. App.jsx, index.jsx → App.tsx, index.tsx
 
 ================================================================

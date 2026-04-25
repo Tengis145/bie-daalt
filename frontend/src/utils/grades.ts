@@ -1,4 +1,12 @@
-export function getLetterGrade(score) {
+export type LetterGrade = 'A' | 'B' | 'C' | 'D' | 'F';
+
+export interface LetterStyle {
+  color: string;
+  bg: string;
+  rowBg: string;
+}
+
+export function getLetterGrade(score: number): LetterGrade {
   if (score >= 90) return 'A';
   if (score >= 80) return 'B';
   if (score >= 70) return 'C';
@@ -6,7 +14,7 @@ export function getLetterGrade(score) {
   return 'F';
 }
 
-export const LETTER_STYLE = {
+export const LETTER_STYLE: Record<LetterGrade, LetterStyle> = {
   A: { color: '#065f46', bg: '#d1fae5', rowBg: '#f0fdf4' },
   B: { color: '#1e40af', bg: '#dbeafe', rowBg: '#eff6ff' },
   C: { color: '#92400e', bg: '#fef3c7', rowBg: '#fffbeb' },

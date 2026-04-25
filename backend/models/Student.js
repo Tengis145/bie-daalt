@@ -22,6 +22,12 @@ const studentSchema = new mongoose.Schema({
   createdBy:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Бүртгэсэн хэрэглэгч
 }, { timestamps: true });
 
+// Indexes for common query patterns
+studentSchema.index({ email: 1 }, { sparse: true });                         // student login + public lookup
+studentSchema.index({ createdBy: 1 });                                        // teacher's student list
+studentSchema.index({ className: 1, academicYear: 1, semester: 1 });          // filter queries
+studentSchema.index({ createdBy: 1, className: 1, academicYear: 1, semester: 1 }); // combined filter
+
 studentSchema.pre('save', async function () {
   if (!this.isModified('password') || !this.password) return;
   this.password = await bcrypt.hash(this.password, 12);

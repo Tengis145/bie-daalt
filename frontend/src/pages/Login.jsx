@@ -106,10 +106,10 @@ export default function Login({ onLogin, onStudentLogin }) {
               Сурагчдын дүн бүртгэлийн систем. Ангиар ангилах, дүн харах, графикаар дүн харуулах боломжтой.
             </p>
             <div className="auth-side-pills">
-              <span className="auth-pill">📊 Дүн бүртгэл</span>
-              <span className="auth-pill">📈 График</span>
-              <span className="auth-pill">🏫 Ангиар харах</span>
-              <span className="auth-pill">🔒 Аюулгүй</span>
+              <span className="auth-pill">Дүн бүртгэл</span>
+              <span className="auth-pill">График</span>
+              <span className="auth-pill">Ангиар харах</span>
+              <span className="auth-pill">Аюулгүй</span>
             </div>
           </div>
           <div style={{ color: 'rgba(255,255,255,.4)', fontSize: '0.75rem' }}>

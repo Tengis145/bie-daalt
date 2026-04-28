@@ -1,0 +1,41 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #fff; padding: 18px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.label { font-size: 0.62rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+.pill-primary  { background: #e0e7ff; color: #4f46e5; }
+.pill-success  { background: #d1fae5; color: #065f46; }
+.pill-warning  { background: #fef3c7; color: #92400e; }
+.pill-danger   { background: #fee2e2; color: #7f1d1d; }
+.pill-info     { background: #dbeafe; color: #1e40af; }
+.pill-orange   { background: #ffedd5; color: #7c2d12; }
+.pill-neutral  { background: #f1f5f9; color: #64748b; }
+.grade-badge { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; }
+.year-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 600; color: #3730a3; background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 20px; padding: 2px 8px; }
+</style></head><body>
+<div class="label">Status Pills</div>
+<div class="row">
+  <span class="badge pill-primary">10-р анги</span>
+  <span class="badge pill-success">Тэнцсэн</span>
+  <span class="badge pill-danger">Тэнцээгүй</span>
+  <span class="badge pill-warning">At-risk</span>
+  <span class="badge pill-info">2024-2025</span>
+  <span class="badge pill-neutral">1-р улирал</span>
+</div>
+<div class="label">Grade Badges</div>
+<div class="row">
+  <div class="grade-badge" style="background:#d1fae5;color:#065f46">A</div>
+  <div class="grade-badge" style="background:#dbeafe;color:#1e40af">B</div>
+  <div class="grade-badge" style="background:#fef3c7;color:#92400e">C</div>
+  <div class="grade-badge" style="background:#ffedd5;color:#7c2d12">D</div>
+  <div class="grade-badge" style="background:#fee2e2;color:#7f1d1d">F</div>
+</div>
+<div class="label">Year Badge</div>
+<div class="row">
+  <span class="year-badge">2024-2025</span>
+  <span class="year-badge">2-р улирал</span>
+</div>
+</body></html>

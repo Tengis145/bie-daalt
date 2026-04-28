@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════
+   БИЕ ДААЛТ — Design Tokens
+   Source: frontend/src/index.css
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ─── Base Color Palette ─────────────────────────────────── */
+:root {
+  /* Primary — Indigo */
+  --primary:        #4f46e5;
+  --primary-dark:   #3730a3;
+  --primary-deeper: #1e1b4b;
+  --primary-light:  #e0e7ff;
+  --primary-bg:     #eef2ff;
+  --primary-mid:    #6366f1;
+
+  /* Semantic */
+  --success:        #059669;
+  --success-light:  #d1fae5;
+  --success-bg:     #f0fdf4;
+  --warning:        #d97706;
+  --warning-light:  #fef3c7;
+  --warning-bg:     #fffbeb;
+  --danger:         #dc2626;
+  --danger-light:   #fee2e2;
+  --danger-bg:      #fff5f5;
+  --info:           #3b82f6;
+  --info-light:     #dbeafe;
+  --info-bg:        #eff6ff;
+
+  /* Neutrals */
+  --bg:             #f1f5f9;
+  --surface:        #ffffff;
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+
+  /* Text */
+  --text:           #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+  --text-faint:     #94a3b8;
+}
+
+/* ─── Grade Colors ───────────────────────────────────────── */
+:root {
+  --grade-a-color:  #065f46;
+  --grade-a-bg:     #d1fae5;
+  --grade-a-row:    #f0fdf4;
+
+  --grade-b-color:  #1e40af;
+  --grade-b-bg:     #dbeafe;
+  --grade-b-row:    #eff6ff;
+
+  --grade-c-color:  #92400e;
+  --grade-c-bg:     #fef3c7;
+  --grade-c-row:    #fffbeb;
+
+  --grade-d-color:  #7c2d12;
+  --grade-d-bg:     #ffedd5;
+  --grade-d-row:    #fff7ed;
+
+  --grade-f-color:  #7f1d1d;
+  --grade-f-bg:     #fee2e2;
+  --grade-f-row:    #fff5f5;
+}
+
+/* ─── Gradients ──────────────────────────────────────────── */
+:root {
+  --gradient-header:  linear-gradient(135deg, #3730a3 0%, #4f46e5 60%, #6366f1 100%);
+  --gradient-auth-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4f46e5 100%);
+  --gradient-hero:    linear-gradient(135deg, #3730a3, #4f46e5, #6366f1);
+  --gradient-card-top: linear-gradient(90deg, #4f46e5, #818cf8);
+}
+
+/* ─── Shadows ────────────────────────────────────────────── */
+:root {
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.1),  0 8px 10px -6px rgba(0,0,0,.04);
+  --shadow-primary: 0 4px 12px rgba(79,70,229,.35);
+}
+
+/* ─── Border Radius ──────────────────────────────────────── */
+:root {
+  --radius:    8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+}
+
+/* ─── Spacing Scale ──────────────────────────────────────── */
+:root {
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+}
+
+/* ─── Typography — Base ──────────────────────────────────── */
+:root {
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-print: 'Times New Roman', serif;
+
+  --text-xs:   0.72rem;   /* 10.8px — badges, sub-labels */
+  --text-sm:   0.8rem;    /* 12px   — muted meta */
+  --text-base: 0.875rem;  /* 13.1px — body / table */
+  --text-md:   0.95rem;   /* 14.3px — form inputs */
+  --text-lg:   1rem;      /* 15px   — card titles */
+  --text-xl:   1.1rem;    /* 16.5px — section titles */
+  --text-2xl:  1.4rem;    /* 21px   — page headings */
+  --text-3xl:  1.6rem;    /* 24px   — h1 */
+  --text-hero: 2.8rem;    /* 42px   — hero score display */
+}
+
+/* ─── Typography — Semantic ──────────────────────────────── */
+:root {
+  --h1-size: 1.6rem;
+  --h1-weight: 800;
+  --h1-tracking: -0.03em;
+
+  --h2-size: 1.4rem;
+  --h2-weight: 800;
+  --h2-tracking: -0.03em;
+
+  --h3-size: 1rem;
+  --h3-weight: 700;
+  --h3-tracking: normal;
+
+  --label-size: 0.875rem;
+  --label-weight: 700;
+  --label-transform: uppercase;
+  --label-tracking: 0.06em;
+
+  --body-size: 15px;
+  --body-weight: 400;
+  --body-line-height: 1.5;
+
+  --stat-size: 1.75rem;
+  --stat-weight: 800;
+  --stat-tracking: -0.03em;
+}
+
+/* ─── Transitions ────────────────────────────────────────── */
+:root {
+  --transition-fast:   all .15s ease;
+  --transition-base:   all .2s ease;
+  --transition-slow:   all .25s ease;
+  --transition-shadow: box-shadow .2s, transform .2s;
+}

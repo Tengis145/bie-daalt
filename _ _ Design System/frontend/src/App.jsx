@@ -1,0 +1,374 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import { SchoolIcon, DashboardIcon, PlusIcon, LockIcon, LogoutIcon, BookIcon, UsersIcon } from './components/Icons';
+import { getImageUrl } from './utils/imageUrl';
+import Toast from './components/Toast';
+import Dashboard from './pages/Dashboard';
+import StudentDetail from './pages/StudentDetail';
+import SubjectDashboard from './pages/SubjectDashboard';
+import AddStudent from './pages/AddStudent';
+import Profile from './pages/Profile';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ChangePassword from './pages/ChangePassword';
+import StudentGrades from './pages/StudentGrades';
+import StudentProfile from './pages/StudentProfile';
+import ManageTeachers from './pages/ManageTeachers';
+
+const API = '/api/students';
+
+const setAuthHeader = (token) => {
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common['Authorization'];
+  }
+};
+
+function ProtectedRoute({ token, children }) {
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+export default function App() {
+  const [token, setToken] = useState(() => {
+    const t = localStorage.getItem('ebs_token') || '';
+    setAuthHeader(t);
+    return t;
+  });
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ebs_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [studentSession, setStudentSession] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ebs_student') || 'null'); } catch { return null; }
+  });
+  const [students, setStudents] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const location = useLocation();
+
+  useEffect(() => { setAuthHeader(token); }, [token]);
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  const handleLogout = useCallback(() => {
+    axios.post('/api/auth/logout').catch(() => {});
+    setToken('');
+    setCurrentUser(null);
+    setStudents([]);
+    setClasses([]);
+    localStorage.removeItem('ebs_token');
+    localStorage.removeItem('ebs_user');
+    localStorage.removeItem('ebs_refresh');
+    setAuthHeader(null);
+  }, []);
+
+  // handleLogout is defined above — no TDZ when referenced in dependency array
+  useEffect(() => {
+    const id = axios.interceptors.response.use(
+      res => res,
+      async err => {
+        const original = err.config;
+        if (err.response?.status === 401 && !original._retry) {
+          original._retry = true;
+          const storedRefresh = localStorage.getItem('ebs_refresh');
+          if (storedRefresh) {
+            try {
+              const { data } = await axios.post('/api/auth/refresh', { refreshToken: storedRefresh });
+              setToken(data.token);
+              localStorage.setItem('ebs_token', data.token);
+              localStorage.setItem('ebs_refresh', data.refreshToken);
+              setAuthHeader(data.token);
+              original.headers['Authorization'] = `Bearer ${data.token}`;
+              return axios(original);
+            } catch {
+              handleLogout();
+            }
+          } else {
+            handleLogout();
+          }
+        }
+        return Promise.reject(err);
+      }
+    );
+    return () => axios.interceptors.response.eject(id);
+  }, [handleLogout]);
+
+  const showToast = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const handleLogin = (newToken, user, newRefreshToken) => {
+    setToken(newToken);
+    setCurrentUser(user);
+    localStorage.setItem('ebs_token', newToken);
+    localStorage.setItem('ebs_user', JSON.stringify(user));
+    if (newRefreshToken) localStorage.setItem('ebs_refresh', newRefreshToken);
+    setAuthHeader(newToken);
+  };
+
+  const handleStudentLogin = (student) => {
+    setStudentSession(student);
+    localStorage.setItem('ebs_student', JSON.stringify(student));
+  };
+
+  const handleStudentLogout = () => {
+    setStudentSession(null);
+    localStorage.removeItem('ebs_student');
+  };
+
+  const onUpdateUser = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('ebs_user', JSON.stringify(updatedUser));
+  };
+
+  const fetchStudents = async (params = {}) => {
+    setLoading(true);
+    try {
+      const query = new URLSearchParams();
+      if (params.className)    query.set('className',    params.className);
+      if (params.search)       query.set('search',       params.search);
+      if (params.academicYear) query.set('academicYear', params.academicYear);
+      if (params.semester)     query.set('semester',     params.semester);
+      if (params.page)         query.set('page',         params.page);
+      const url = query.toString() ? `${API}?${query}` : API;
+      const res = await axios.get(url);
+      const data = res.data;
+      if (data.students) {
+        setStudents(data.students);
+        setPagination({ total: data.total, page: data.page, pages: data.pages });
+      } else {
+        setStudents(data);
+      }
+    } catch (e) {
+      if (e.response?.status === 401) handleLogout();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const res = await axios.get(`${API}/meta/classes`);
+      setClasses(res.data);
+    } catch (e) {
+      console.error('Ангиуд авахад алдаа:', e);
+    }
+  };
+
+  const addStudent = async (data) => {
+    const res = await axios.post(API, data);
+    await fetchStudents();
+    await fetchClasses();
+    return res.data;
+  };
+
+  const updateStudent = async (id, data) => {
+    const res = await axios.put(`${API}/${id}`, data);
+    fetchStudents(); // background refresh — don't await to avoid loading flash during modal save
+    return res.data;
+  };
+
+  const deleteStudent = async (id) => {
+    await axios.delete(`${API}/${id}`);
+    await fetchStudents();
+    await fetchClasses();
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchStudents();
+      fetchClasses();
+    }
+  }, [token]);
+
+  const navLinks = [
+    { to: '/',         label: 'Хяналтын самбар', icon: <DashboardIcon size={16} color="currentColor" /> },
+    { to: '/subjects', label: 'Хичээлүүд',        icon: <BookIcon      size={16} color="currentColor" /> },
+    { to: '/add',      label: 'Сурагч нэмэх',     icon: <PlusIcon      size={16} color="currentColor" /> },
+    ...(currentUser?.role === 'admin'
+      ? [{ to: '/teachers', label: 'Багш удирдах', icon: <UsersIcon size={16} color="currentColor" /> }]
+      : []),
+  ];
+
+  const initials = currentUser?.username
+    ? currentUser.username.slice(0, 2).toUpperCase()
+    : '?';
+
+  return (
+    <div className="app">
+      {token && (
+        <header className="header">
+          <div className="header-inner">
+            <Link to="/" className="logo">
+              <div className="logo-icon-wrap">
+                <SchoolIcon size={20} color="white" />
+              </div>
+              <div>
+                <div className="logo-title">ЕБС Дүн Бүртгэл</div>
+                <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+              </div>
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="nav desktop-nav">
+              {navLinks.map(link => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
+                >
+                  {link.icon}{link.label}
+                </Link>
+              ))}
+              <Link
+                to="/change-password"
+                className={`nav-link ${location.pathname === '/change-password' ? 'active' : ''}`}
+              >
+                <LockIcon size={16} color="currentColor" />Нууц үг
+              </Link>
+              <div className="nav-divider" />
+              <div className="nav-user">
+                <Link to="/profile" className="user-badge" style={{ textDecoration: 'none' }}>
+                  {getImageUrl(currentUser?.profileImage)
+                    ? <img src={getImageUrl(currentUser?.profileImage)} alt="" className="user-avatar-img" />
+                    : <div className="user-avatar">{initials}</div>
+                  }
+                  <span className="user-name">{currentUser?.username}</span>
+                </Link>
+                <button onClick={handleLogout} className="btn-logout">
+                  <LogoutIcon size={14} color="currentColor" />Гарах
+                </button>
+              </div>
+            </nav>
+
+            {/* Mobile hamburger */}
+            <button
+              className={`hamburger ${menuOpen ? 'open' : ''}`}
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="Цэс"
+            >
+              <span /><span /><span />
+            </button>
+          </div>
+
+          {/* Mobile dropdown menu */}
+          {menuOpen && (
+            <div className="mobile-menu">
+              {navLinks.map(link => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`mobile-nav-link ${location.pathname === link.to ? 'active' : ''}`}
+                >
+                  {link.icon}{link.label}
+                </Link>
+              ))}
+              <Link
+                to="/change-password"
+                className={`mobile-nav-link ${location.pathname === '/change-password' ? 'active' : ''}`}
+              >
+                <LockIcon size={16} color="currentColor" />Нууц үг солих
+              </Link>
+              <div className="mobile-menu-divider" />
+              <div className="mobile-menu-user">
+                <Link to="/profile" className="user-badge" style={{ background: 'rgba(255,255,255,.15)', textDecoration: 'none' }}>
+                  {getImageUrl(currentUser?.profileImage)
+                    ? <img src={getImageUrl(currentUser?.profileImage)} alt="" className="user-avatar-img" />
+                    : <div className="user-avatar">{initials}</div>
+                  }
+                  <span className="user-name">{currentUser?.username}</span>
+                </Link>
+                <button onClick={handleLogout} className="btn-logout">
+                  <LogoutIcon size={14} color="currentColor" />Гарах
+                </button>
+              </div>
+            </div>
+          )}
+        </header>
+      )}
+
+      <main className={token ? 'main' : ''}>
+          <Routes>
+            <Route path="/login"    element={token ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} onStudentLogin={handleStudentLogin} />} />
+            <Route path="/my-grades" element={
+              studentSession
+                ? <StudentGrades student={studentSession} onLogout={handleStudentLogout} standalone={!token} />
+                : <Navigate to="/login" replace />
+            } />
+            <Route path="/my-profile" element={
+              studentSession
+                ? <StudentProfile student={studentSession} onLogout={handleStudentLogout} standalone={!token} />
+                : <Navigate to="/login" replace />
+            } />
+            <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register onLogin={handleLogin} />} />
+            <Route path="/" element={
+              <ProtectedRoute token={token}>
+                <Dashboard
+                  students={students}
+                  pagination={pagination}
+                  classes={classes}
+                  loading={loading}
+                  onFilter={fetchStudents}
+                  onDelete={deleteStudent}
+                  onUpdate={updateStudent}
+                  showToast={showToast}
+                />
+              </ProtectedRoute>
+            } />
+            <Route path="/subjects" element={
+              <ProtectedRoute token={token}>
+                <SubjectDashboard students={students} classes={classes} loading={loading} />
+              </ProtectedRoute>
+            } />
+            <Route path="/add" element={
+              <ProtectedRoute token={token}>
+                <AddStudent onAdd={addStudent} classes={classes} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/:id" element={
+              <ProtectedRoute token={token}>
+                <StudentDetail onUpdate={updateStudent} onDelete={deleteStudent} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/change-password" element={
+              <ChangePassword token={token} currentUser={currentUser} showToast={showToast} />
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute token={token}>
+                <Profile currentUser={currentUser} onUpdateUser={onUpdateUser} showToast={showToast} />
+              </ProtectedRoute>
+            } />
+            <Route path="/teachers" element={
+              <ProtectedRoute token={token}>
+                {currentUser?.role === 'admin'
+                  ? <ManageTeachers showToast={showToast} />
+                  : <Navigate to="/" replace />}
+              </ProtectedRoute>
+            } />
+          </Routes>
+      </main>
+
+      {token && (
+        <footer className="footer">
+          © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
+        </footer>
+      )}
+
+      <Toast toasts={toasts} onRemove={removeToast} />
+    </div>
+  );
+}

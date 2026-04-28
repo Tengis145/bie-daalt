@@ -1,0 +1,50 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 18px; }
+.row { display: flex; gap: 8px; }
+.card { flex: 1; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+.badge { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; flex-shrink: 0; }
+.info { flex: 1; }
+.range { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.label { font-size: 0.72rem; font-weight: 500; }
+</style></head><body>
+<div class="row">
+  <div class="card" style="background:#d1fae5">
+    <div class="badge" style="background:#f0fdf4; color:#065f46">A</div>
+    <div class="info">
+      <div class="range" style="color:#065f46">≥ 90 оноо</div>
+      <div class="label" style="color:#065f46">Дүн · Шилдэг</div>
+    </div>
+  </div>
+  <div class="card" style="background:#dbeafe">
+    <div class="badge" style="background:#eff6ff; color:#1e40af">B</div>
+    <div class="info">
+      <div class="range" style="color:#1e40af">≥ 80 оноо</div>
+      <div class="label" style="color:#1e40af">Дүн · Сайн</div>
+    </div>
+  </div>
+  <div class="card" style="background:#fef3c7">
+    <div class="badge" style="background:#fffbeb; color:#92400e">C</div>
+    <div class="info">
+      <div class="range" style="color:#92400e">≥ 70 оноо</div>
+      <div class="label" style="color:#92400e">Дүн · Дунд</div>
+    </div>
+  </div>
+  <div class="card" style="background:#ffedd5">
+    <div class="badge" style="background:#fff7ed; color:#7c2d12">D</div>
+    <div class="info">
+      <div class="range" style="color:#7c2d12">≥ 60 оноо</div>
+      <div class="label" style="color:#7c2d12">Дүн · Хангалтгүй</div>
+    </div>
+  </div>
+  <div class="card" style="background:#fee2e2">
+    <div class="badge" style="background:#fff5f5; color:#7f1d1d">F</div>
+    <div class="info">
+      <div class="range" style="color:#7f1d1d">&lt; 60 оноо</div>
+      <div class="label" style="color:#7f1d1d">Дүн · Тэнцээгүй</div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 18px; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 12px; font-size: 0.875rem; font-weight: 500; box-shadow: 0 10px 15px -3px rgba(0,0,0,.08); min-width: 240px; max-width: 360px; }
+.toast-success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+.toast-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+.toast-info    { background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; }
+.icon { font-size: 1rem; font-weight: 700; flex-shrink: 0; }
+</style></head><body>
+<div class="col">
+  <div class="toast toast-success">
+    <span class="icon">✓</span>
+    <span>Сурагч амжилттай нэмэгдлээ</span>
+  </div>
+  <div class="toast toast-error">
+    <span class="icon">✕</span>
+    <span>Имэйл эсвэл нууц үг буруу байна</span>
+  </div>
+  <div class="toast toast-info">
+    <span class="icon">i</span>
+    <span>Excel файл татаж авч байна...</span>
+  </div>
+</div>
+</body></html>

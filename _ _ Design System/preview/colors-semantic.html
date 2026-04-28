@@ -1,0 +1,58 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.block { border-radius: 10px; overflow: hidden; }
+.block-top { height: 44px; display: flex; align-items: center; padding: 0 12px; }
+.block-bot { padding: 8px 12px; }
+.name { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.hex  { font-size: 0.62rem; font-weight: 500; margin-top: 2px; opacity: 0.75; }
+.desc { font-size: 0.65rem; color: #64748b; margin-top: 3px; }
+</style></head><body>
+<div class="grid">
+  <div class="block" style="border:1px solid #6ee7b7">
+    <div class="block-top" style="background:#059669"><span class="name" style="color:#fff">Success</span></div>
+    <div class="block-bot" style="background:#d1fae5">
+      <div class="hex" style="color:#065f46">#059669 / #d1fae5</div>
+      <div class="desc">Grade A · Амжилт · Positive</div>
+    </div>
+  </div>
+  <div class="block" style="border:1px solid #fca5a5">
+    <div class="block-top" style="background:#dc2626"><span class="name" style="color:#fff">Danger</span></div>
+    <div class="block-bot" style="background:#fee2e2">
+      <div class="hex" style="color:#991b1b">#dc2626 / #fee2e2</div>
+      <div class="desc">Grade F · Алдаа · Destructive</div>
+    </div>
+  </div>
+  <div class="block" style="border:1px solid #fbbf24">
+    <div class="block-top" style="background:#d97706"><span class="name" style="color:#fff">Warning</span></div>
+    <div class="block-bot" style="background:#fef3c7">
+      <div class="hex" style="color:#92400e">#d97706 / #fef3c7</div>
+      <div class="desc">Grade C · Анхааруулга · At-risk</div>
+    </div>
+  </div>
+  <div class="block" style="border:1px solid #93c5fd">
+    <div class="block-top" style="background:#3b82f6"><span class="name" style="color:#fff">Info</span></div>
+    <div class="block-bot" style="background:#dbeafe">
+      <div class="hex" style="color:#1e40af">#3b82f6 / #dbeafe</div>
+      <div class="desc">Grade B · Мэдээлэл · Charts</div>
+    </div>
+  </div>
+  <div class="block" style="border:1px solid #e0e7ff">
+    <div class="block-top" style="background:#4f46e5"><span class="name" style="color:#fff">Primary</span></div>
+    <div class="block-bot" style="background:#eef2ff">
+      <div class="hex" style="color:#3730a3">#4f46e5 / #eef2ff</div>
+      <div class="desc">Үндсэн өнгө · Buttons · Links</div>
+    </div>
+  </div>
+  <div class="block" style="border:1px solid #e2e8f0">
+    <div class="block-top" style="background:#f1f5f9"><span class="name" style="color:#64748b">Neutral bg</span></div>
+    <div class="block-bot" style="background:#fff">
+      <div class="hex" style="color:#64748b">#f1f5f9 / #ffffff</div>
+      <div class="desc">Дэвсгэр · Surface · Cards</div>
+    </div>
+  </div>
+</div>
+</body></html>

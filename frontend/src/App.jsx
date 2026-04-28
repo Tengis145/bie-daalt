@@ -77,7 +77,7 @@ export default function App() {
       res => res,
       async err => {
         const original = err.config;
-        if (err.response?.status === 401 && !original._retry) {
+        if (err.response?.status === 401 && !original._retry && !original.url?.includes('/api/auth/logout')) {
           original._retry = true;
           const storedRefresh = localStorage.getItem('ebs_refresh');
           if (storedRefresh) {

@@ -603,6 +603,7 @@ body {
 }
 
 .auth-wrapper {
+  position: relative;
   display: flex;
   background: var(--surface);
   border-radius: var(--radius-2xl);
@@ -612,6 +613,21 @@ body {
   min-height: 560px;
   box-shadow: var(--shadow-xl);
 }
+
+.btn-language {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.9);
+  color: #475569;
+  padding: 5px 10px;
+  font: 700 0.75rem/1 inherit;
+  cursor: pointer;
+}
+.btn-language:hover { background: #fff; color: var(--primary); }
 
 .auth-side {
   width: 42%;

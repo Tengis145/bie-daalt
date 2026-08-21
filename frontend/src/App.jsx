@@ -15,6 +15,7 @@ import ChangePassword from './pages/ChangePassword';
 import StudentGrades from './pages/StudentGrades';
 import StudentProfile from './pages/StudentProfile';
 import ManageTeachers from './pages/ManageTeachers';
+import { useLanguage } from './utils/language.jsx';
 
 const API = '/api/students';
 
@@ -32,6 +33,7 @@ function ProtectedRoute({ token, children }) {
 }
 
 export default function App() {
+  const { toggleLanguage, language, t } = useLanguage();
   const [token, setToken] = useState(() => {
     const t = localStorage.getItem('ebs_token') || '';
     setAuthHeader(t);
@@ -196,11 +198,11 @@ export default function App() {
   }, [token]);
 
   const navLinks = [
-    { to: '/',         label: 'Хяналтын самбар', icon: <DashboardIcon size={16} color="currentColor" /> },
-    { to: '/subjects', label: 'Хичээлүүд',        icon: <BookIcon      size={16} color="currentColor" /> },
-    { to: '/add',      label: 'Сурагч нэмэх',     icon: <PlusIcon      size={16} color="currentColor" /> },
+    { to: '/',         label: t('dashboard'), icon: <DashboardIcon size={16} color="currentColor" /> },
+    { to: '/subjects', label: t('subjects'),  icon: <BookIcon      size={16} color="currentColor" /> },
+    { to: '/add',      label: t('addStudent'), icon: <PlusIcon       size={16} color="currentColor" /> },
     ...(currentUser?.role === 'admin'
-      ? [{ to: '/teachers', label: 'Багш удирдах', icon: <UsersIcon size={16} color="currentColor" /> }]
+      ? [{ to: '/teachers', label: t('manageTeachers'), icon: <UsersIcon size={16} color="currentColor" /> }]
       : []),
   ];
 
@@ -218,8 +220,8 @@ export default function App() {
                 <SchoolIcon size={20} color="white" />
               </div>
               <div>
-                <div className="logo-title">ЕБС Дүн Бүртгэл</div>
-                <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+                <div className="logo-title">{t('appName')}</div>
+                <div className="logo-sub">{t('appSubtitle')}</div>
               </div>
             </Link>
 
@@ -238,7 +240,7 @@ export default function App() {
                 to="/change-password"
                 className={`nav-link ${location.pathname === '/change-password' ? 'active' : ''}`}
               >
-                <LockIcon size={16} color="currentColor" />Нууц үг
+                <LockIcon size={16} color="currentColor" />{t('password')}
               </Link>
               <div className="nav-divider" />
               <div className="nav-user">
@@ -250,7 +252,10 @@ export default function App() {
                   <span className="user-name">{currentUser?.username}</span>
                 </Link>
                 <button onClick={handleLogout} className="btn-logout">
-                  <LogoutIcon size={14} color="currentColor" />Гарах
+                  <LogoutIcon size={14} color="currentColor" />{t('logout')}
+                </button>
+                <button onClick={toggleLanguage} className="btn-logout" aria-label={t('langToggleLabel')}>
+                  {language === 'mn' ? 'EN' : 'MN'}
                 </button>
               </div>
             </nav>
@@ -259,7 +264,7 @@ export default function App() {
             <button
               className={`hamburger ${menuOpen ? 'open' : ''}`}
               onClick={() => setMenuOpen(v => !v)}
-              aria-label="Цэс"
+              aria-label={t('menu')}
             >
               <span /><span /><span />
             </button>
@@ -281,7 +286,7 @@ export default function App() {
                 to="/change-password"
                 className={`mobile-nav-link ${location.pathname === '/change-password' ? 'active' : ''}`}
               >
-                <LockIcon size={16} color="currentColor" />Нууц үг солих
+                <LockIcon size={16} color="currentColor" />{t('changePassword')}
               </Link>
               <div className="mobile-menu-divider" />
               <div className="mobile-menu-user">
@@ -293,8 +298,9 @@ export default function App() {
                   <span className="user-name">{currentUser?.username}</span>
                 </Link>
                 <button onClick={handleLogout} className="btn-logout">
-                  <LogoutIcon size={14} color="currentColor" />Гарах
+                  <LogoutIcon size={14} color="currentColor" />{t('logout')}
                 </button>
+                <button onClick={toggleLanguage} className="btn-logout">{language === 'mn' ? 'EN' : 'MN'}</button>
               </div>
             </div>
           )}
@@ -364,7 +370,7 @@ export default function App() {
 
       {token && (
         <footer className="footer">
-          © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
+          © 2024 {t('appName')} · {t('footer')}
         </footer>
       )}
 

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { EyeIcon, EyeOffIcon } from './Icons';
+import { useLanguage } from '../utils/language.jsx';
 
 export default function PasswordInput({ name, value, onChange, placeholder, required }) {
+  const { t } = useLanguage();
   const [show, setShow] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
@@ -19,7 +21,7 @@ export default function PasswordInput({ name, value, onChange, placeholder, requ
         onClick={() => setShow(s => !s)}
         style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex', alignItems: 'center' }}
         tabIndex={-1}
-        aria-label={show ? 'Нууц үг нуух' : 'Нууц үг харуулах'}
+        aria-label={show ? t('pwHide') : t('pwShow')}
       >
         {show ? <EyeOffIcon size={17} /> : <EyeIcon size={17} />}
       </button>

@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { BookIcon, ChartIcon, TrophyIcon, UsersIcon } from '../components/Icons';
 import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
+import { useLanguage } from '../utils/language.jsx';
 
 // ── helpers ────────────────────────────────────────────────────
 const SCORE_COLOR = (s) => s >= 90 ? '#059669' : s >= 75 ? '#3b82f6' : '#d97706';
@@ -79,6 +80,7 @@ function CustomTooltip({ active, payload, label }) {
 
 // ── Subject card ────────────────────────────────────────────────
 function SubjectCard({ stat, selected, onClick }) {
+  const { t } = useLanguage();
   const exPct   = pct(stat.excellent, stat.count);
   const goodPct = pct(stat.good,      stat.count);
   const lowPct  = pct(stat.below,     stat.count);
@@ -100,37 +102,38 @@ function SubjectCard({ stat, selected, onClick }) {
 
       {/* Distribution bar */}
       <div className="dist-bar">
-        {exPct   > 0 && <div className="dist-seg dist-excellent" style={{ width: `${exPct}%` }}   title={`Тэрлэлт (≥90): ${stat.excellent}`} />}
-        {goodPct > 0 && <div className="dist-seg dist-good"      style={{ width: `${goodPct}%` }} title={`Сайн (75-89): ${stat.good}`} />}
-        {lowPct  > 0 && <div className="dist-seg dist-below"     style={{ width: `${lowPct}%` }}  title={`Дунд (<75): ${stat.below}`} />}
+        {exPct   > 0 && <div className="dist-seg dist-excellent" style={{ width: `${exPct}%` }}   title={t('subj_excellentTitle', { count: stat.excellent })} />}
+        {goodPct > 0 && <div className="dist-seg dist-good"      style={{ width: `${goodPct}%` }} title={t('subj_goodTitle', { count: stat.good })} />}
+        {lowPct  > 0 && <div className="dist-seg dist-below"     style={{ width: `${lowPct}%` }}  title={t('subj_belowTitle', { count: stat.below })} />}
       </div>
       <div className="dist-legend">
-        <span style={{ color: '#059669' }}>●&nbsp;{stat.excellent} тэрлэлт</span>
-        <span style={{ color: '#3b82f6' }}>●&nbsp;{stat.good} сайн</span>
-        <span style={{ color: '#d97706' }}>●&nbsp;{stat.below} дунд</span>
+        <span style={{ color: '#059669' }}>●&nbsp;{stat.excellent} {t('subj_excellentLabel')}</span>
+        <span style={{ color: '#3b82f6' }}>●&nbsp;{stat.good} {t('subj_goodLabel')}</span>
+        <span style={{ color: '#d97706' }}>●&nbsp;{stat.below} {t('subj_belowLabel')}</span>
       </div>
 
       <div className="subject-card-meta">
-        <div className="subject-meta-item"><span>Сурагч</span><strong>{stat.count}</strong></div>
-        <div className="subject-meta-item"><span>Чанар</span><strong style={{ color: stat.qualityPct >= 75 ? '#059669' : stat.qualityPct >= 50 ? '#2563eb' : '#d97706' }}>{stat.qualityPct}%</strong></div>
-        <div className="subject-meta-item"><span>Хамгийн өндөр</span><strong style={{ color: '#059669' }}>{stat.max}</strong></div>
-        <div className="subject-meta-item"><span>Хамгийн бага</span><strong style={{ color: '#d97706' }}>{stat.min}</strong></div>
+        <div className="subject-meta-item"><span>{t('subj_studentsLabel')}</span><strong>{stat.count}</strong></div>
+        <div className="subject-meta-item"><span>{t('subj_qualityLabel')}</span><strong style={{ color: stat.qualityPct >= 75 ? '#059669' : stat.qualityPct >= 50 ? '#2563eb' : '#d97706' }}>{stat.qualityPct}%</strong></div>
+        <div className="subject-meta-item"><span>{t('subj_highestLabel')}</span><strong style={{ color: '#059669' }}>{stat.max}</strong></div>
+        <div className="subject-meta-item"><span>{t('subj_lowestLabel')}</span><strong style={{ color: '#d97706' }}>{stat.min}</strong></div>
       </div>
 
       <div className="subject-card-components">
-        <span>Ш1 <em>{stat.avgExam1}/30</em></span>
-        <span>Ш2 <em>{stat.avgExam2}/30</em></span>
-        <span>Ирц <em>{stat.avgAtt}/20</em></span>
-        <span>БД <em>{stat.avgInd}/20</em></span>
+        <span>{t('thExam1')} <em>{stat.avgExam1}/30</em></span>
+        <span>{t('thExam2')} <em>{stat.avgExam2}/30</em></span>
+        <span>{t('thAttendance')} <em>{stat.avgAtt}/20</em></span>
+        <span>{t('thIndependent')} <em>{stat.avgInd}/20</em></span>
       </div>
 
-      {selected && <div className="subject-card-arrow">▼ Дэлгэрэнгүй</div>}
+      {selected && <div className="subject-card-arrow">{t('subj_detailsArrow')}</div>}
     </div>
   );
 }
 
 // ── Detail section ──────────────────────────────────────────────
 function SubjectDetail({ stat }) {
+  const { t } = useLanguage();
   const chartData = stat.entries.map(e => ({
     name:        e.studentName.split(' ')[0],
     fullName:    e.studentName,
@@ -148,23 +151,23 @@ function SubjectDetail({ stat }) {
       <div className="subject-detail-hero">
         <div>
           <h2 className="subject-detail-title">{stat.subject}</h2>
-          <p className="subject-detail-sub">{stat.count} сурагчийн дүнгийн дэлгэрэнгүй мэдээлэл</p>
+          <p className="subject-detail-sub">{t('subj_studentsCountLabel', { count: stat.count })}</p>
         </div>
         <div className="subject-hero-stats">
           <div className="subject-hero-stat">
-            <span>Дундаж</span>
+            <span>{t('subj_avgLabel')}</span>
             <strong style={{ color: '#fff' }}>{stat.avg}</strong>
           </div>
           <div className="subject-hero-stat">
-            <span>Өндөр</span>
+            <span>{t('subj_highLabel')}</span>
             <strong style={{ color: '#fff' }}>{stat.max}</strong>
           </div>
           <div className="subject-hero-stat">
-            <span>Бага</span>
+            <span>{t('subj_lowLabel')}</span>
             <strong style={{ color: '#fff' }}>{stat.min}</strong>
           </div>
           <div className="subject-hero-stat">
-            <span>Чанар</span>
+            <span>{t('subj_qualityLabel')}</span>
             <strong style={{ color: '#fff' }}>{stat.qualityPct}%</strong>
           </div>
         </div>
@@ -173,7 +176,7 @@ function SubjectDetail({ stat }) {
       <div className="subject-detail-body">
         {/* Stacked bar chart */}
         <div className="subject-chart-box">
-          <h3>Сурагч бүрийн оноо (бүрэлдэхүүнээр)</h3>
+          <h3>{t('subj_scoreByComponentTitle')}</h3>
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 55 }}>
@@ -188,10 +191,10 @@ function SubjectDetail({ stat }) {
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="top" wrapperStyle={{ fontSize: 12, paddingBottom: 8 }} />
-                <Bar dataKey="independent" name="Бие даалт"  stackId="a" fill="#10b981" />
-                <Bar dataKey="attendance"  name="Ирц"        stackId="a" fill="#06b6d4" />
-                <Bar dataKey="exam2"       name="Шалгалт 2"  stackId="a" fill="#8b5cf6" />
-                <Bar dataKey="exam1"       name="Шалгалт 1"  stackId="a" fill="#6366f1" radius={[4,4,0,0]} />
+                <Bar dataKey="independent" name={t('independentFull')} stackId="a" fill="#10b981" />
+                <Bar dataKey="attendance"  name={t('attendanceFull')}  stackId="a" fill="#06b6d4" />
+                <Bar dataKey="exam2"       name={t('exam2Full')}       stackId="a" fill="#8b5cf6" />
+                <Bar dataKey="exam1"       name={t('exam1Full')}       stackId="a" fill="#6366f1" radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -199,20 +202,20 @@ function SubjectDetail({ stat }) {
 
         {/* Student ranking table */}
         <div className="subject-rank-box">
-          <h3>Сурагчдын жагсаалт (өндрөөс бага)</h3>
+          <h3>{t('subj_rankingTitle')}</h3>
           <div style={{ overflowY: 'auto', maxHeight: 320 }}>
             <table className="subject-rank-table">
               <thead>
                 <tr>
                   <th>#</th>
-                  <th style={{ textAlign: 'left' }}>Нэр</th>
-                  <th>Анги</th>
-                  <th>Ш1</th>
-                  <th>Ш2</th>
-                  <th>Ирц</th>
-                  <th>БД</th>
-                  <th>Нийт</th>
-                  <th>Үсгэн</th>
+                  <th style={{ textAlign: 'left' }}>{t('nameLabel')}</th>
+                  <th>{t('classLabel')}</th>
+                  <th>{t('thExam1')}</th>
+                  <th>{t('thExam2')}</th>
+                  <th>{t('thAttendance')}</th>
+                  <th>{t('thIndependent')}</th>
+                  <th>{t('totalLabel')}</th>
+                  <th>{t('letterLabel')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -261,6 +264,7 @@ function SubjectDetail({ stat }) {
 
 // ── Main page ───────────────────────────────────────────────────
 export default function SubjectDashboard({ students = [], classes = [], loading }) {
+  const { t } = useLanguage();
   const [filterClass,      setFilterClass]      = useState('');
   const [selectedSubject,  setSelectedSubject]  = useState(null);
   const [sortBy,           setSortBy]           = useState('avg'); // avg | name | count
@@ -287,7 +291,7 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
     return (
       <div className="loading-wrap">
         <div className="spinner" />
-        Мэдээлэл уншиж байна...
+        {t('loadingData')}
       </div>
     );
   }
@@ -301,8 +305,8 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
   return (
     <div>
       <div className="page-header">
-        <h1>Хичээлүүд</h1>
-        <p>Хичээл тус бүрийн дүнгийн статистик, график харьцуулалт</p>
+        <h1>{t('subjects')}</h1>
+        <p>{t('subj_subtitle')}</p>
       </div>
 
       {/* Summary stat cards */}
@@ -311,14 +315,14 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
           <div className="stat-icon indigo"><BookIcon size={22} color="#4f46e5" /></div>
           <div className="stat-info">
             <div className="stat-value">{totalSubjects}</div>
-            <div className="stat-label">Нийт хичээл</div>
+            <div className="stat-label">{t('subj_totalSubjects')}</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon blue"><UsersIcon size={22} color="#2563eb" /></div>
           <div className="stat-info">
             <div className="stat-value">{totalEntries}</div>
-            <div className="stat-label">Нийт дүн оруулалт</div>
+            <div className="stat-label">{t('subj_totalEntries')}</div>
           </div>
         </div>
         <div className="stat-card">
@@ -327,7 +331,7 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
             <div className="stat-value" style={{ fontSize: bestSubject ? '1.05rem' : '1.75rem', fontWeight: 800 }}>
               {bestSubject ? bestSubject.subject : '—'}
             </div>
-            <div className="stat-label">Хамгийн өндөр дундаж ({bestSubject?.avg ?? '—'})</div>
+            <div className="stat-label">{t('subj_highestAvg')} ({bestSubject?.avg ?? '—'})</div>
           </div>
         </div>
         <div className="stat-card">
@@ -336,7 +340,7 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
             <div className="stat-value" style={{ fontSize: worstSubject ? '1.05rem' : '1.75rem', fontWeight: 800 }}>
               {worstSubject && worstSubject !== bestSubject ? worstSubject.subject : '—'}
             </div>
-            <div className="stat-label">Хамгийн бага дундаж ({worstSubject && worstSubject !== bestSubject ? worstSubject.avg : '—'})</div>
+            <div className="stat-label">{t('subj_lowestAvg')} ({worstSubject && worstSubject !== bestSubject ? worstSubject.avg : '—'})</div>
           </div>
         </div>
       </div>
@@ -344,35 +348,35 @@ export default function SubjectDashboard({ students = [], classes = [], loading 
       {/* Controls */}
       <div className="controls">
         <div className="filter-group">
-          <span className="filter-label">Анги:</span>
+          <span className="filter-label">{t('dash_classFilter')}</span>
           <select
             className="filter-select"
             value={filterClass}
             onChange={e => { setFilterClass(e.target.value); setSelectedSubject(null); }}
           >
-            <option value="">Бүх анги</option>
+            <option value="">{t('subj_allClasses')}</option>
             {classes.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="filter-group">
-          <span className="filter-label">Эрэмбэлэх:</span>
+          <span className="filter-label">{t('subj_sortBy')}</span>
           <select className="filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ minWidth: 140 }}>
-            <option value="avg">Дундажаар</option>
-            <option value="name">Нэрээр</option>
-            <option value="count">Сурагчийн тоогоор</option>
+            <option value="avg">{t('subj_sortAvg')}</option>
+            <option value="name">{t('subj_sortName')}</option>
+            <option value="count">{t('subj_sortCount')}</option>
           </select>
         </div>
         <div className="stats-pill">
-          <span>Нийт:</span>
-          <strong>{totalSubjects} хичээл</strong>
+          <span>{t('dash_totalPill')}</span>
+          <strong>{totalSubjects} {t('subjectsCountUnit')}</strong>
         </div>
       </div>
 
       {stats.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"><BookIcon size={48} color="#94a3b8" /></div>
-          <h3>Хичээлийн мэдээлэл байхгүй байна</h3>
-          <p>Эхлээд сурагч болон дүнгийн мэдээлэл оруулна уу.</p>
+          <h3>{t('subj_noData')}</h3>
+          <p>{t('subj_noDataHint')}</p>
         </div>
       ) : (
         <>

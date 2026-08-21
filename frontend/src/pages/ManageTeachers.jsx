@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLanguage } from '../utils/language.jsx';
 
 const EMPTY = { username: '', email: '', password: '', role: 'teacher' };
 
 export default function ManageTeachers({ showToast }) {
+  const { t } = useLanguage();
   const [users, setUsers]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm]       = useState(EMPTY);
@@ -16,7 +18,7 @@ export default function ManageTeachers({ showToast }) {
       const res = await axios.get('/api/auth/users');
       setUsers(res.data);
     } catch {
-      showToast('Хэрэглэгчид авахад алдаа гарлаа', 'error');
+      showToast(t('mt_fetchError'), 'error');
     } finally {
       setLoading(false);
     }
@@ -35,46 +37,46 @@ export default function ManageTeachers({ showToast }) {
     setError('');
     try {
       await axios.post('/api/auth/users', form);
-      showToast(`${form.username} амжилттай нэмэгдлээ`);
+      showToast(t('mt_addedToast', { name: form.username }));
       setForm(EMPTY);
       await load();
     } catch (err) {
-      setError(err.response?.data?.message || 'Алдаа гарлаа');
+      setError(err.response?.data?.message || t('genericError'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (user) => {
-    if (!window.confirm(`"${user.username}"-г устгах уу?`)) return;
+    if (!window.confirm(t('mt_deleteConfirm', { name: user.username }))) return;
     try {
       await axios.delete(`/api/auth/users/${user._id}`);
-      showToast(`${user.username} устгагдлаа`, 'info');
+      showToast(t('mt_deletedToast', { name: user.username }), 'info');
       setUsers(u => u.filter(x => x._id !== user._id));
     } catch (err) {
-      showToast(err.response?.data?.message || 'Устгахад алдаа гарлаа', 'error');
+      showToast(err.response?.data?.message || t('mt_deleteError'), 'error');
     }
   };
 
-  const roleLabel = r => r === 'admin' ? 'Админ' : 'Багш';
+  const roleLabel = r => r === 'admin' ? t('roleAdmin') : t('roleTeacher');
   const roleBg    = r => r === 'admin' ? '#fef3c7' : '#dbeafe';
   const roleColor = r => r === 'admin' ? '#92400e' : '#1e40af';
 
   return (
     <div>
       <div className="page-header">
-        <h1>Хэрэглэгч удирдах</h1>
-        <p>Багш болон админ бүртгэлийг удирдах (зөвхөн админ)</p>
+        <h1>{t('mt_title')}</h1>
+        <p>{t('mt_subtitle')}</p>
       </div>
 
       {/* Add teacher form */}
       <div className="chart-section" style={{ marginBottom: 24 }}>
-        <h3>Шинэ хэрэглэгч нэмэх</h3>
+        <h3>{t('mt_addNewUser')}</h3>
         {error && <div className="auth-error" style={{ marginBottom: 16 }}>{error}</div>}
         <form onSubmit={handleAdd}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Хэрэглэгчийн нэр</label>
+              <label>{t('mt_username')}</label>
               <input
                 name="username"
                 value={form.username}
@@ -84,7 +86,7 @@ export default function ManageTeachers({ showToast }) {
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Имэйл хаяг</label>
+              <label>{t('email')}</label>
               <input
                 type="email"
                 name="email"
@@ -95,7 +97,7 @@ export default function ManageTeachers({ showToast }) {
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Нууц үг</label>
+              <label>{t('passwordLabel')}</label>
               <input
                 type="password"
                 name="password"
@@ -107,28 +109,28 @@ export default function ManageTeachers({ showToast }) {
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label>Эрх</label>
+              <label>{t('mt_role')}</label>
               <select name="role" value={form.role} onChange={handleChange}>
-                <option value="teacher">Багш</option>
-                <option value="admin">Админ</option>
+                <option value="teacher">{t('roleTeacher')}</option>
+                <option value="admin">{t('roleAdmin')}</option>
               </select>
             </div>
           </div>
           <button className="btn btn-success" type="submit" disabled={saving}>
-            {saving ? 'Нэмж байна...' : '+ Хэрэглэгч нэмэх'}
+            {saving ? t('mt_adding') : t('mt_addUserBtn')}
           </button>
         </form>
       </div>
 
       {/* User list */}
       <div className="chart-section">
-        <h3>Хэрэглэгчдийн жагсаалт ({users.length})</h3>
+        <h3>{t('mt_userListTitle', { count: users.length })}</h3>
         {loading ? (
           <div className="loading-wrap"><div className="spinner" /></div>
         ) : users.length === 0 ? (
           <div className="empty-state" style={{ padding: '40px 20px' }}>
             <div className="empty-state-icon">👤</div>
-            <p>Хэрэглэгч байхгүй байна</p>
+            <p>{t('mt_noUsers')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -136,10 +138,10 @@ export default function ManageTeachers({ showToast }) {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'left' }}>#</th>
-                  <th style={{ textAlign: 'left' }}>Нэр</th>
-                  <th style={{ textAlign: 'left' }}>Имэйл</th>
-                  <th>Эрх</th>
-                  <th>Бүртгэгдсэн</th>
+                  <th style={{ textAlign: 'left' }}>{t('nameLabel')}</th>
+                  <th style={{ textAlign: 'left' }}>{t('email')}</th>
+                  <th>{t('mt_role')}</th>
+                  <th>{t('mt_thRegistered')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -173,7 +175,7 @@ export default function ManageTeachers({ showToast }) {
                         style={{ padding: '4px 12px', fontSize: '0.8rem' }}
                         onClick={() => handleDelete(u)}
                       >
-                        Устгах
+                        {t('delete')}
                       </button>
                     </td>
                   </tr>

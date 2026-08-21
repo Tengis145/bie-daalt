@@ -4,8 +4,10 @@ import axios from 'axios';
 import { GoogleLogin } from '@react-oauth/google';
 import { SchoolIcon } from '../components/Icons';
 import PasswordInput from '../components/PasswordInput';
+import { useLanguage } from '../utils/language.jsx';
 
 export default function Login({ onLogin, onStudentLogin }) {
+  const { toggleLanguage, language, t } = useLanguage();
   const navigate = useNavigate();
   const [tab, setTab] = useState('teacher'); // 'teacher' | 'student'
 
@@ -37,7 +39,7 @@ export default function Login({ onLogin, onStudentLogin }) {
       onLogin(res.data.token, res.data.user, res.data.refreshToken);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Нэвтрэхэд алдаа гарлаа');
+      setError(err.response?.data?.message || t('loginError'));
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function Login({ onLogin, onStudentLogin }) {
       onStudentLogin(res.data.student);
       navigate('/my-grades');
     } catch (err) {
-      setStuErr(err.response?.data?.message || 'Нэвтрэхэд алдаа гарлаа');
+      setStuErr(err.response?.data?.message || t('loginError'));
     } finally {
       setStuLoad(false);
     }
@@ -64,7 +66,7 @@ export default function Login({ onLogin, onStudentLogin }) {
       onLogin(res.data.token, res.data.user, res.data.refreshToken);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Google нэвтрэлт амжилтгүй болсон');
+      setError(err.response?.data?.message || t('googleError'));
     }
   };
 
@@ -78,7 +80,7 @@ export default function Login({ onLogin, onStudentLogin }) {
       onStudentLogin(res.data);
       navigate('/my-grades');
     } catch (err) {
-      setStuErr(err.response?.data?.message || 'Google нэвтрэлт амжилтгүй болсон');
+      setStuErr(err.response?.data?.message || t('googleError'));
     } finally {
       setStuLoad(false);
     }
@@ -86,34 +88,37 @@ export default function Login({ onLogin, onStudentLogin }) {
 
   // Single Google handler — dispatches based on active tab to avoid double initialize()
   const handleGoogleAny  = (cr) => tab === 'teacher' ? handleGoogleSuccess(cr) : handleStudentGoogle(cr);
-  const handleGoogleError = ()  => tab === 'teacher' ? setError('Google нэвтрэлт амжилтгүй болсон') : setStuErr('Google нэвтрэлт амжилтгүй болсон');
+  const handleGoogleError = ()  => tab === 'teacher' ? setError(t('googleError')) : setStuErr(t('googleError'));
 
   return (
     <div className="auth-page">
       <div className="auth-wrapper">
+        <button type="button" onClick={toggleLanguage} className="btn-language" aria-label={t('langToggleLabel')}>
+          {language === 'mn' ? 'EN' : 'MN'}
+        </button>
         {/* Left side */}
         <div className="auth-side">
           <div className="auth-side-logo">
             <div className="auth-side-logo-icon"><SchoolIcon size={22} color="white" /></div>
             <div>
-              <div className="auth-side-logo-text">ЕБС Дүн Бүртгэл</div>
-              <div className="auth-side-logo-sub">Ерөнхий боловсролын сургууль</div>
+              <div className="auth-side-logo-text">{t('appName')}</div>
+              <div className="auth-side-logo-sub">{t('appSubtitle')}</div>
             </div>
           </div>
           <div className="auth-side-body">
-            <h2 className="auth-side-title">Тавтай морил!</h2>
+            <h2 className="auth-side-title">{t('welcome')}</h2>
             <p className="auth-side-text">
-              Сурагчдын дүн бүртгэлийн систем. Ангиар ангилах, дүн харах, графикаар дүн харуулах боломжтой.
+              {t('loginSideText')}
             </p>
             <div className="auth-side-pills">
-              <span className="auth-pill">Дүн бүртгэл</span>
-              <span className="auth-pill">График</span>
-              <span className="auth-pill">Ангиар харах</span>
-              <span className="auth-pill">Аюулгүй</span>
+              <span className="auth-pill">{t('pillGrades')}</span>
+              <span className="auth-pill">{t('pillCharts')}</span>
+              <span className="auth-pill">{t('pillByClass')}</span>
+              <span className="auth-pill">{t('pillSecure')}</span>
             </div>
           </div>
           <div style={{ color: 'rgba(255,255,255,.4)', fontSize: '0.75rem' }}>
-            © 2024 ЕБС Систем
+            {t('sideCopyright')}
           </div>
         </div>
 
@@ -125,53 +130,53 @@ export default function Login({ onLogin, onStudentLogin }) {
               onClick={() => { setTab('teacher'); setStuErr(''); }}
               style={{ flex: 1, padding: '10px', fontWeight: 700, fontSize: '0.875rem', border: 'none', cursor: 'pointer', background: tab === 'teacher' ? '#4f46e5' : 'white', color: tab === 'teacher' ? 'white' : '#64748b', transition: 'all .15s' }}
             >
-              Багш нэвтрэх
+              {t('teacherLogin')}
             </button>
             <button
               onClick={() => { setTab('student'); setError(''); }}
               style={{ flex: 1, padding: '10px', fontWeight: 700, fontSize: '0.875rem', border: 'none', cursor: 'pointer', background: tab === 'student' ? '#4f46e5' : 'white', color: tab === 'student' ? 'white' : '#64748b', transition: 'all .15s' }}
             >
-              Сурагч дүн харах
+              {t('studentGrades')}
             </button>
           </div>
 
           {/* Teacher login — always mounted so GoogleLogin initializes only once */}
           <div style={{ display: tab === 'teacher' ? 'block' : 'none' }}>
-              <h1 className="auth-main-title">Нэвтрэх</h1>
-              <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
+              <h1 className="auth-main-title">{t('login')}</h1>
+              <p className="auth-main-sub">{t('loginHint')}</p>
               {error && <div className="auth-error">{error}</div>}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label>Имэйл хаяг</label>
+                  <label>{t('email')}</label>
                   <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" required />
                 </div>
                 <div className="form-group">
-                  <label>Нууц үг</label>
+                  <label>{t('passwordLabel')}</label>
                   <PasswordInput name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
                 </div>
                 <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={loading}>
-                  {loading ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
+                  {loading ? t('loggingIn') : t('login')}
                 </button>
               </form>
 
               <p className="auth-footer">
-                Бүртгэлгүй юу?{' '}<Link to="/register">Бүртгүүлэх</Link>
+                {t('registerPrompt')}{' '}<Link to="/register">{t('register')}</Link>
               </p>
               <p className="auth-footer" style={{ marginTop: 8 }}>
-                <Link to="/change-password">Нууц үг солих</Link>
+                <Link to="/change-password">{t('changePassword')}</Link>
               </p>
           </div>
 
           {/* Student login */}
           <div style={{ display: tab === 'student' ? 'block' : 'none' }}>
-              <h1 className="auth-main-title">Нэвтрэх</h1>
-              <p className="auth-main-sub">Имэйл болон нууц үгээ оруулна уу</p>
+              <h1 className="auth-main-title">{t('login')}</h1>
+              <p className="auth-main-sub">{t('loginHint')}</p>
 
               {stuErr && <div className="auth-error">{stuErr}</div>}
 
               <form onSubmit={handleStudentLogin}>
                 <div className="form-group">
-                  <label>Имэйл хаяг</label>
+                  <label>{t('email')}</label>
                   <input
                     type="email"
                     name="email"
@@ -182,7 +187,7 @@ export default function Login({ onLogin, onStudentLogin }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Нууц үг</label>
+                  <label>{t('passwordLabel')}</label>
                   <PasswordInput
                     name="password"
                     value={stuData.password}
@@ -192,22 +197,22 @@ export default function Login({ onLogin, onStudentLogin }) {
                   />
                 </div>
                 <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={stuLoad}>
-                  {stuLoad ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
+                  {stuLoad ? t('loggingIn') : t('login')}
                 </button>
               </form>
 
               <p className="auth-footer" style={{ marginTop: 16, color: '#64748b', fontSize: '0.82rem' }}>
-                Нэвтрэх мэдээллийг багшаасаа аваарай
+                {t('studentLoginHint')}
               </p>
               <p className="auth-footer" style={{ marginTop: 4 }}>
-                <Link to="/change-password">Нууц үг солих</Link>
+                <Link to="/change-password">{t('changePassword')}</Link>
               </p>
           </div>
 
           {/* Single GoogleLogin — shared between tabs to avoid double initialize() */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
             <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>эсвэл Google-ээр</span>
+            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{t('orGoogle')}</span>
             <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center' }}>

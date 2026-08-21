@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldIcon } from '../components/Icons';
 import PasswordInput from '../components/PasswordInput';
+import { useLanguage } from '../utils/language.jsx';
 
 export default function ChangePassword({ token, currentUser, showToast }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: currentUser?.email || '',
@@ -27,9 +29,9 @@ export default function ChangePassword({ token, currentUser, showToast }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.newPassword !== formData.confirmPassword)
-      return setError('Шинэ нууц үг таарахгүй байна');
+      return setError(t('cp_mismatchError'));
     if (formData.newPassword.length < 6)
-      return setError('Шинэ нууц үг дор хаяж 6 тэмдэгт байх ёстой');
+      return setError(t('cp_tooShortError'));
 
     setLoading(true);
     try {
@@ -38,12 +40,12 @@ export default function ChangePassword({ token, currentUser, showToast }) {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
-      setSuccess('Нууц үг амжилттай солигдлоо!');
-      showToast?.('Нууц үг амжилттай солигдлоо');
+      setSuccess(t('cp_successMsg'));
+      showToast?.(t('cp_successMsg'));
       setFormData({ email: currentUser?.email || '', currentPassword: '', newPassword: '', confirmPassword: '' });
       timerRef.current = setTimeout(() => navigate(token ? '/' : '/login'), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Нууц үг солиход алдаа гарлаа');
+      setError(err.response?.data?.message || t('cp_changeError'));
     } finally {
       setLoading(false);
     }
@@ -57,36 +59,36 @@ export default function ChangePassword({ token, currentUser, showToast }) {
           <div className="auth-side-logo">
             <div className="auth-side-logo-icon"><ShieldIcon size={22} color="white" /></div>
             <div>
-              <div className="auth-side-logo-text">Аюулгүй байдал</div>
-              <div className="auth-side-logo-sub">ЕБС Дүн Бүртгэлийн Систем</div>
+              <div className="auth-side-logo-text">{t('cp_sideTitle')}</div>
+              <div className="auth-side-logo-sub">{t('appFullName')}</div>
             </div>
           </div>
           <div className="auth-side-body">
-            <h2 className="auth-side-title">Нууц үг солих</h2>
+            <h2 className="auth-side-title">{t('changePassword')}</h2>
             <p className="auth-side-text">
-              Нууц үгийг тогтмол солих нь таны бүртгэлийн аюулгүй байдлыг хангана. Хамгийн багадаа 6 тэмдэгт ашиглана уу.
+              {t('cp_sideText')}
             </p>
             <div className="auth-side-pills">
-              <span className="auth-pill">🔐 bcrypt шифрлэлт</span>
-              <span className="auth-pill">🛡️ JWT токен</span>
+              <span className="auth-pill">{t('cp_pillEncryption')}</span>
+              <span className="auth-pill">{t('cp_pillJwt')}</span>
             </div>
           </div>
           <div style={{ color: 'rgba(255,255,255,.4)', fontSize: '0.75rem' }}>
-            © 2024 ЕБС Систем
+            {t('sideCopyright')}
           </div>
         </div>
 
         {/* Right side */}
         <div className="auth-main">
-          <h1 className="auth-main-title">Нууц үг солих</h1>
-          <p className="auth-main-sub">Имэйл болон нууц үгийг оруулна уу</p>
+          <h1 className="auth-main-title">{t('changePassword')}</h1>
+          <p className="auth-main-sub">{t('cp_subtitle')}</p>
 
           {error   && <div className="auth-error">{error}</div>}
           {success && <div className="auth-success">{success}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Имэйл хаяг</label>
+              <label>{t('email')}</label>
               <input
                 type="email"
                 name="email"
@@ -97,32 +99,32 @@ export default function ChangePassword({ token, currentUser, showToast }) {
               />
             </div>
             <div className="form-group">
-              <label>Одоогийн нууц үг</label>
+              <label>{t('cp_currentPassword')}</label>
               <PasswordInput
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
-                placeholder="Одоогийн нууц үгийг оруулна уу"
+                placeholder={t('cp_currentPasswordPlaceholder')}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Шинэ нууц үг</label>
+              <label>{t('cp_newPassword')}</label>
               <PasswordInput
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
-                placeholder="Дор хаяж 6 тэмдэгт"
+                placeholder={t('add_minChars')}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Шинэ нууц үг давтах</label>
+              <label>{t('cp_confirmNewPassword')}</label>
               <PasswordInput
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Шинэ нууц үгийг дахин оруулна уу"
+                placeholder={t('cp_confirmNewPasswordPlaceholder')}
                 required
               />
             </div>
@@ -132,7 +134,7 @@ export default function ChangePassword({ token, currentUser, showToast }) {
                 className="btn btn-secondary btn-lg"
                 onClick={() => navigate(token ? '/' : '/login')}
               >
-                ← Буцах
+                {t('backArrow')}
               </button>
               <button
                 type="submit"
@@ -140,13 +142,13 @@ export default function ChangePassword({ token, currentUser, showToast }) {
                 style={{ flex: 1 }}
                 disabled={loading}
               >
-                {loading ? 'Хадгалж байна...' : 'Нууц үг солих'}
+                {loading ? t('saving') : t('changePassword')}
               </button>
             </div>
           </form>
 
           <p className="auth-footer" style={{ marginTop: 20 }}>
-            <Link to="/login">Нэвтрэх хуудас руу буцах</Link>
+            <Link to="/login">{t('cp_backToLogin')}</Link>
           </p>
         </div>
       </div>

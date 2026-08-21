@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { PrintIcon } from '../components/Icons';
 import { getImageUrl } from '../utils/imageUrl';
 import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
+import { useLanguage } from '../utils/language.jsx';
 
 function clamp(val, min, max) {
   const n = Number(val);
@@ -26,6 +27,7 @@ function MiniBar({ value, max, color }) {
 
 // Custom chart tooltip showing all 4 components
 function CustomTooltip({ active, payload, label }) {
+  const { t } = useLanguage();
   if (!active || !payload?.length) return null;
   const g = payload[0]?.payload;
   if (!g) return null;
@@ -33,10 +35,10 @@ function CustomTooltip({ active, payload, label }) {
     <div style={{ background: 'white', borderRadius: 10, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,.13)', fontSize: '0.8rem', minWidth: 160 }}>
       <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: 6, fontSize: '0.85rem' }}>{label}</div>
       {[
-        { label: 'Шалгалт 1', key: 'exam1',       max: 30, color: '#6366f1' },
-        { label: 'Шалгалт 2', key: 'exam2',       max: 30, color: '#8b5cf6' },
-        { label: 'Ирц',       key: 'attendance',  max: 20, color: '#06b6d4' },
-        { label: 'Бие даалт', key: 'independent', max: 20, color: '#10b981' },
+        { label: t('exam1Full'),       key: 'exam1',       max: 30, color: '#6366f1' },
+        { label: t('exam2Full'),       key: 'exam2',       max: 30, color: '#8b5cf6' },
+        { label: t('attendanceFull'),  key: 'attendance',  max: 20, color: '#06b6d4' },
+        { label: t('independentFull'), key: 'independent', max: 20, color: '#10b981' },
       ].map(({ label: l, key, max, color }) => (
         <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 3 }}>
           <span style={{ color: '#64748b' }}>{l}</span>
@@ -44,7 +46,7 @@ function CustomTooltip({ active, payload, label }) {
         </div>
       ))}
       <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 700, color: '#1e293b' }}>Нийт</span>
+        <span style={{ fontWeight: 700, color: '#1e293b' }}>{t('totalLabel')}</span>
         <span style={{ fontWeight: 900, color: '#4f46e5' }}>{g.score}</span>
       </div>
     </div>
@@ -52,6 +54,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function StudentDetail({ onUpdate, onDelete, showToast }) {
+  const { t, language } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
@@ -68,7 +71,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       .then(res => setStudent(res.data))
       .catch(err => {
         console.error(err);
-        setFetchError(err.response?.data?.message || 'Сурагчийн мэдээлэл авахад алдаа гарлаа');
+        setFetchError(err.response?.data?.message || t('detail_fetchError'));
       });
   }, [id]);
 
@@ -102,7 +105,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       <div className="loading-wrap">
         <p style={{ color: '#dc2626', fontWeight: 600 }}>{fetchError}</p>
         <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/')}>
-          ← Буцах
+          {t('backArrow')}
         </button>
       </div>
     );
@@ -112,13 +115,13 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
     return (
       <div className="loading-wrap">
         <div className="spinner" />
-        Сурагчийн мэдээлэл уншиж байна...
+        {t('detail_loading')}
       </div>
     );
   }
 
   const handleDelete = () => {
-    if (window.confirm(`Та "${student.name}"-ийг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцаах боломжгүй.`)) {
+    if (window.confirm(t('detail_deleteConfirm', { name: student.name }))) {
       onDelete(id);
       navigate('/');
     }
@@ -153,9 +156,9 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
 
   const handleAddGrade = () => {
     const name = newRow.subject.trim();
-    if (!name) { setAddError('Хичээлийн нэр оруулна уу'); return; }
+    if (!name) { setAddError(t('modal_subjectNameRequired')); return; }
     if (editGrades.some(g => g.subject.toLowerCase() === name.toLowerCase())) {
-      setAddError(`"${name}" хичээл аль хэдийн байна`); return;
+      setAddError(t('modal_subjectExists', { name })); return;
     }
     const score = calcScore(newRow);
     setEditGrades(prev => [...prev, { ...newRow, subject: name, score }]);
@@ -170,7 +173,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
     const pendingName = newRow.subject.trim();
     if (pendingName) {
       if (editGrades.some(g => g.subject.toLowerCase() === pendingName.toLowerCase())) {
-        setAddError(`"${pendingName}" хичээл аль хэдийн байна`); return;
+        setAddError(t('modal_subjectExists', { name: pendingName })); return;
       }
       finalGrades = [...editGrades, { ...newRow, subject: pendingName, score: calcScore(newRow) }];
       setEditGrades(finalGrades);
@@ -182,9 +185,9 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       const updated = await onUpdate(id, { grades: finalGrades });
       setStudent(updated);
       setEditing(false);
-      showToast('Дүн амжилттай хадгалагдлаа');
+      showToast(t('dash_gradeSaved'));
     } catch (err) {
-      const msg = err.response?.data?.message || 'Хадгалахад алдаа гарлаа';
+      const msg = err.response?.data?.message || t('dash_saveError');
       showToast(msg, 'error');
     } finally {
       setSaving(false);
@@ -212,10 +215,10 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           )}
           <div>
             <h1 className="hero-name">{student.name}</h1>
-            <span className="hero-class">Анги: {student.className}</span>
+            <span className="hero-class">{t('detail_classPrefix')} {student.className}</span>
             {student.academicYear && (
               <span className="hero-class" style={{ marginLeft: 8 }}>
-                {student.academicYear} · {student.semester}-р улирал
+                {student.academicYear} · {t('semesterOf', { semester: student.semester })}
               </span>
             )}
             {student.email && (
@@ -227,16 +230,16 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <div className="hero-score">
-            <div className="hero-score-label">Дундаж нийт</div>
+            <div className="hero-score-label">{t('detail_avgTotal')}</div>
             <div className="hero-score-value">{student.average}</div>
           </div>
           {totals && (
             <div className="hero-breakdown">
               {[
-                { label: 'Шалгалт 1', val: totals.exam1,       max: 30, color: '#6366f1' },
-                { label: 'Шалгалт 2', val: totals.exam2,       max: 30, color: '#8b5cf6' },
-                { label: 'Ирц',       val: totals.attendance,  max: 20, color: '#06b6d4' },
-                { label: 'Бие даалт', val: totals.independent, max: 20, color: '#10b981' },
+                { label: t('exam1Full'),       val: totals.exam1,       max: 30, color: '#6366f1' },
+                { label: t('exam2Full'),       val: totals.exam2,       max: 30, color: '#8b5cf6' },
+                { label: t('attendanceFull'),  val: totals.attendance,  max: 20, color: '#06b6d4' },
+                { label: t('independentFull'), val: totals.independent, max: 20, color: '#10b981' },
               ].map(({ label, val, max, color }) => (
                 <div key={label} className="hero-breakdown-row">
                   <span>{label}</span>
@@ -257,7 +260,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
       <div className="detail-content">
         {/* Chart */}
         <div className="chart-box">
-          <h3>Хичээл тус бүрийн нийт дүн</h3>
+          <h3>{t('detail_chartTitle')}</h3>
           <div style={{ width: '100%', height: chartHeight }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -269,7 +272,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <YAxis dataKey="subject" type="category" width={75} tick={{ fontSize: 11, fill: '#374151' }} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,.06)' }} />
-                <Bar dataKey="score" name="Нийт дүн" radius={[0, 5, 5, 0]}>
+                <Bar dataKey="score" name={t('totalLabel')} radius={[0, 5, 5, 0]}>
                   {student.grades.map((entry, i) => (
                     <Cell key={i} fill={getScoreColor(entry.score)} />
                   ))}
@@ -282,18 +285,18 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
         {/* Grades table */}
         <div className="grades-list">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ margin: 0 }}>Дүнгийн дэлгэрэнгүй</h3>
+            <h3 style={{ margin: 0 }}>{t('detail_gradesDetailTitle')}</h3>
             {!editing ? (
               <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem' }} onClick={handleEditStart}>
-                Засах
+                {t('edit')}
               </button>
             ) : (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.82rem' }} onClick={() => setEditing(false)}>
-                  Болих
+                  {t('cancel')}
                 </button>
                 <button className="btn btn-success" style={{ padding: '6px 14px', fontSize: '0.82rem' }} onClick={handleSave} disabled={saving}>
-                  {saving ? 'Хадгалж...' : 'Хадгалах'}
+                  {saving ? t('detail_savingShort') : t('save')}
                 </button>
               </div>
             )}
@@ -303,13 +306,13 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
             <table className="grades-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Хичээл</th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ш1<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ш2<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>Ирц<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>БД<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Нийт</th>
-                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>Үсгэн</th>
+                  <th style={{ textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>{t('subjectLabel')}</th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>{t('thExam1')}<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>{t('thExam2')}<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/30</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>{t('thAttendance')}<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 4px 8px', borderBottom: '1px solid #e2e8f0' }}>{t('thIndependent')}<em style={{fontSize:'0.65rem',color:'#94a3b8'}}>/20</em></th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>{t('totalLabel')}</th>
+                  <th style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, padding: '6px 0 8px', borderBottom: '1px solid #e2e8f0' }}>{t('letterLabel')}</th>
                   {editing && <th style={{ borderBottom: '1px solid #e2e8f0' }} />}
                 </tr>
               </thead>
@@ -367,7 +370,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                 {editing && (
                   <tr style={{ background: '#f8fafc' }}>
                     <td style={{ padding: '5px 0' }}>
-                      <input className="exam-input" style={{ width: '100%', minWidth: 90, borderColor: addError ? '#dc2626' : '' }} type="text" placeholder="Хичээлийн нэр" value={newRow.subject} onChange={e => { handleNewRowChange('subject', e.target.value); setAddError(''); }} onKeyDown={e => e.key === 'Enter' && handleAddGrade()} />
+                      <input className="exam-input" style={{ width: '100%', minWidth: 90, borderColor: addError ? '#dc2626' : '' }} type="text" placeholder={t('modal_newSubjectPlaceholder')} value={newRow.subject} onChange={e => { handleNewRowChange('subject', e.target.value); setAddError(''); }} onKeyDown={e => e.key === 'Enter' && handleAddGrade()} />
                       {addError && <div style={{ color: '#dc2626', fontSize: '0.72rem', marginTop: 2 }}>{addError}</div>}
                     </td>
                     {['exam1','exam2','attendance','independent'].map(f => (
@@ -401,7 +404,7 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
                   <div style={{ fontSize: '1.2rem', fontWeight: 900, color: ls.color, lineHeight: 1 }}>{grade}</div>
                   <div style={{ fontSize: '1.3rem', fontWeight: 800, color: ls.color, margin: '3px 0 1px' }}>{count}</div>
                   <div style={{ fontSize: '0.62rem', color: ls.color, opacity: 0.8 }}>{pct}%</div>
-                  <div style={{ fontSize: '0.6rem', color: ls.color, opacity: 0.6 }}>хичээл</div>
+                  <div style={{ fontSize: '0.6rem', color: ls.color, opacity: 0.6 }}>{t('subjectsCountUnit')}</div>
                 </div>
               );
             })}
@@ -419,29 +422,29 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
         padding: '12px 0',
         marginTop: 24,
       }}>
-        <button onClick={() => navigate('/')} className="btn btn-secondary">← Буцах</button>
+        <button onClick={() => navigate('/')} className="btn btn-secondary">{t('backArrow')}</button>
         <button onClick={() => window.print()} className="btn btn-secondary">
-          <PrintIcon size={15} color="currentColor" />Хэвлэх
+          <PrintIcon size={15} color="currentColor" />{t('printLabel')}
         </button>
-        <button onClick={handleDelete} className="btn btn-danger">Устгах</button>
+        <button onClick={handleDelete} className="btn btn-danger">{t('delete')}</button>
       </div>
 
       {/* Print report */}
       <div className="print-report">
-        <div className="print-school">ЕБС ДҮН БҮРТГЭЛИЙН СИСТЕМ</div>
-        <div className="print-title">ДҮНГИЙН ТАЙЛАН</div>
+        <div className="print-school">{t('detail_printSchoolName')}</div>
+        <div className="print-title">{t('detail_printReportTitle')}</div>
         <div className="print-meta">
-          <div><strong>Нэр:</strong> {student.name}</div>
-          <div><strong>Анги:</strong> {student.className}</div>
-          {student.academicYear && <div><strong>Хичээлийн жил:</strong> {student.academicYear} · {student.semester}-р улирал</div>}
-          <div><strong>Дундаж дүн:</strong> {student.average} / 100</div>
+          <div><strong>{t('nameLabel')}:</strong> {student.name}</div>
+          <div><strong>{t('classLabel')}:</strong> {student.className}</div>
+          {student.academicYear && <div><strong>{t('detail_printYear')}</strong> {student.academicYear} · {t('semesterOf', { semester: student.semester })}</div>}
+          <div><strong>{t('detail_printAvg')}</strong> {student.average} / 100</div>
         </div>
         <table className="print-table">
           <thead>
             <tr>
-              <th>#</th><th>Хичээл</th>
-              <th>Шалгалт 1 (/30)</th><th>Шалгалт 2 (/30)</th>
-              <th>Ирц (/20)</th><th>Бие даалт (/20)</th><th>Нийт (/100)</th><th>Үсгэн</th>
+              <th>#</th><th>{t('subjectLabel')}</th>
+              <th>{t('exam1Full')} (/30)</th><th>{t('exam2Full')} (/30)</th>
+              <th>{t('attendanceFull')} (/20)</th><th>{t('independentFull')} (/20)</th><th>{t('totalLabel')} (/100)</th><th>{t('letterLabel')}</th>
             </tr>
           </thead>
           <tbody>
@@ -460,15 +463,15 @@ export default function StudentDetail({ onUpdate, onDelete, showToast }) {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={6} style={{ textAlign: 'right' }}><strong>Дундаж нийт оноо:</strong></td>
+              <td colSpan={6} style={{ textAlign: 'right' }}><strong>{t('detail_printAvgFooter')}</strong></td>
               <td><strong>{student.average}</strong></td>
               <td><strong>{getLetterGrade(parseFloat(student.average))}</strong></td>
             </tr>
           </tfoot>
         </table>
         <div className="print-footer">
-          <div className="print-sign"><span>Багшийн гарын үсэг: ___________</span></div>
-          <div className="print-sign"><span>Огноо: {new Date().toLocaleDateString('mn-MN')}</span></div>
+          <div className="print-sign"><span>{t('detail_teacherSign')}</span></div>
+          <div className="print-sign"><span>{t('detail_date')} {new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'mn-MN')}</span></div>
         </div>
       </div>
     </div>

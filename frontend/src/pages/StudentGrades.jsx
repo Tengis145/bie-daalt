@@ -5,6 +5,7 @@ import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
 import { getImageUrl } from '../utils/imageUrl';
 import { Link } from 'react-router-dom';
 import { SchoolIcon, LogoutIcon, PrintIcon, ChartIcon, TrophyIcon, BookIcon } from '../components/Icons';
+import { useLanguage } from '../utils/language.jsx';
 
 function MiniBar({ value, max, color }) {
   const pct = Math.min(100, Math.round((value / max) * 100));
@@ -16,6 +17,7 @@ function MiniBar({ value, max, color }) {
 }
 
 function CustomTooltip({ active, payload, label }) {
+  const { t } = useLanguage();
   if (!active || !payload?.length) return null;
   const g = payload[0]?.payload;
   if (!g) return null;
@@ -23,10 +25,10 @@ function CustomTooltip({ active, payload, label }) {
     <div style={{ background: 'white', borderRadius: 10, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,.13)', fontSize: '0.8rem', minWidth: 160 }}>
       <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>{label}</div>
       {[
-        { label: 'Шалгалт 1', key: 'exam1',       max: 30, color: '#6366f1' },
-        { label: 'Шалгалт 2', key: 'exam2',       max: 30, color: '#8b5cf6' },
-        { label: 'Ирц',       key: 'attendance',  max: 20, color: '#06b6d4' },
-        { label: 'Бие даалт', key: 'independent', max: 20, color: '#10b981' },
+        { label: t('exam1Full'),       key: 'exam1',       max: 30, color: '#6366f1' },
+        { label: t('exam2Full'),       key: 'exam2',       max: 30, color: '#8b5cf6' },
+        { label: t('attendanceFull'),  key: 'attendance',  max: 20, color: '#06b6d4' },
+        { label: t('independentFull'), key: 'independent', max: 20, color: '#10b981' },
       ].map(({ label: l, key, max, color }) => (
         <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 3 }}>
           <span style={{ color: '#64748b' }}>{l}</span>
@@ -34,7 +36,7 @@ function CustomTooltip({ active, payload, label }) {
         </div>
       ))}
       <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 700, color: '#1e293b' }}>Нийт</span>
+        <span style={{ fontWeight: 700, color: '#1e293b' }}>{t('totalLabel')}</span>
         <span style={{ fontWeight: 900, color: '#4f46e5' }}>{g.score}</span>
       </div>
     </div>
@@ -42,6 +44,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function StudentGrades({ student, onLogout, standalone = true }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const { average, gradeDist, totals, chartHeight, best, worst } = useMemo(() => {
@@ -78,9 +81,9 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
   if (!student) {
     return (
       <div className="loading-wrap">
-        <p style={{ color: '#dc2626' }}>Мэдээлэл олдсонгүй.</p>
+        <p style={{ color: '#dc2626' }}>{t('sg_noData')}</p>
         <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/login')}>
-          ← Нэвтрэх хуудас руу буцах
+          {t('sg_backToLogin')}
         </button>
       </div>
     );
@@ -106,8 +109,8 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
             <div className="logo">
               <div className="logo-icon-wrap"><SchoolIcon size={20} color="white" /></div>
               <div>
-                <div className="logo-title">ЕБС Дүн Бүртгэл</div>
-                <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+                <div className="logo-title">{t('appName')}</div>
+                <div className="logo-sub">{t('appSubtitle')}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -119,10 +122,10 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
                 <span className="user-name">{student.name}</span>
               </Link>
               <button className="btn-logout" onClick={() => window.print()}>
-                <PrintIcon size={14} color="currentColor" />Хэвлэх
+                <PrintIcon size={14} color="currentColor" />{t('printLabel')}
               </button>
               <button className="btn-logout" onClick={onLogout}>
-                <LogoutIcon size={14} color="currentColor" />Гарах
+                <LogoutIcon size={14} color="currentColor" />{t('logout')}
               </button>
             </div>
           </div>
@@ -134,11 +137,11 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
 
         {/* Page header */}
         <div className="page-header">
-          <h1>Миний дүн</h1>
+          <h1>{t('sg_myGrades')}</h1>
           <p>
-            {student.className} анги
+            {t('sg_classSuffix', { class: student.className })}
             {student.academicYear && ` · ${student.academicYear}`}
-            {student.semester    && ` · ${student.semester}-р улирал`}
+            {student.semester    && ` · ${t('semesterOf', { semester: student.semester })}`}
           </p>
         </div>
 
@@ -148,14 +151,14 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
             <div className="stat-icon indigo"><ChartIcon size={22} color="#4f46e5" /></div>
             <div className="stat-info">
               <div className="stat-value" style={{ color: avgStyle.color }}>{average}</div>
-              <div className="stat-label">Дундаж оноо · {avgLetter}</div>
+              <div className="stat-label">{t('sg_avgScoreLabel', { letter: avgLetter })}</div>
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-icon blue"><BookIcon size={22} color="#2563eb" /></div>
             <div className="stat-info">
               <div className="stat-value">{student.grades.length}</div>
-              <div className="stat-label">Нийт хичээл</div>
+              <div className="stat-label">{t('subj_totalSubjects')}</div>
             </div>
           </div>
           <div className="stat-card">
@@ -164,7 +167,7 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
               <div className="stat-value" style={{ color: '#059669', fontSize: '1.1rem', lineHeight: 1.3 }}>
                 {best ? best.score : '—'}
               </div>
-              <div className="stat-label">Өндөр оноо{best ? ` · ${best.subject}` : ''}</div>
+              <div className="stat-label">{t('sg_highScore')}{best ? ` · ${best.subject}` : ''}</div>
             </div>
           </div>
           <div className="stat-card" style={worst && worst.score < 60 ? { borderLeft: '3px solid #dc2626' } : {}}>
@@ -175,7 +178,7 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
               <div className="stat-value" style={{ color: worst && worst.score < 60 ? '#dc2626' : '#d97706', fontSize: '1.1rem', lineHeight: 1.3 }}>
                 {worst ? worst.score : '—'}
               </div>
-              <div className="stat-label">Бага оноо{worst ? ` · ${worst.subject}` : ''}</div>
+              <div className="stat-label">{t('sg_lowScore')}{worst ? ` · ${worst.subject}` : ''}</div>
             </div>
           </div>
         </div>
@@ -197,7 +200,7 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
               </div>
             </div>
             <div className="hero-score">
-              <div className="hero-score-label">ДУНДАЖ ОНОО</div>
+              <div className="hero-score-label">{t('sg_avgScoreAllCaps')}</div>
               <div className="hero-score-value">{average}</div>
               <div style={{ fontSize: '1rem', fontWeight: 900, color: 'rgba(255,255,255,.9)', marginTop: 2 }}>{avgLetter}</div>
             </div>
@@ -206,10 +209,10 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
           {totals && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 20 }}>
               {[
-                { label: 'Шалгалт 1', key: 'exam1', max: 30, color: '#a5b4fc' },
-                { label: 'Шалгалт 2', key: 'exam2', max: 30, color: '#c4b5fd' },
-                { label: 'Ирц',       key: 'attendance',  max: 20, color: '#67e8f9' },
-                { label: 'Бие даалт', key: 'independent', max: 20, color: '#6ee7b7' },
+                { label: t('exam1Full'),       key: 'exam1', max: 30, color: '#a5b4fc' },
+                { label: t('exam2Full'),       key: 'exam2', max: 30, color: '#c4b5fd' },
+                { label: t('attendanceFull'),  key: 'attendance',  max: 20, color: '#67e8f9' },
+                { label: t('independentFull'), key: 'independent', max: 20, color: '#6ee7b7' },
               ].map(({ label, key, max, color }) => (
                 <div key={key} style={{ background: 'rgba(255,255,255,.12)', borderRadius: 10, padding: '10px 14px' }}>
                   <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.65)', fontWeight: 600 }}>{label}</div>
@@ -226,7 +229,7 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
         {/* Chart */}
         {student.grades.length > 0 && (
           <div className="chart-section">
-            <h3>Хичээл тус бүрийн оноо</h3>
+            <h3>{t('sg_chartTitle')}</h3>
             <ResponsiveContainer width="100%" height={chartHeight}>
               <BarChart data={student.grades} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -245,18 +248,18 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
 
         {/* Grade table */}
         <div className="chart-section" style={{ marginBottom: 24 }}>
-          <h3>Дүнгийн хүснэгт</h3>
+          <h3>{t('sg_tableTitle')}</h3>
           <div style={{ overflowX: 'auto' }}>
             <table className="exam-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }}>Хичээл</th>
-                  <th>Ш1<span className="th-max">/30</span></th>
-                  <th>Ш2<span className="th-max">/30</span></th>
-                  <th>Ирц<span className="th-max">/20</span></th>
-                  <th>БД<span className="th-max">/20</span></th>
-                  <th>Нийт</th>
-                  <th>Үсгэн</th>
+                  <th style={{ textAlign: 'left' }}>{t('subjectLabel')}</th>
+                  <th>{t('thExam1')}<span className="th-max">/30</span></th>
+                  <th>{t('thExam2')}<span className="th-max">/30</span></th>
+                  <th>{t('thAttendance')}<span className="th-max">/20</span></th>
+                  <th>{t('thIndependent')}<span className="th-max">/20</span></th>
+                  <th>{t('totalLabel')}</th>
+                  <th>{t('letterLabel')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -295,7 +298,7 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
 
         {/* Grade distribution */}
         <div className="chart-section" style={{ marginBottom: 24 }}>
-          <h3>Үсгэн дүнгийн тархалт</h3>
+          <h3>{t('sg_distTitle')}</h3>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {gradeDist.map(({ grade, count }) => {
               const ls = LETTER_STYLE[grade];
@@ -311,13 +314,13 @@ export default function StudentGrades({ student, onLogout, standalone = true }) 
         </div>
 
         <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', marginBottom: 8 }}>
-          Дүн буруу байвал багшдаа хандана уу.
+          {t('sg_footerNote')}
         </p>
       </main>
 
       {standalone && (
         <footer className="footer">
-          © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
+          © 2024 {t('appFullName')} · {t('footer')}
         </footer>
       )}
     </div>

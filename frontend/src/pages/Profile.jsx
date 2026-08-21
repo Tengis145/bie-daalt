@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CameraIcon, UserIcon } from '../components/Icons';
 import { getImageUrl } from '../utils/imageUrl';
+import { useLanguage } from '../utils/language.jsx';
 
 export default function Profile({ currentUser, onUpdateUser, showToast }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
@@ -16,7 +18,7 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      showToast('Файлын хэмжээ 5MB-аас хэтэрч байна', 'error');
+      showToast(t('profile_fileTooLarge'), 'error');
       return;
     }
     setPreview(URL.createObjectURL(file));
@@ -24,7 +26,7 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
 
   const handleUpload = async () => {
     const file = fileRef.current?.files?.[0];
-    if (!file) { showToast('Зураг сонгоно уу', 'error'); return; }
+    if (!file) { showToast(t('profile_choosePhoto'), 'error'); return; }
 
     setUploading(true);
     try {
@@ -40,23 +42,23 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
       onUpdateUser(profileRes.data.user);
       setPreview(null);
       if (fileRef.current) fileRef.current.value = '';
-      showToast('Профайл зураг шинэчлэгдлээ');
+      showToast(t('profile_updated'));
     } catch (err) {
-      showToast(err.response?.data?.message || 'Зураг оруулахад алдаа гарлаа', 'error');
+      showToast(err.response?.data?.message || t('profile_uploadError'), 'error');
     } finally {
       setUploading(false);
     }
   };
 
-  const roleLabel = currentUser?.role === 'admin' ? 'Админ' : 'Багш';
+  const roleLabel = currentUser?.role === 'admin' ? t('roleAdmin') : t('roleTeacher');
   const roleBg    = currentUser?.role === 'admin' ? '#fef3c7' : '#dbeafe';
   const roleColor = currentUser?.role === 'admin' ? '#92400e' : '#1e40af';
 
   return (
     <div style={{ maxWidth: 520, margin: '0 auto' }}>
       <div className="page-header">
-        <h1>Профайл</h1>
-        <p>Хэрэглэгчийн мэдээлэл болон зураг удирдах</p>
+        <h1>{t('profile_title')}</h1>
+        <p>{t('profile_subtitle')}</p>
       </div>
 
       <div className="profile-card">
@@ -96,17 +98,17 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
         {preview && (
           <div className="profile-upload-actions">
             <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 12px' }}>
-              Шинэ зураг сонгогдсон. Хадгалахын тулд доорх товч дарна уу.
+              {t('profile_newPhotoSelected')}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 className="btn btn-secondary"
                 onClick={() => { setPreview(null); if (fileRef.current) fileRef.current.value = ''; }}
               >
-                Цуцлах
+                {t('cancel')}
               </button>
               <button className="btn btn-success" style={{ flex: 1 }} onClick={handleUpload} disabled={uploading}>
-                {uploading ? 'Хадгалж байна...' : 'Зураг хадгалах'}
+                {uploading ? t('saving') : t('profile_savePhoto')}
               </button>
             </div>
           </div>
@@ -116,7 +118,7 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
               <CameraIcon size={16} color="currentColor" />
-              Зураг солих
+              {t('profile_changePhoto')}
             </button>
           </div>
         )}
@@ -125,19 +127,19 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
 
         {/* Role info */}
         <div className="profile-perm-box">
-          <h4>Эрхийн мэдээлэл</h4>
+          <h4>{t('profile_permTitle')}</h4>
           {currentUser?.role === 'admin' ? (
             <ul className="profile-perm-list">
-              <li>✓ Бүх ангийн сурагчдыг харах боломжтой</li>
-              <li>✓ Бүх сурагчийн дүн засварлах боломжтой</li>
-              <li>✓ Сурагч устгах боломжтой</li>
-              <li>✓ Бүх хэрэглэгчийн мэдээллийг харах боломжтой</li>
+              <li>✓ {t('profile_adminPerm1')}</li>
+              <li>✓ {t('profile_adminPerm2')}</li>
+              <li>✓ {t('profile_adminPerm3')}</li>
+              <li>✓ {t('profile_adminPerm4')}</li>
             </ul>
           ) : (
             <ul className="profile-perm-list">
-              <li>✓ Өөрийн бүртгэсэн сурагчдыг харах боломжтой</li>
-              <li>✓ Өөрийн сурагчдын дүн засварлах боломжтой</li>
-              <li>✗ Бусад багшийн сурагчийн мэдээлэлд хандах боломжгүй</li>
+              <li>✓ {t('profile_teacherPerm1')}</li>
+              <li>✓ {t('profile_teacherPerm2')}</li>
+              <li>✗ {t('profile_teacherPerm3')}</li>
             </ul>
           )}
         </div>
@@ -145,10 +147,10 @@ export default function Profile({ currentUser, onUpdateUser, showToast }) {
         <div className="profile-divider" />
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navigate('/')}>
-            ← Буцах
+            {t('backArrow')}
           </button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('/change-password')}>
-            Нууц үг солих
+            {t('changePassword')}
           </button>
         </div>
       </div>

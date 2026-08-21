@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { getLetterGrade, LETTER_STYLE } from '../utils/grades';
 import { getImageUrl } from '../utils/imageUrl';
 import { SchoolIcon, LogoutIcon, UserIcon, ChartIcon, TrophyIcon, BookIcon } from '../components/Icons';
+import { useLanguage } from '../utils/language.jsx';
 
 export default function StudentProfile({ student, onLogout, standalone = true }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const { average, avgLetter, gradeDist, subjectCount } = useMemo(() => {
@@ -28,9 +30,9 @@ export default function StudentProfile({ student, onLogout, standalone = true })
   if (!student) {
     return (
       <div className="loading-wrap">
-        <p style={{ color: '#dc2626' }}>Мэдээлэл олдсонгүй.</p>
+        <p style={{ color: '#dc2626' }}>{t('sg_noData')}</p>
         <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={() => navigate('/login')}>
-          ← Нэвтрэх хуудас руу буцах
+          {t('sg_backToLogin')}
         </button>
       </div>
     );
@@ -51,8 +53,8 @@ export default function StudentProfile({ student, onLogout, standalone = true })
             <div className="logo">
               <div className="logo-icon-wrap"><SchoolIcon size={20} color="white" /></div>
               <div>
-                <div className="logo-title">ЕБС Дүн Бүртгэл</div>
-                <div className="logo-sub">Ерөнхий боловсролын сургууль</div>
+                <div className="logo-title">{t('appName')}</div>
+                <div className="logo-sub">{t('appSubtitle')}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -64,7 +66,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
                 <span className="user-name">{student.name}</span>
               </div>
               <button className="btn-logout" onClick={onLogout}>
-                <LogoutIcon size={14} color="currentColor" />Гарах
+                <LogoutIcon size={14} color="currentColor" />{t('logout')}
               </button>
             </div>
           </div>
@@ -73,8 +75,8 @@ export default function StudentProfile({ student, onLogout, standalone = true })
 
       <main className="main" style={standalone ? { flex: 1 } : {}}>
         <div className="page-header">
-          <h1>Профайл</h1>
-          <p>Сурагчийн хувийн мэдээлэл</p>
+          <h1>{t('profile_title')}</h1>
+          <p>{t('sp_subtitle')}</p>
         </div>
 
         <div style={{ maxWidth: 520, margin: '0 auto' }}>
@@ -108,7 +110,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
                 )}
                 {student.semester && (
                   <span className="profile-role" style={{ background: '#fef3c7', color: '#92400e' }}>
-                    {student.semester}-р улирал
+                    {t('semesterOf', { semester: student.semester })}
                   </span>
                 )}
               </div>
@@ -124,7 +126,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
                 </div>
                 <div>
                   <div className="stat-value" style={{ fontSize: '1.4rem', color: gradeColor(average) }}>{average}</div>
-                  <div className="stat-label">Дундаж · {avgLetter}</div>
+                  <div className="stat-label">{t('sp_avgShort', { letter: avgLetter })}</div>
                 </div>
               </div>
               <div className="stat-card" style={{ padding: '14px 12px', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 6 }}>
@@ -133,7 +135,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
                 </div>
                 <div>
                   <div className="stat-value" style={{ fontSize: '1.4rem' }}>{subjectCount}</div>
-                  <div className="stat-label">Хичээл</div>
+                  <div className="stat-label">{t('sp_subjectsCountLabel')}</div>
                 </div>
               </div>
               <div className="stat-card" style={{ padding: '14px 12px', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 6 }}>
@@ -142,7 +144,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
                 </div>
                 <div>
                   <div className="stat-value" style={{ fontSize: '1.4rem', color: avgStyle.color }}>{avgLetter}</div>
-                  <div className="stat-label">Үсгэн дүн</div>
+                  <div className="stat-label">{t('sp_letterGradeLabel')}</div>
                 </div>
               </div>
             </div>
@@ -151,7 +153,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
 
             {/* Grade distribution */}
             <div className="profile-perm-box">
-              <h4>Дүнгийн тархалт</h4>
+              <h4>{t('sp_distTitle')}</h4>
               <div style={{ display: 'flex', gap: 8 }}>
                 {['A','B','C','D','F'].map(g => {
                   const ls = LETTER_STYLE[g];
@@ -170,10 +172,10 @@ export default function StudentProfile({ student, onLogout, standalone = true })
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navigate('/my-grades')}>
-                ← Дүн харах
+                {t('sp_backToGrades')}
               </button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('/change-password')}>
-                Нууц үг солих
+                {t('changePassword')}
               </button>
             </div>
           </div>
@@ -182,7 +184,7 @@ export default function StudentProfile({ student, onLogout, standalone = true })
 
       {standalone && (
         <footer className="footer">
-          © 2024 ЕБС Дүн Бүртгэлийн Систем · Бүх эрх хуулиар хамгаалагдсан
+          © 2024 {t('appFullName')} · {t('footer')}
         </footer>
       )}
     </div>
